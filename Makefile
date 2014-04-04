@@ -9,4 +9,4 @@ dataautoupdate:
 	git add nemui
 
 test:
-	echo "ok"
+	echo "nemui"
