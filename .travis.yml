@@ -14,10 +14,11 @@ notifications:
     - wakaba@suikawiki.org
 deploy:
   provider: heroku
+  strategy: git
+#  buildpack: https://github.com/wakaba/heroku-buildpack-perl-pmbp
   api_key:
     secure: RQQDfTnspiAPCQ4neJMB4lysykdQerbsWcyExusJqUzmK1aVooY1FPv/LYYkEtN5ymvlR0J/Hm/BbY0TsbhCSpotxEI3d581C5IZGbtrb3pcA11bHOwcgD2VQdPbHBDSjQka+vMVhwxiq9WjpgNyOvHX4i2KBc1hcE0LpXof5vg=
   app:
     master: fuga1
   on:
     branch: master
-#  buildpack: https://github.com/wakaba/heroku-buildpack-perl-pmbp
