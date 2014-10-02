@@ -14,7 +14,8 @@ notifications:
     - wakaba@suikawiki.org
 deploy:
   provider: heroku
-  api_key: "iWoCZqO/9SbEs8hw7l6ifdt3f7dJU4ABIA5iSzPX3HAftHSiy84D5Gax4Uu4bG5j4AkHKI+Gk3dYFs0G6mfi1bC3fcrRc4hnevMwgQECmcaK6NWjzqXXtCLNF9CrcRtA+7FkFxVnCXMJZClfLh4+AGrNOOa8o3N0/KKoJ8xGgOc="
+  api_key:
+    secure: RQQDfTnspiAPCQ4neJMB4lysykdQerbsWcyExusJqUzmK1aVooY1FPv/LYYkEtN5ymvlR0J/Hm/BbY0TsbhCSpotxEI3d581C5IZGbtrb3pcA11bHOwcgD2VQdPbHBDSjQka+vMVhwxiq9WjpgNyOvHX4i2KBc1hcE0LpXof5vg=
   app:
     master: fuga1
   on:
