@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Path::Class;
-use lib glob file (__FILE__)->dir->parent->child ('modules/wanage/modules/*/lib');
+use lib glob file (__FILE__)->dir->parent->subdir ('modules/wanage/modules/*/lib');
 use Wanage::HTTP;
 use Warabe::App;
 use Data::Dumper;
