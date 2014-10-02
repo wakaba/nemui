@@ -1,0 +1,3 @@
+[submodule "modules/wanage"]
+	path = modules/wanage
+	url = git://github.com/wakaba/wanage
