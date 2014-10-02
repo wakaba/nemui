@@ -12,10 +12,7 @@ updatenightly: local/bin/pmbp.pl
 
 ## ------ Setup ------
 
-deps: git-submodules pmbp-install
-
-git-submodules:
-	$(GIT) submodule update --init
+deps: pmbp-install
 
 local/bin/pmbp.pl:
 	mkdir -p local/bin
