@@ -20,4 +20,4 @@ deploy:
     master: fuga1
   on:
     branch: master
-  buildpack: https://github.com/wakaba/heroku-buildpack-perl-pmbp
+#  buildpack: https://github.com/wakaba/heroku-buildpack-perl-pmbp
