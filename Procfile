@@ -1,1 +1,1 @@
-web: ./plackup -s Twiggy -p $PORT bin/server.psgi
+web: bin/run.sh
