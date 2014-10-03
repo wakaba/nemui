@@ -16,7 +16,9 @@ return sub {
   my $app = Warabe::App->new_from_http ($http);
   return $http->send_response (onready => sub {
     if ($app->path_segments->[0] eq 'die') {
-      die "/die";
+      print "/DIE\n";
+      warn "/die";
+      exit;
     } else {
       $app->execute (sub {
         my $path = $app->path_segments;
