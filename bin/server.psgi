@@ -19,6 +19,14 @@ return sub {
       print "/DIE\n";
       warn "/die";
       exit;
+    } elsif ($app->path_segments->[0] eq 'style') {
+      $app->http->set_response_header ('Content-Type' => 'text/css');
+      $app->http->set_response_last_modified (time);
+      $app->send_plain_text ('.PASS { color: green } .FAIL { color: red }');
+    } elsif ($app->path_segments->[0] eq 'style.css') {
+      $app->http->set_response_header ('Content-Type' => 'text/css');
+      $app->http->set_response_last_modified (time);
+      $app->send_plain_text ('.PASS { color: green } .FAIL { color: red }');
     } else {
       $app->execute (sub {
         my $path = $app->path_segments;
