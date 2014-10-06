@@ -8,8 +8,9 @@ use Warabe::App;
 use Data::Dumper;
 
 $Wanage::HTTP::UseXForwardedScheme = 1;
+$Wanage::HTTP::UseXForwardedFor = 1;
 $Wanage::HTTP::UseCFVisitor = 1;
-$Wanage::HTTP::UseXForwardedHost = 1;
+$Wanage::HTTP::UseCFConnectingIP = 1;
 
 return sub {
   my $env = $_[0];
