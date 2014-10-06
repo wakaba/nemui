@@ -8,6 +8,7 @@ use Warabe::App;
 use Data::Dumper;
 
 $Wanage::HTTP::UseXForwardedScheme = 1;
+$Wanage::HTTP::UseCFVisitor = 1;
 $Wanage::HTTP::UseXForwardedHost = 1;
 
 return sub {
