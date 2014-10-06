@@ -37,6 +37,7 @@ return sub {
           url => $app->http->url->stringify,
           client_ip_addr => $app->http->client_ip_addr->as_text,
           url_scheme => $app->http->{interface}->url_scheme,
+          url_scheme_by_proxy => $app->http->{interface}->_url_scheme_by_proxy,
           use_cf_visitor => $Wanage::HTTP::UseCFVisitor,
           cf_visitor => $app->http->{interface}->get_request_header ('CF-Visitor'),
         });
