@@ -1,4 +1,6 @@
+box: wercker/default
 build:
   steps:
     - script:
+      name: "make test"
       code: make test
