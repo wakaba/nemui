@@ -2,4 +2,4 @@
 - "../../modules/web-encodings" tests
 - "../../modules/charclass" tests build
 - "../../modules/ooutils" tests operationresponse classregistry
-- "../../modules/wanage" tests build datetime mp
+- "../../modules/wanage" build datetime mp
