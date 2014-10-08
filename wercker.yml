@@ -14,10 +14,13 @@ build:
             channel: mechanize
 deploy:
     steps:
+        - script:
+            name: before-deploy
+            code: echo "foo" > hoge
         - heroku-deploy
         - script:
             name: make external-test-or-rollback
-            code: make external-test-or-rollback
+            code: cat hoge; make external-test-or-rollback
     after-steps:
         - wouter/irc-notify:
             server: irc.suikawiki.org
