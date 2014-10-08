@@ -32,15 +32,11 @@ return sub {
     } else {
       $app->execute (sub {
         my $path = $app->path_segments;
-        $app->http->set_status (404);
+        $app->http->set_status (400);
         $app->send_plain_text (Dumper {
           env => $env,
           url => $app->http->url->stringify,
           client_ip_addr => $app->http->client_ip_addr->as_text,
-          url_scheme => $app->http->{interface}->url_scheme,
-          url_scheme_by_proxy => $app->http->{interface}->_url_scheme_by_proxy,
-          use_cf_visitor => $Wanage::HTTP::UseCFVisitor,
-          cf_visitor => $app->http->{interface}->get_request_header ('CF-Visitor'),
         });
         return $app->throw;
       });
