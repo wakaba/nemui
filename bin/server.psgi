@@ -37,6 +37,7 @@ return sub {
           env => $env,
           url => $app->http->url->stringify,
           client_ip_addr => $app->http->client_ip_addr->as_text,
+          hoge => 1,
         });
         return $app->throw;
       });
