@@ -13,11 +13,11 @@ build:
       nickname: wercker
       channel: mechanize
 deploy:
-    steps:
-        - heroku-deploy
-        - script:
-            name: make external-test-or-rollback
-            code: make external-test-or-rollback
+  steps:
+    - heroku-deploy
+    - script:
+      name: make external-test-or-rollback
+      code: make external-test-or-rollback
   after-steps:
     - wouter/irc-notify:
       server: irc.suikawiki.org
