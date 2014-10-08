@@ -43,7 +43,7 @@ external-test-or-rollback:
 external-test: test-deps external-test-main
 
 external-test-main:
-	XTEST_ORIGIN=http://fuga1.herokuapp.com $(PROVE) t_ext/*.t
+	XTEST_ORIGIN=https://fuga1.herokuapp.com $(PROVE) t_ext/*.t
 
 heroku-rollback:
 	heroku rollback
