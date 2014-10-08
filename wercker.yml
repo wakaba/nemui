@@ -1,12 +1,26 @@
 box: wercker/default
+steps:
+  - wouter/irc-notify@0.0.9
 build:
     steps:
         - script:
             name: make test
             code: make test
+  after-steps:
+    - wouter/irc-notify:
+      server: irc.suikawiki.org
+      port: 6667
+      nickname: wercker
+      channel: mechanize
 deploy:
     steps:
         - heroku-deploy
         - script:
             name: make external-test-or-rollback
             code: make external-test-or-rollback
+  after-steps:
+    - wouter/irc-notify:
+      server: irc.suikawiki.org
+      port: 6667
+      nickname: wercker
+      channel: mechanize
