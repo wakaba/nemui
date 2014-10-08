@@ -42,11 +42,18 @@ external-test-or-rollback:
 
 external-test: test-deps external-test-main
 
+HEROKU_APP_NAME=fuga1
+
 external-test-main:
-	XTEST_ORIGIN=https://fuga1.herokuapp.com $(PROVE) t_ext/*.t
+	XTEST_ORIGIN=https://$(HEROKU_APP_NAME).herokuapp.com $(PROVE) t_ext/*.t
+
+heroku-save-current-release:
+	mkdir -p local/lib/JSON
+	curl -s -S -L https://raw.githubusercontent.com/wakaba/perl-json-ps/master/lib/JSON/PS.pm > local/lib/JSON/PS.pm
+	perl -Ilocal/lib -MJSON::PS -e '$$json = `curl -f https://api.heroku.com/apps/$(HEROKU_APP_NAME)/dynos -H "Accept: application/vnd.heroku+json; version=3" --user ":$$ENV{HEROKU_API_KEY}"`; print [grep { $$_->{type} eq 'web' } @{json_bytes2perl ($$json)}]->[0]->{release}->{id} || die "Cannot get release.id";' > local/.heroku-current-release
 
 heroku-rollback:
-	heroku rollback
+	perl -e '(system qq(curl -X POST -f https://api.heroku.com/apps/$(HEROKU_APP_NAME)/releases -H "Accept: application/vnd.heroku+json; version=3" --user ":$$ENV{HEROKU_API_KEY}" -H "Content-Type: application/json" -d "{\\\"release\\\":\\\"$$ARGV[0]\\\"}")) == 0 or die $$?' `cat local/.heroku-current-release`
 
 failed:
 	false
