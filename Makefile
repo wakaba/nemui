@@ -36,3 +36,17 @@ test-deps: deps
 
 test-main:
 	#$(PROVE) t/*.t
+
+external-test-or-rollback:
+	$(MAKE) external-test || $(MAKE) heroku-rollback failed
+
+external-test: test-deps external-test-main
+
+external-test-main:
+	XTEST_ORIGIN=http://fuga1.herokuapp.com $(PROVE) t_ext/*.t
+
+heroku-rollback:
+	heroku rollback
+
+failed:
+	false
