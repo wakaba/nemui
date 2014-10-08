@@ -4,3 +4,9 @@ build:
         - script:
             name: make test
             code: make test
+deploy:
+    steps:
+        - heroku-deploy
+        - script:
+            name: make external-test-or-rollback
+            code: make external-test-or-rollback
