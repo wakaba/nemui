@@ -22,4 +22,5 @@ deploy:
     master: fuga1
   on:
     branch: master
-  run: "make external-test-or-rollback"
+after_deploy:
+  - "make external-test-or-rollback"
