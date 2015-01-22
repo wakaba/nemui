@@ -9,6 +9,10 @@ updatenightly: local/bin/pmbp.pl
 	$(GIT) add modules t_deps/modules
 	perl local/bin/pmbp.pl --update
 	$(GIT) add config
+	
+updatenightlywp:
+	date > wp
+	$(GIT) add wp
 
 ## ------ Setup ------
 
@@ -24,7 +28,7 @@ pmbp-upgrade: local/bin/pmbp.pl
 pmbp-update: git-submodules pmbp-upgrade
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update
 pmbp-install: pmbp-upgrade
-	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install --install-module Plack
+	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install
 
 ## ------ Tests ------
 
