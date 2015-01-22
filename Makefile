@@ -12,7 +12,7 @@ updatenightly: local/bin/pmbp.pl
 	
 updatenightlywp:
 	date > wp
-	echo ${WP_DATA_DIR} >> wp
+	echo $(WP_DATA_DIR) >> wp
 	$(GIT) add wp
 
 ## ------ Setup ------
