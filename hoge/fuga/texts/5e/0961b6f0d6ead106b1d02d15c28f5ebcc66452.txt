@@ -1,2 +1,4 @@
-&tags:hoe
+&tags:0
+&tags:1
 &tags:ふが
+&tags:ほえ
