@@ -1,8 +1,7 @@
-$args.desc.:YYY
 $args.desc.USER:ユーザー名
 $args.desc.ほげ:ほげふがあいうえお foo bar baz AAA BBB CCC DEFEEAAAAAAA
+$desc:
 $msgid:ttt
 &tags:abc def
 @args:ほげ
 @args:USER
-@args:
