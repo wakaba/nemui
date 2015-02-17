@@ -1,4 +1,6 @@
+$args.desc.USER:ユーザー名
 $args.desc.ほげ:ffoo
 $msgid:ttt
 &tags:abc def
 @args:ほげ
+@args:USER
