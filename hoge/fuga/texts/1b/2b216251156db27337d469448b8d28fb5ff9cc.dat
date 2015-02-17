@@ -1,6 +1,4 @@
-$args.desc.aa:ddddd
 $args.desc.ほげ:ffoo
 $msgid:ttt
 &tags:abc def
-@args:aa
 @args:ほげ
