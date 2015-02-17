@@ -1,8 +1,8 @@
-$body_0:こんにちは。
+$body_0:こんにちは、{USER}さん。
 $body_1:
 $body_2:
 $body_3:
 $body_4:
 $body_o:FTP (File Transfer Protocol) は、インターネットでファイルを転送するためのアプリケーション層プロトコルです。
 $forms:o
-$last_modified:1424157427
+$last_modified:1424159933
