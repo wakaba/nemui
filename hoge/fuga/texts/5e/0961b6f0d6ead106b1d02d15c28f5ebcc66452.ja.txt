@@ -1,8 +1,8 @@
-$body_0:tttt
+$body_0:tttt{USER}, {hoge}, {FOO}
 $body_1:
 $body_2:
 $body_3:
 $body_4:444
-$body_o:margin: 0.5em 0 0;\r\nfont-size: 90%;\r\ntext-align: center;\r\n}
+$body_o:margin\C 0.5em 0 0;\r\nfont-size\C 90%;\r\ntext-align\C center;\r\n}
 $forms:test
-$last_modified:1424159756
+$last_modified:1424268856
