@@ -1,8 +1,8 @@
-$body_0:tttt{USER}, {hoge}, {FOO} [20%]
+$body_0:tttt{USER}, {hoge}, {FOO} [20%]aaaaaa\r\nbaaaaa
 $body_1:
 $body_2:
-$body_3:
+$body_3:3, 1, 2, aab{USER}
 $body_4:444
 $body_o:margin\C 0.5em 0 0;\r\nfont-size\C 90%;\r\ntext-align\C center;\r\n}
 $forms:test
-$last_modified:1424268963
+$last_modified:1424586705
