@@ -1,11 +1,13 @@
 $additional_license_terms:Hi! ttt
-$lang.id.0:en
+$lang.id.en:en-gb
 $lang.id.1:ja
 $lang.id.2:fr
 $lang.id.3:es
 $lang.id.4:it
 $lang.id.5:ja-latn
 $lang.id.6:i-default
-$langs:en,ja,fr,es,it,ja-latn,i-default
+$lang.label.it:イタリア語
+$lang.
+$langs:en,ja,fr,es,it
 $license:MIT
 $license_holders:us, you
