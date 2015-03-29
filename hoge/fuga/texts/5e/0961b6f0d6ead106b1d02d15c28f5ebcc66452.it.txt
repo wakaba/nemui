@@ -1,0 +1,2 @@
+$body_0:tttt%1$s, {hoge}, %2$s [20%%]
+$last_modified:1424328544
