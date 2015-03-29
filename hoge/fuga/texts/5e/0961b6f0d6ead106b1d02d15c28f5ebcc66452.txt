@@ -1,5 +1,0 @@
-&tags:0
-&tags:1
-&tags:ro
-&tags:ふが
-&tags:ほえ
