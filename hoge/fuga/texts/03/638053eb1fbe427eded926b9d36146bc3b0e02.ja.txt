@@ -1,7 +1,7 @@
-$body_0:難しい。?..
+$body_0:難しいです
 $body_1:
 $body_2:
 $body_3:
 $body_4:
 $forms:o
-$last_modified:1427614104
+$last_modified:1427635328
