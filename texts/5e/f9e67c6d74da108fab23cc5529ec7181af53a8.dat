@@ -1,6 +1,8 @@
 $args.desc.XXYU:
+$args.desc.fff:
 $desc:Hello!
 $msgid:hoge.fuga
 &tags:fuga
 &tags:hoe
 @args:XXYU
+@args:fff
