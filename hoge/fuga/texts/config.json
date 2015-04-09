@@ -1,1 +1,4 @@
-$langs:en,ja
+$lang.id.en:en
+$lang.id.ja:ja
+$lang.id.ja-latn:ja-latn
+$langs:en,ja,ja-latn
