@@ -1,7 +1,7 @@
-$body_0:こんにちは。こんにちは。
+$body_0:こんにちは、{名前}さん。
 $body_1:
 $body_2:
 $body_3:
 $body_4:
 $forms:o
-$last_modified:1428643123
+$last_modified:1428643693
