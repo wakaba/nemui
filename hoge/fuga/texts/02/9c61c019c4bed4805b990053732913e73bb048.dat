@@ -1,2 +1,6 @@
+$args.desc.名前:ユーザー名です。
+$desc:
 $msgid:devel.id1
 &tags:Fuga
+&tags:あいうえお
+@args:名前
