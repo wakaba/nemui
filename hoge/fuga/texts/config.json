@@ -1,5 +1,1 @@
-$lang.id.en:en
-$lang.id.fr:fr
-$lang.id.ja:ja
-$lang.id.ja-latn:ja-latn
-$langs:en,ja,ja-latn,fr
+{"location_base_url":"http://www.example.com/hoge/fuga"}
