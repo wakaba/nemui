@@ -4,3 +4,5 @@ $msgid:devel.id1333333
 &tags:Fuga
 &tags:あいうえお
 @args:名前
+@locations:{"file":"abd"}
+@locations:{"file":"axx.txt"}
