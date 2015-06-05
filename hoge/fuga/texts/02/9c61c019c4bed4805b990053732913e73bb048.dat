@@ -8,3 +8,4 @@ $msgid:devel.id1333333
 @locations:{"file":"axx.txt"}
 @locations:{"url":"../path.txt", "label": "link1"}
 @locations:{"url":"javascript:path.txt", "label": "link2"}
+@locations:{"url":"https://example.net/path.txt", "label": "link3"}
