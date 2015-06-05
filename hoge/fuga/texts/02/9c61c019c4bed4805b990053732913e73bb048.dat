@@ -6,5 +6,5 @@ $msgid:devel.id1333333
 @args:名前
 @locations:{"file":"abd"}
 @locations:{"file":"axx.txt"}
-@locations:{"url":"../path.txt"}
-@locations:{"url":"javascript:path.txt"}
+@locations:{"url":"../path.txt", "label": "link1"}
+@locations:{"url":"javascript:path.txt", "label": "link2"}
