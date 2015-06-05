@@ -1,3 +1,3 @@
 {
-  "preview_url_template": "https://wakaba.github.io/nemui/?lang={lang_key}"
+  "preview_url_template": "https://wakaba.github.io/nemui/?lang={lang}"
 }
