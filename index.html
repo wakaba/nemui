@@ -1,2 +1,11 @@
 <title>nemui</title>
 <p>Mecha nemui.
+
+<pre></pre>
+
+<script>
+  var output = document.querySelector ('pre');
+  onmessage = function (ev) {
+    output.textContent += "\n" + JSON.serialize ({data: ev.data, origin: ev.origin});
+  };
+</script>
