@@ -1,5 +1,9 @@
 <title>nemui</title>
-<p>Mecha nemui.
+<p data-msgid=test>Mecha nemui.
+
+<p data-msgid=test2>
+  
+  <p data-msgid=hello!>
 
 <pre></pre>
 
@@ -7,5 +11,12 @@
   var output = document.querySelector ('pre');
   onmessage = function (ev) {
     output.textContent += "\n" + JSON.stringify ({data: ev.data, origin: ev.origin});
+    
+    if (ev.data.msgid) {
+      var id = ev.data.msgid.replace (/["\\\u000D\u000A\u000C]/g, function (x) { return "\\" + x.charCodeAt (0).toString (16) + " " });
+      Array.prototype.forEach.call (document.querySelectorAll ('[data-msgid="' + id + '"]'), function (el) {
+        el.textContent = ev.data.text.langs[ev.data.lang].body_0;
+      });
+    }
   };
 </script>
