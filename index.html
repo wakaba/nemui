@@ -14,10 +14,11 @@
   onmessage = function (ev) {
     output.textContent += "\n" + JSON.stringify ({data: ev.data, origin: ev.origin});
     
-    if (ev.data.msgid) {
-      var id = ev.data.msgid.replace (/["\\\u000D\u000A\u000C]/g, function (x) { return "\\" + x.charCodeAt (0).toString (16) + " " });
+    var text = ev.data.text;
+    if (text.msgid) {
+      var id = text.msgid.replace (/["\\\u000D\u000A\u000C]/g, function (x) { return "\\" + x.charCodeAt (0).toString (16) + " " });
       Array.prototype.forEach.call (document.querySelectorAll ('[data-msgid="' + id + '"]'), function (el) {
-        el.textContent = ev.data.text.langs[ev.data.lang].body_0;
+        el.textContent = text.langs[ev.data.lang].body_0;
       });
     }
   };
