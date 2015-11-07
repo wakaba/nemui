@@ -22,7 +22,7 @@ build_script:
   - where perl
   - perl pmbp.pl --install-module Path::Tiny
   - perl pmbp.pl --install-module Encode
-  #- perl pmbp.pl --install-perl
+  - perl pmbp.pl --install-perl
   - curl http://wiki.suikawiki.org > wiki.html
   - type wiki.html
 test_script:
