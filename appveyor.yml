@@ -1,5 +1,5 @@
 install:
-  - mkdir bin
+  #- mkdir bin
   - curl -f -L "https://github.com/mohawk2/dmake/archive/DMAKE_4_12_2_2.zip"
   - unzip DMAKE_*.zip
   - move DMAKE_*\dmake.exe bin\
