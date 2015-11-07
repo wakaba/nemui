@@ -3,4 +3,5 @@ install:
 build_script:
   - ver
 test_script:
-  - set
+  - ps: Start-FileDownload 'http://suikawiki.org' -FileName "sw.html"
+  - dir
