@@ -1,4 +1,6 @@
 install:
+  - choco install docker-machine
+  - docker-machine ps
   - curl "https://selenium-release.storage.googleapis.com/2.48/IEDriverServer_x64_2.48.0.zip" > IEDriver.zip
   - unzip IEDriver.zip
   - ps: start-process -FilePath IEDriverServer.exe -ArgumentList "--port=5555" -WindowStyle hidden
