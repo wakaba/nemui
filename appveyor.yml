@@ -2,8 +2,8 @@ install:
   - curl "https://selenium-release.storage.googleapis.com/2.48/IEDriverServer_x64_2.48.0.zip" > IEDriver.zip
   - unzip IEDriver.zip
   - ps: start-process -FilePath IEDriverServer.exe -ArgumentList "--port=5555" -WindowStyle hidden
-  - curl -f --dump-header - http://localhost:5555/status
-  - curl -f --dump-header - -X POST --header Content-Type:application/json --data {"desiredCapabilities":{}} http://localhost:5555/session
+  - curl -f --dump-header - -L http://localhost:5555/status
+  - curl -f --dump-header - -L -X POST --header Content-Type:application/json --data {"desiredCapabilities":{}} http://localhost:5555/session
   - curl "https://download.microsoft.com/download/8/D/0/8D0D08CF-790D-4586-B726-C6469A9ED49C/MicrosoftWebDriver.msi" > wd.msi
   - msiexec.exe /i wd.msi /QN /L*V msi.log || type msi.log
   - git clone https://github.com/dnmfarrell/berrybrew
