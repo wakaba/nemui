@@ -4,7 +4,7 @@ install:
   - .\unzip.exe perl.zip
   - curl -f -L https://raw.githubusercontent.com/wakaba/perl-setupenv/master/bin/pmbp.pl > pmbp.pl
 build_script:
-  - perl/bin/perl.exe pmbp.pl --install-module Path::Tiny
+  - perl\bin\perl.exe pmbp.pl --install-module Path::Tiny
   - curl http://wiki.suikawiki.org > wiki.html
   - type wiki.html
 test_script:
