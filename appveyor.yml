@@ -1,6 +1,6 @@
 install:
   - dir
-script:
+build_script:
   - ver
 test_script:
   - set
