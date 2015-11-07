@@ -1,10 +1,12 @@
 install:
-  - ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
-  - curl -f -L "http://kent.dl.sourceforge.net/project/unigw/unzip/5.50/unzip.exe" > unzip.exe
-  - .\unzip.exe perl.zip > NUL
+  #- ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
+  #- curl -f -L "http://kent.dl.sourceforge.net/project/unigw/unzip/5.50/unzip.exe" > unzip.exe
+  #- .\unzip.exe perl.zip > NUL
   - curl -f -L https://raw.githubusercontent.com/wakaba/perl-setupenv/staging/bin/pmbp.pl > pmbp.pl
 build_script:
-  - perl\bin\perl.exe pmbp.pl --install-module Path::Tiny
+  #- perl\bin\perl.exe pmbp.pl --install-module Path::Tiny
+  - where perl
+  - perl pmbp.pl --install-module Path::Tiny
   - curl http://wiki.suikawiki.org > wiki.html
   - type wiki.html
 test_script:
