@@ -1,6 +1,6 @@
 install:
   - ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
-  - curl "http://osdn.jp/frs/g_redir.php?m=kent&f=%2Funigw%2Funzip%2F5.50%2Funzip.exe" > unzip.exe
+  - curl -f -L "http://osdn.jp/frs/g_redir.php?m=kent&f=%2Funigw%2Funzip%2F5.50%2Funzip.exe" > unzip.exe
   - .\unzip perl.zip
 build_script:
   - curl http://wiki.suikawiki.org > wiki.html
