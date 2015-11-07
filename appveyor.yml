@@ -1,9 +1,9 @@
 install:
   - ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
   - mkdir food
-  - "ps:
-    [System.Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
-    [System.IO.Compression.ZipFile]::ExtractToDirectory('perl.zip', 'food')"
+  - echo "[System.Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')" > hoge.ps1
+  - echo "[System.IO.Compression.ZipFile]::ExtractToDirectory('perl.zip', 'food')" >> hoge.ps1
+  - powershell .\hoge.ps1
   - dir food
 build_script:
   - curl http://wiki.suikawiki.org > wiki.html
