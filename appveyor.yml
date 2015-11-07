@@ -1,4 +1,5 @@
 install:
+  - perl -v
   - ppm repo list
   - ppm repo sync
   - ppm install dmake
