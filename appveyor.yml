@@ -1,11 +1,15 @@
 install:
-  - curl -f -L "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip" > get.zip
-  - unzip get.zip
+  - mkdir bin
+  - curl -f -L "https://github.com/mohawk2/dmake/archive/DMAKE_4_12_2_2.zip"
+  - unzip DMAKE_*.zip
+  - move DMAKE_*\dmake.exe bin\
+  #- curl -f -L "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip" > get.zip
+  #- unzip get.zip
   - set PATH=%CD%\bin;%PATH%
-  - echo %PATH%
-  - bin\mingw-get install mingw32-make gcc
-  - copy bin\mingw32-make.exe bin\make.exe
-  - make
+  #- echo %PATH%
+  #- bin\mingw-get install mingw32-make gcc
+  #- copy bin\mingw32-make.exe bin\make.exe
+  #- make
   #- ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
   #- curl -f -L "http://kent.dl.sourceforge.net/project/unigw/unzip/5.50/unzip.exe" > unzip.exe
   #- .\unzip.exe perl.zip > NUL
