@@ -1,4 +1,7 @@
 install:
+  - curl -f -L "https://github.com/dnmfarrell/berrybrew/raw/master/bin/berrybrew.exe" > berrybrew.exe
+  - .\berrybrew available
+  - .\berrybrew install 5.22.0
   #- mkdir bin
   - curl -f -L "https://github.com/mohawk2/dmake/archive/DMAKE_4_12_2_2.zip" > DMAKE.zip
   - unzip DMAKE.zip
@@ -18,7 +21,7 @@ build_script:
   - where perl
   - perl pmbp.pl --install-module Path::Tiny
   - perl pmbp.pl --install-module Encode
-  - perl pmbp.pl --install-perl
+  #- perl pmbp.pl --install-perl
   - curl http://wiki.suikawiki.org > wiki.html
   - type wiki.html
 test_script:
