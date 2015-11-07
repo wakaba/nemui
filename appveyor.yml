@@ -1,8 +1,8 @@
 install:
   - ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
-  - mkdir foo
-  - ps: Expand-Archive perl.zip -dest foo
-  - dir foo
+  - mkdir food
+  - ps: Expand-Archive perl.zip -dest food
+  - dir food
 build_script:
   - curl http://wiki.suikawiki.org > wiki.html
   - type wiki.html
