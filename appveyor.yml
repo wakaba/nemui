@@ -1,7 +1,6 @@
 install:
   - curl "https://download.microsoft.com/download/8/D/0/8D0D08CF-790D-4586-B726-C6469A9ED49C/MicrosoftWebDriver.msi" > wd.msi
-  - msiexec.exe /i wd.msi /QN /L*V msi.log
-  - type msi.log
+  - msiexec.exe /i wd.msi /QN /L*V msi.log || type msi.log
   - git clone https://github.com/dnmfarrell/berrybrew
   - berrybrew\bin\berrybrew available
   - berrybrew\bin\berrybrew install 5.20.3_64
