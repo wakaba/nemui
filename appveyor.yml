@@ -1,6 +1,5 @@
 install:
   - ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
-  - mkdir food
   - echo "Add-Type -assembly 'System.IO.Compression.FileSystem'" > hoge.ps1
   - echo "[System.IO.Compression.ZipFile]::ExtractToDirectory('C:\projects\nemui\perl.zip', 'C:\projects\nemui\food')" >> hoge.ps1
   - powershell .\hoge.ps1
