@@ -1,6 +1,9 @@
 install:
-  - dir "C:\Program Files\Git\bin"
-  - dir "C:\Program Files\Git\usr\bin"
+  - curl -f -L "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip" > get.zip
+  - unzip get.zip
+  - bin/mingw-get install mingw32-make gcc
+  - mingw32-make
+  - make
   #- ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
   #- curl -f -L "http://kent.dl.sourceforge.net/project/unigw/unzip/5.50/unzip.exe" > unzip.exe
   #- .\unzip.exe perl.zip > NUL
