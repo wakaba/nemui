@@ -1,6 +1,7 @@
 install:
   - choco install virtualbox docker docker-machine
-  - docker-machine create --driver virtualbox dev
+  #- docker-machine create --driver virtualbox dev
+  - docker-machine create --driver hyper-v dev
   - docker-machine ls
   - docker-machine env dev
   - docker run debian:sid echo nemui
