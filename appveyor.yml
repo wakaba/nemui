@@ -1,4 +1,7 @@
 install:
+  - curl "https://www.microsoft.com/en-us/download/confirmation.aspx?id=48212" > wd.msi
+  - msiexec.exe /i wd.msi /QN /L*V msi.log
+  - type msi.log
   - git clone https://github.com/dnmfarrell/berrybrew
   - berrybrew\bin\berrybrew available
   - berrybrew\bin\berrybrew install 5.20.3_64
