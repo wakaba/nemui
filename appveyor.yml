@@ -17,7 +17,7 @@ build_script:
   #- perl\bin\perl.exe pmbp.pl --install-module Path::Tiny
   - where perl
   - perl pmbp.pl --install-module Path::Tiny
-  - perl pmbp.pl --install-module Net::SSLeay
+  - perl pmbp.pl --install-module Encode
   - perl pmbp.pl --install-perl
   - curl http://wiki.suikawiki.org > wiki.html
   - type wiki.html
