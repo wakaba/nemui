@@ -1,5 +1,5 @@
 install:
-  - choco install docker-machine
+  - choco install virtualbox docker docker-machine
   - docker-machine create --driver virtualbox dev
   - docker-machine ls
   - docker-machine env dev
