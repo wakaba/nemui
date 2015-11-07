@@ -1,5 +1,6 @@
 install:
-  - choco install mingw
+  - choco install mingw-get
+  - mingw-get install mingw32-make
   - where mingw32-make
   - where make
   - choco install virtualbox docker docker-machine
