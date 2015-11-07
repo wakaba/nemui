@@ -1,7 +1,8 @@
 install:
   - git clone https://github.com/dnmfarrell/berrybrew
   - berrybrew\bin\berrybrew available
-  - berrybrew\bin\berrybrew install 5.22.0_64
+  - berrybrew\bin\berrybrew install 5.20.3_64
+  - where perl
   #- mkdir bin
   - curl -f -L "https://github.com/mohawk2/dmake/archive/DMAKE_4_12_2_2.zip" > DMAKE.zip
   - unzip DMAKE.zip
