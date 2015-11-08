@@ -1,6 +1,6 @@
 install:
   - choco install strawberryperl
-  - perl -MConfig -e "print join qq{\n}, %Config"
+  - perl -MConfig -e "print join qq{\r\n}, %Config"
   - where perl
   - where link
   - curl -f -L "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip" > get.zip
