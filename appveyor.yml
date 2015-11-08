@@ -9,7 +9,7 @@ install:
   - mingw-get install mingw32-make gcc
   - where link
   - where mingw32-make
-  - where make
+  #- where make
   #- choco install virtualbox docker docker-machine
   #- docker-machine ls
   #- docker-machine create --driver virtualbox dev
