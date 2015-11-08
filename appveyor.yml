@@ -1,6 +1,10 @@
 install:
-  - choco install mingw-get
-  - mingw-get install mingw32-make
+  - where link
+  - curl -f -L "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip" > get.zip
+  - unzip get.zip
+  - set PATH=%CD%\bin;%PATH%
+  - mingw-get install mingw32-make gcc
+  - where link
   - where mingw32-make
   - where make
   - choco install virtualbox docker docker-machine
@@ -24,11 +28,8 @@ install:
   #- mkdir bin
   - curl -f -L "https://github.com/mohawk2/dmake/archive/DMAKE_4_12_2_2.zip" > DMAKE.zip
   - unzip DMAKE.zip
-  #- curl -f -L "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip" > get.zip
-  #- unzip get.zip
   - set PATH=%CD%\dmake-DMAKE_4_12_2_2;%PATH%
   #- echo %PATH%
-  #- bin\mingw-get install mingw32-make gcc
   #- copy bin\mingw32-make.exe bin\make.exe
   #- make
   #- ps: Start-FileDownload "http://strawberryperl.com/download/5.8.8/strawberry-perl-5.8.8.1-1.zip" -FileName "perl.zip"
