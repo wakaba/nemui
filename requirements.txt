@@ -1,2 +1,4 @@
 lxml
 cssselect
+html5lib
+hg+http://bitbucket.org/ms2ger/anolis
