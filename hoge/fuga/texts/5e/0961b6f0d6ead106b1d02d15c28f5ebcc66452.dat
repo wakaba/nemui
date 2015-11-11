@@ -1,0 +1,10 @@
+$args.desc.FOO:何か。
+$args.desc.USER:ユーザー名
+$desc:あいうえお かきくけこ さしすせそたちつてとなにぬねの。
+$msgid:hoge.1hhhhhhhh
+&tags:Fuga
+&tags:abc def
+&tags:ffff
+&tags:hoge
+@args:USER
+@args:FOO

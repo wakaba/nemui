@@ -1,0 +1,2 @@
+$msgid:hoge.fuga
+&tags:ふが
