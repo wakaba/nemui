@@ -24,7 +24,7 @@ pmbp-upgrade: local/bin/pmbp.pl
 pmbp-update: git-submodules pmbp-upgrade
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update
 pmbp-install: pmbp-upgrade
-	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install --install-module Plack
+	#perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install --install-module Plack
 
 ## ------ Tests ------
 
