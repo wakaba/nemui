@@ -4,7 +4,7 @@ env:
 before_install: git submodule update --init
 script: make test
 after_success:
-  - curl https://gist.githubusercontent.com/wakaba/9970857/raw/travis-merger.pl | perl
+  - curl https://gist.githubusercontent.com/wakaba/9970857/raw/travis-merger-git.pl | perl
 notifications: 
   irc: 
     use_notice: true
