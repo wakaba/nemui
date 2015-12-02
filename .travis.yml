@@ -1,3 +1,6 @@
+os:
+  - linux
+  - osx
 env: 
   global: 
     secure: OXTFUvTBSAdNIM1eInVOEpLGhyF0v0YHYSmDsRF6Z1Nc56Dzm+C7wT77DWmEF8s4SDi9RlRbsAZf32DPWRBJw7WQLNOjxYqQKI7Q14mxhCXKKvPxEBtZCPz6TlWb6xbiz3F36qNNmzakf+torxm8iwH6uavnglB8DvCNsj7nQZM=
