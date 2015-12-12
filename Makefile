@@ -36,12 +36,16 @@ pmbp-install: pmbp-upgrade
 
 PROVE = ./prove
 
-test: test-deps test-main
+test: test-deps test-main test-https
 
 test-deps: deps
 
 test-main:
 	#$(PROVE) t/*.t
+	
+test-https:
+	curl https://suikawiki.org
+	wget https://suikawiki.org
 
 external-test-or-rollback:
 	$(MAKE) external-test || $(MAKE) heroku-rollback failed
