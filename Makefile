@@ -19,6 +19,7 @@ updatenightlywp:
 ## ------ Setup ------
 
 deps: pmbp-install
+	apt-get install -y libkakasi2-dev	
 
 PMBP_OPTIONS=
 
