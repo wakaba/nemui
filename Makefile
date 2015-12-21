@@ -19,7 +19,7 @@ updatenightlywp:
 ## ------ Setup ------
 
 deps: pmbp-install
-	readlink -f .
+	readlink -f . || (brew install coreutils && greadlink -f .)
 
 PMBP_OPTIONS=
 
