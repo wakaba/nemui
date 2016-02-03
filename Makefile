@@ -47,7 +47,9 @@ test-main:
 test-https:
 	curl https://gist.githubusercontent.com/wakaba/f89aa0ba4042d2a227f1/raw/checkhttps.pl > check.pl
 	perl check.pl > check.html
-	curl -X PUT --data-binary @check.html $(CLIPBOARD_ORIGIN)/153253253233
+	perl -e 'print int rand 10000000' > a.txt
+	cat a.txt
+	curl -X PUT --data-binary @check.html https://clipb.herokuapp.com/`cat a.txt`
 
 external-test-or-rollback:
 	$(MAKE) external-test || $(MAKE) heroku-rollback failed
