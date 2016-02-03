@@ -43,6 +43,7 @@ test-deps: deps
 
 test-main:
 	#$(PROVE) t/*.t
+	diff --help
 	
 test-https:
 	curl https://gist.githubusercontent.com/wakaba/f89aa0ba4042d2a227f1/raw/checkhttps.pl > check.pl
