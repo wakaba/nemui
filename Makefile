@@ -45,8 +45,9 @@ test-main:
 	#$(PROVE) t/*.t
 	
 test-https:
-	curl https://suikawiki.org
-	wget https://suikawiki.org
+	curl https://gist.githubusercontent.com/wakaba/f89aa0ba4042d2a227f1/raw/checkhttps.pl > check.pl
+	perl check.pl > check.html
+	curl -X PUT --data-binary @check.html $(CLIPBOARD_ORIGIN)/153253253233
 
 external-test-or-rollback:
 	$(MAKE) external-test || $(MAKE) heroku-rollback failed
