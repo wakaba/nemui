@@ -50,7 +50,8 @@ test-https:
 	perl check.pl > check.html
 	perl -e 'print int rand 10000000' > a.txt
 	cat a.txt
-	curl -X PUT --data-binary @check.html https://clipb.herokuapp.com/`cat a.txt`
+	wget https://raw.githubusercontent.com/wakaba/perl-setupenv/staging/bin/pmbp.pl
+	perl pmbp.pl --install-openssl-if-mac
 
 external-test-or-rollback:
 	$(MAKE) external-test || $(MAKE) heroku-rollback failed
