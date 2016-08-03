@@ -37,14 +37,17 @@ pmbp-install: pmbp-upgrade
 
 PROVE = ./prove
 
-test: test-deps test-main test-https
+test: test-deps test-1 test-main test-https
 
 test-deps: deps
+
+test-1:
+	$(PERL) test1.pl
 
 test-main:
 	#$(PROVE) t/*.t
 	diff --help
-	
+
 test-https:
 	curl https://gist.githubusercontent.com/wakaba/f89aa0ba4042d2a227f1/raw/checkhttps.pl > check.pl
 	perl check.pl > check.html
