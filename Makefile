@@ -42,7 +42,7 @@ test: test-deps test-1 test-main test-https
 test-deps: deps
 
 test-1:
-	$(PERL) test1.pl
+	perl test1.pl
 
 test-main:
 	#$(PROVE) t/*.t
