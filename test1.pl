@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use File::Temp;
+use File::Temp qw(tempfile);
 
 my (undef, $file_name) = tempfile;
 
