@@ -19,6 +19,7 @@ updatenightlywp:
 ## ------ Setup ------
 
 deps: pmbp-install
+	readlink -f . || (brew install coreutils && greadlink -f .)
 
 PMBP_OPTIONS=
 
@@ -29,19 +30,38 @@ pmbp-upgrade: local/bin/pmbp.pl
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update-pmbp-pl
 pmbp-update: git-submodules pmbp-upgrade
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update
-pmbp-install: pmbp-upgrade
-	#perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install
+pmbp-install: git-submodules pmbp-upgrade
+	perl local/bin/pmbp.pl $(PMBP_OPTIONS) \
+	    --install \
+	    --install-module Encode~2.86 \
+	    --create-perl-command-shortcut perl
+#	    --install-perl --perl-version 5.24.0 \
+
+git-submodules:
+	git submodule update --init
 
 ## ------ Tests ------
 
 PROVE = ./prove
 
-test: test-deps test-main
+test: test-deps test-1 test-main test-https
 
 test-deps: deps
 
+test-1:
+	./perl test1.pl
+
 test-main:
 	#$(PROVE) t/*.t
+	diff --help
+
+test-https:
+	curl https://gist.githubusercontent.com/wakaba/f89aa0ba4042d2a227f1/raw/checkhttps.pl > check.pl
+	perl check.pl > check.html
+	perl -e 'print int rand 10000000' > a.txt
+	cat a.txt
+	wget https://raw.githubusercontent.com/wakaba/perl-setupenv/staging/bin/pmbp.pl
+	perl pmbp.pl --install-openssl-if-mac
 
 external-test-or-rollback:
 	$(MAKE) external-test || $(MAKE) heroku-rollback failed
