@@ -42,7 +42,7 @@ test: test-deps test-1 test-main test-https
 test-deps: deps
 
 test-1:
-	perl local/bin/pmbp.pl --perl-version 5.14.2 --install-perl --install-module Encode --create-perl-command-shortcut perl
+	perl local/bin/pmbp.pl --perl-version 5.14.2 --install-perl --add-git-submodule-rec git://github.com/manakai/perl-web-url --create-perl-command-shortcut perl
 	./perl test1.pl
 
 test-main:
