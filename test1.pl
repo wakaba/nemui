@@ -1,22 +1,22 @@
 use strict;
 use warnings;
 
-use File::Temp qw(tempfile);
+my $x="a\360\200\200\240b.test";
+$x =~ s/([^\x00-\x7F])/sprintf '%%%02X', ord $1/ge;
 
-my (undef, $file_name) = tempfile;
+use Encode;
+use Devel::Peek;
 
-warn $file_name;
+$x = encode "utf-8", $x;
 
-my $dir_name = $file_name;
-$dir_name =~ s{/[^/]*$}{};
+Dump $x;
 
-warn $dir_name;
+$x =~ s/%([0-9A-Fa-f]{2})/pack 'C', hex $1/ge;
 
-warn "ls";
-system "ls $dir_name";
+Dump $x;
 
-warn "echo";
-system "echo a > $dir_name/a";
+$x = decode "utf-8", $x;
 
-warn "ls";
-system "ls $dir_name";
+Dump $x;
+
+print "$x\n"

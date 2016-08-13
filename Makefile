@@ -42,7 +42,6 @@ test: test-deps test-1 test-main test-https
 test-deps: deps
 
 test-1:
-	perl -e '$$x="a\360\200\200\240b.test"; use Encode; $$x = decode "utf-8", $$x; use Devel::Peek; warn Dump $$x; print "$$x\n"'
 	perl test1.pl
 
 test-main:
