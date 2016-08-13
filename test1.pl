@@ -1,30 +1,23 @@
 use strict;
 use warnings;
-
-my $x="a\360\200\200\240b.test";
-$x =~ s/([^\x00-\x7F])/sprintf '%%%02X', ord $1/ge;
-
-my $y = $x;
-
-use Encode;
-use Devel::Peek;
-
-$x = encode "utf-8", $x;
-
-Dump $x;
-
-$x =~ s/%([0-9A-Fa-f]{2})/pack 'C', hex $1/ge;
-
-Dump $x;
-
-$x = decode "utf-8", $x;
-
-Dump $x;
-
-print "$x\n";
-
+use utf8;
 use lib glob "modules/*/lib";
 use Web::URL;
+use Web::Encoding;
+use Devel::Peek;
 
-my $url = Web::URL->parse_string ((decode "utf-8", "https://") . $y);
+my $host = q<a%c1%80b.test>;
+
+my $s = $host;
+Dump $s;
+  $s = encode_web_utf8 $s;
+Dump $s;
+  $s =~ s{%([0-9A-Fa-f]{2})}{pack 'C', hex $1}ge;
+Dump $s;
+  $s = decode_web_utf8 $s;
+Dump $s;
+
+warn "=====";
+
+my $url = Web::URL->parse_string ("https://$host");
 warn $url->stringify;
