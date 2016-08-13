@@ -31,7 +31,8 @@ pmbp-upgrade: local/bin/pmbp.pl
 pmbp-update: git-submodules pmbp-upgrade
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update
 pmbp-install: pmbp-upgrade
-	#perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install
+	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install \
+	    --create-perl-command-shortcut perl
 
 ## ------ Tests ------
 
@@ -42,7 +43,6 @@ test: test-deps test-1 test-main test-https
 test-deps: deps
 
 test-1:
-	perl local/bin/pmbp.pl --perl-version 5.14.2 --install-perl --add-git-submodule-rec git://github.com/manakai/perl-web-url --create-perl-command-shortcut perl
 	./perl test1.pl
 
 test-main:
