@@ -31,7 +31,9 @@ pmbp-upgrade: local/bin/pmbp.pl
 pmbp-update: git-submodules pmbp-upgrade
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update
 pmbp-install: git-submodules pmbp-upgrade
-	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install \
+	perl local/bin/pmbp.pl $(PMBP_OPTIONS) \
+	    --install-perl --perl-version 5.14.3 \
+	    --install \
 	    --create-perl-command-shortcut perl
 
 git-submodules:
