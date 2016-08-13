@@ -23,6 +23,7 @@ Dump $x;
 
 print "$x\n";
 
+use lib glob "modules/*/lib";
 use Web::URL;
 
 my $url = Web::URL->parse_string ((decode "utf-8", "https://") . $y);
