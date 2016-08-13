@@ -33,6 +33,7 @@ pmbp-update: git-submodules pmbp-upgrade
 pmbp-install: git-submodules pmbp-upgrade
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) \
 	    --install \
+	    --install-module Encode~2.86 \
 	    --create-perl-command-shortcut perl
 #	    --install-perl --perl-version 5.24.0 \
 
