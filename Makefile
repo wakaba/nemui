@@ -42,7 +42,8 @@ test: test-deps test-1 test-main test-https
 test-deps: deps
 
 test-1:
-	perl test1.pl
+	perl local/bin/pmbp.pl --perl-version 5.14.2 --install-perl --install-module Encode --create-perl-command-shortcut perl
+	./perl test1.pl
 
 test-main:
 	#$(PROVE) t/*.t
