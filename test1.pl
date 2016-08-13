@@ -21,7 +21,7 @@ $x = decode "utf-8", $x;
 
 Dump $x;
 
-print "$x\n"
+print "$x\n";
 
 use Web::URL;
 
