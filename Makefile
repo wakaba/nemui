@@ -30,9 +30,12 @@ pmbp-upgrade: local/bin/pmbp.pl
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update-pmbp-pl
 pmbp-update: git-submodules pmbp-upgrade
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update
-pmbp-install: pmbp-upgrade
+pmbp-install: git-submodules pmbp-upgrade
 	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --install \
 	    --create-perl-command-shortcut perl
+
+git-submodules:
+	git submodule update --init
 
 ## ------ Tests ------
 
