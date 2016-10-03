@@ -53,6 +53,7 @@ test-1:
 
 test-main:
 	#$(PROVE) t/*.t
+	which sed
 	diff --help
 
 test-https:
