@@ -20,6 +20,7 @@ updatenightlywp:
 
 deps:
 	which sed
+	brew uninstall libtool && brew install libtool 
 	$(MAKE) local/bin/pmbp.pl
 	perl local/bin/pmbp.pl --install-openssl
 	$(MAKE) pmbp-install
