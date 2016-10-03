@@ -20,6 +20,8 @@ updatenightlywp:
 
 deps:
 	which sed
+	$(MAKE) local/bin/pmbp.pl
+	perl local/bin/pmbp.pl --install-openssl
 	$(MAKE) pmbp-install
 	readlink -f . || (brew install coreutils && greadlink -f .)
 
