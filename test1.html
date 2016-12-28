@@ -3,7 +3,9 @@
 <p><a href=http://wakaba.github.io/nemui/test1.html>http:</a>
 <p><a href=https://wakaba.github.io/nemui/test1.html>https:</a>
 
+  <p>This page: <span id=this></span>
 <p>Referrer: <span id=result></span>
 <script>
+  document.querySelector ('#this').textContent = document.URL;
   document.querySelector ('#result').textContent = document.referrer;
 </script>
