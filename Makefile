@@ -19,6 +19,11 @@ updatenightlywp:
 ## ------ Setup ------
 
 deps:
+	$(MAKE) local/bin/pmbp.pl
+	perl local/bin/pmbp.pl --update-pmbp-pl-staging
+	perl local/bin/pmbp.pl --install-openssl
+
+a:
 	which sed
 	brew uninstall libtool && brew install libtool 
 	$(MAKE) local/bin/pmbp.pl
