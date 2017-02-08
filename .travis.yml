@@ -1,7 +1,7 @@
 git:
   submodules: false
 os:
-  #- linux
+  - linux
   - osx
 language: perl
 env: 
