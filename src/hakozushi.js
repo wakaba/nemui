@@ -32,8 +32,10 @@ Hakozushi.run = function (e) {
   var mo = new MutationObserver (function (mutations) {
     mutations.forEach (function (m) {
       Array.prototype.forEach.call (m.addedNodes, function (e) {
-        if (e.nodeType === e.ELEMENT_NODE && e.matches (selector)) op (e);
-        Array.prototype.forEach.call (e.querySelectorAll (selector), op);
+        if (e.nodeType === e.ELEMENT_NODE) {
+          if (e.matches (selector)) op (e);
+          Array.prototype.forEach.call (e.querySelectorAll (selector), op);
+        }
       });
     });
   });

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>hakozushi.js declarative tests</title>
+  <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.2.0.css">
+  <script src="https://code.jquery.com/qunit/qunit-2.2.0.js"></script>
+
+  <script src="../src/hakozushi.js" data-selector="#qunit-fixture .process-target"></script>
+  <script>
+    /*
+      Notes
+      * As callback of `MutationObserver` is executed as microtask,
+        assertions needs to be executed on later tick.
+        * See : https://dom.spec.whatwg.org/#mutation-observers
+     */
+
+    function arrangeTestElements (testCaseElem, testText) {
+      var processed = document.createElement ("div");
+      processed.className = "test-target process-target";
+      processed.textContent = testText;
+      testCaseElem.appendChild (processed);
+
+      var notProcessed = document.createElement ("div");
+      notProcessed.className = "test-target not-process-target";
+      notProcessed.textContent = testText;
+      testCaseElem.appendChild (notProcessed);
+
+      return {
+        processed: processed,
+        notProcessed: notProcessed
+      };
+    }
+
+    QUnit.test("Test case #1 : Two lines if not processed, but one line on processed", function (assert) {
+      var testCaseElem = document.querySelector ("#test-case-1");
+      var testText = "It's nice weather, isn't it? Let's go for a walk!";
+
+      var elems = arrangeTestElements (testCaseElem, testText);
+      var processed = elems.processed;
+      var notProcessed = elems.notProcessed;
+
+      var done = assert.async();
+      setTimeout(function () {
+        assert.ok(
+          +processed.dataset.tryCount > 0,
+          "The value of processed element's `data-try-count` attribute is a number more than zero." +
+          " (value : " + processed.dataset.tryCount + ")");
+
+        var heightOfProcessed = processed.getBoundingClientRect().height;
+        var heightOfNotProcessed = notProcessed.getBoundingClientRect().height;
+        assert.ok(
+          heightOfProcessed < heightOfNotProcessed * 0.6,
+          "Processed element's height is about half or smaller than not-processed element's one." +
+          " (Processed element's height : " + heightOfProcessed + "," +
+          " not-processed element's height : " + heightOfNotProcessed + ")");
+
+        done();
+        document.querySelector ("#for-screenshot").appendChild (testCaseElem.cloneNode (true));
+      }, 0);
+    });
+
+    QUnit.test("Test case #2 : Short one line", function (assert) {
+      var testCaseElem = document.querySelector ("#test-case-2");
+      var testText = "Short";
+
+      var elems = arrangeTestElements (testCaseElem, testText);
+      var processed = elems.processed;
+      var notProcessed = elems.notProcessed;
+
+      var done = assert.async();
+      setTimeout(function () {
+        assert.ok(
+          processed.dataset.tryCount === undefined,
+          "The value of processed element's `data-try-count` attribute is undefined." +
+          " (value : " + processed.dataset.tryCount + ")");
+
+        var heightOfProcessed = processed.getBoundingClientRect().height;
+        var heightOfNotProcessed = notProcessed.getBoundingClientRect().height;
+        assert.ok(
+          Math.abs(heightOfProcessed - heightOfNotProcessed) < 0.001,
+          "Processed element's height is nearly equal to not-processed element's one." +
+          " (Processed element's height : " + heightOfProcessed + "," +
+          " not-processed element's height : " + heightOfNotProcessed + ")");
+
+        done();
+        document.querySelector ("#for-screenshot").appendChild (testCaseElem.cloneNode (true));
+      }, 0);
+    });
+
+    QUnit.test("Test case #3 : Not processed because last line is too long", function (assert) {
+      var testCaseElem = document.querySelector ("#test-case-3");
+      var testText = "It's nice weather, isn't it? Let's go for a walk! - That's nice.";
+
+      var elems = arrangeTestElements (testCaseElem, testText);
+      var processed = elems.processed;
+      var notProcessed = elems.notProcessed;
+
+      var done = assert.async();
+      setTimeout(function () {
+        assert.ok(
+          processed.dataset.tryCount === undefined,
+          "The value of processed element's `data-try-count` attribute is undefined." +
+          " (value : " + processed.dataset.tryCount + ")");
+
+        var heightOfProcessed = processed.getBoundingClientRect().height;
+        var heightOfNotProcessed = notProcessed.getBoundingClientRect().height;
+        assert.ok(
+          Math.abs(heightOfProcessed - heightOfNotProcessed) < 0.001,
+          "Processed element's height is nearly equal to not-processed element's one." +
+          " (Processed element's height : " + heightOfProcessed + "," +
+          " not-processed element's height : " + heightOfNotProcessed + ")");
+
+        done();
+        document.querySelector ("#for-screenshot").appendChild (testCaseElem.cloneNode (true));
+      }, 0);
+    });
+  </script>
+  <style>
+    .test-target {
+      width: 450px;
+      font-size: 16px;
+      font-family: "Noto Mono", monospace;
+      background-color: #FFFFCC;
+    }
+  </style>
+</head>
+<body>
+  <div id="for-screenshot" style="display: none;"></div>
+  <div id="qunit"></div>
+  <div id="qunit-fixture">
+    <div id="test-case-1" class="test-case">
+      <!-- Appended by DOM operation. -->
+    </div>
+    <div id="test-case-2" class="test-case">
+      <!-- Appended by DOM operation. -->
+    </div>
+    <div id="test-case-3" class="test-case">
+      <!-- Appended by DOM operation. -->
+    </div>
+  </div>
+</body>
+</html>
+<!-- ***** BEGIN LICENSE BLOCK *****
+
+The MIT License
+
+Copyright 2017 Wakaba <wakaba@suikawiki.org>.
+Copyright 2017 Hatena <http://hatenacorp.jp/>.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+***** END LICENSE BLOCK ***** -->
