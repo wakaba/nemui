@@ -1,0 +1,41 @@
+machine:
+  services:
+    - docker
+dependencies:
+  cache_directories:
+    - local
+    - deps
+  override:
+    - docker info
+    - docker pull quay.io/wakaba/firefoxdriver:stable :
+        background: true
+        timeout: 600
+    - docker pull quay.io/wakaba/chromedriver:chromium :
+        background: true
+        timeout: 600
+
+    - make deps:
+        timeout: 600
+
+test:
+  override:
+    # Firefox
+    - docker run --name firefoxdriver -v $(pwd):/project -d --net=host -t quay.io/wakaba/firefoxdriver:stable /fx:
+        parallel: true
+    - TEST_WD_URL=http://localhost:9516 TEST_RESULTS_DIR=$CIRCLE_ARTIFACTS/test_results/firefox make test :
+        timeout: 600
+        parallel: true
+    - docker logs firefoxdriver:
+        parallel: true
+    - docker kill firefoxdriver:
+        parallel: true
+    # Chrome
+    - docker run --name chromedriver -v $(pwd):/project -d --net=host -t quay.io/wakaba/chromedriver:chromium /cd:
+        parallel: true
+    - TEST_WD_URL=http://localhost:9515 TEST_RESULTS_DIR=$CIRCLE_ARTIFACTS/test_results/chromium make test :
+        timeout: 600
+        parallel: true
+    - docker logs chromedriver:
+        parallel: true
+    - docker kill chromedriver:
+        parallel: true
