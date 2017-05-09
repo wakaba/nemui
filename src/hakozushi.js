@@ -18,7 +18,6 @@ Hakozushi.run = function (e) {
     factor *= 0.99;
     e.style.transform = "scalex("+factor+")";
     e.style.width = eWidth / factor + "px";
-    e.style.background = "red";
     e.setAttribute ('data-try-count', tryCount);
     rects = f.getClientRects ();
   }
