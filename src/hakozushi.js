@@ -44,6 +44,9 @@ Hakozushi.run = function (e) {
 
 /*
 
+Hakozushi.js
+<https://github.com/wakaba/js-hakozushi/>
+
 USAGE:
 
 Declarative:
