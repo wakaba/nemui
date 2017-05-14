@@ -18,6 +18,16 @@ Imperative:
 </script>
 ```
 
+# Authors
+
+Wakaba <wakaba@suikawiki.org>.
+
+nobuoka.
+
+# Acknowledgements
+
+Thanks to cho45 and yz3.
+
 # License
 
 The MIT License
