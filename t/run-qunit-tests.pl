@@ -4,7 +4,6 @@ use Path::Tiny;
 use lib glob path (__FILE__)->parent->parent->child ('t_deps/modules/*/lib');
 use IO::File;
 use JSON::PS;
-use MIME::Base64 ();
 use Promise;
 use Web::URL;
 use Web::Driver::Client::Connection;
@@ -107,7 +106,7 @@ sub execute_test_html_file {
         })->then (sub {
           my $res = $_[0];
           if ($res->json->{value}->{screenshotNeeded}) {
-            return take_screenshot ($wd, $session->session_id)->then (sub {
+            return $session->screenshot->then (sub {
               my $image = $_[0];
 
               my $fh = IO::File->new("$test_result_file_path.png", ">");
@@ -156,18 +155,6 @@ sub execute_async {
     my $res = $_[0];
     die $res if $res->is_error;
     return $res->json;
-  });
-}
-
-sub take_screenshot {
-  my ($wd, $session_id) = @_;
-  return $wd->http_get (['session', $session_id, 'screenshot'])->then (sub {
-    my $res = $_[0];
-    die $res if $res->is_error;
-
-    my $image_base64 = $res->json->{value};
-    die 'Value of Base64-encoded image not defined' if not defined $image_base64;
-    return MIME::Base64::decode ($image_base64);
   });
 }
 
