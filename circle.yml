@@ -39,3 +39,14 @@ test:
         parallel: true
     - docker kill chromedriver:
         parallel: true
+
+
+deployment:
+  nightly:
+    branch: nightly
+    commands:
+      - curl -s -S --request POST --header "Authorization:token $GH_AT" --header "Content-Type:application/json" --data-binary "{\"base\":\"master\",\"head\":\"`git rev-parse HEAD`\",\"commit_message\":\"auto-merge nightly into master\"}" "https://api.github.com/repos/wakaba/js-hakozushi/merges"
+  staging:
+    branch: staging
+    commands:
+      - curl -s -S --request POST --header "Authorization:token $GH_AT" --header "Content-Type:application/json" --data-binary "{\"base\":\"master\",\"head\":\"`git rev-parse HEAD`\",\"commit_message\":\"auto-merge staging into master\"}" "https://api.github.com/repos/wakaba/js-hakozushi/merges"
