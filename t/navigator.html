@@ -14,7 +14,12 @@
       assert.strictEqual (navigator.appCodeName, 'Mozilla', 'navigator.appCodeName === "Mozilla"');
       assert.strictEqual (navigator.appName, 'Netscape', 'navigator.appName === "Netscape"');
       assert.strictEqual (navigator.platform, '', 'navigator.platform');
-      assert.strictEqual (navigator.product, 'Gecko', 'navigator.product');
+      assert.strictEqual (navigator.product, 'Gecko', 'navigator.product === "Gecko"');
+      assert.strictEqual (navigator.productSub, '...', 'navigator.productSub');
+      assert.strictEqual (navigator.vendor, '...', 'navigator.vendor');
+      assert.strictEqual (navigator.vendorSub, '', 'navigator.vendorSub');
+      assert.strictEqual (navigator.oscpu, '', 'navigator.oscpu');
+      assert.strictEqual (navigator.taintEnabled, '', 'navigator.taintEnabled');
       done ();
     });
   </script>
