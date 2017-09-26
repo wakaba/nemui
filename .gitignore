@@ -1,5 +1,6 @@
 *~
 /local/
+/deps/
 /perl
 /prove
 /plackup

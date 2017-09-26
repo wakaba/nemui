@@ -3,3 +3,9 @@
 - "../../modules/charclass" tests build
 - "../../modules/ooutils" tests operationresponse classregistry
 - "../../modules/wanage" build datetime mp
+- "../../t_deps/modules/web-resource" build tests
+- "../../t_deps/modules/promise" build tests
+- "../../t_deps/modules/web-url" build tests
+- "../../t_deps/modules/web-encodings" build tests
+- "../../t_deps/modules/json-ps" build tests
+- "../../t_deps/modules/web-datetime" build tests
