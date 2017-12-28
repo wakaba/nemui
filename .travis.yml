@@ -4,10 +4,11 @@ env:
   matrix:
     - FOO=1
     - FOO=2
-before_install: git submodule update --init
+before_install: echo "before install"
 script: make test
 jobs:
   include:
+    - script: "false"
     - stage: merge
       script: curl https://gist.githubusercontent.com/wakaba/9970857/raw/travis-merger-git.pl | perl
 notifications: 
