@@ -18,7 +18,8 @@ updatenightlywp:
 
 ## ------ Setup ------
 
-deps: pmbp-install
+deps: 
+	echo "make deps executed"
 
 PMBP_OPTIONS=
 
