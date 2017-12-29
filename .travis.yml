@@ -8,7 +8,7 @@ before_install: echo "before install"
 script: make test
 jobs:
   include:
-    - script: "false"
+    - script: "true"
     - stage: merge
       script: curl -f https://gist.githubusercontent.com/wakaba/ab553f86cd017e0cb28c6dbb5364b009/raw/travis-merge-job.pl | perl
 notifications: 
