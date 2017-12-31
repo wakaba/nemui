@@ -15,7 +15,7 @@ before_install: echo "before install"
 install:
   - "make test-deps"
   - brew cask install docker
-  - open /Applications/Docker.app
+  - /Applications/Docker.app
   - docker --version
 script: make test
 jobs:
