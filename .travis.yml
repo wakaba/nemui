@@ -12,7 +12,10 @@ env:
     - FOO=2
 before_install: echo "before install"
 #before_install: git submodule update --init
-install: "make test-deps"
+install:
+  - "make test-deps"
+  - brew cask install docker
+  - docker --version
 script: make test
 jobs:
   include:
