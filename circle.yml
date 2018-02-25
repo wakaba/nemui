@@ -9,7 +9,7 @@ dependencies:
     - echo $FOO > foo.txt
     - git add foo.txt
     - git commit -m data
-    - git push
+    - git push origin $CIRCLE_BRANCH  
     
     - make deps
 test:
