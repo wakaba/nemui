@@ -5,6 +5,12 @@ dependencies:
   override:
     - git config --global user.email "temp@circleci.test"
     - git config --global user.name "CircleCI"
+    
+    - echo $FOO > foo.txt
+    - git add foo.txt
+    - git commit -m data
+    - git push
+    
     - make deps
 test:
   override:
