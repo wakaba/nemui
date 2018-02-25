@@ -5,11 +5,12 @@ dependencies:
   override:
     - git config --global user.email "temp@circleci.test"
     - git config --global user.name "CircleCI"
+    - git config --global url.https://$GITHUB_ACCESS_TOKEN:@github.com/.pushInsteadOf git@github.com:
     
     - echo $FOO > foo.txt
     - git add foo.txt
     - git commit -m data
-    - git push origin $CIRCLE_BRANCH  
+    - git push origin $CIRCLE_BRANCH --quiet > /dev/null 2> /dev/null
     
     - make deps
 test:
