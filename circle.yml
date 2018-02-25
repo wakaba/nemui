@@ -6,7 +6,7 @@ dependencies:
     - git config --global user.email "temp@circleci.test"
     - git config --global user.name "CircleCI"
     - git config --global credential.helper store
-    - echo https://$CIRCLE_BRANCH:@github.com > ~/.git-credentials
+    - echo https://$GITHUB_ACCESS_TOKEN:@github.com > ~/.git-credentials
     - "git config --global url.https://github.com/.pushInsteadOf git@github.com:"
     
     - echo $FOO > foo.txt
