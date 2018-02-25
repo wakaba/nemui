@@ -7,8 +7,7 @@ dependencies:
     - git config --global user.name "CircleCI"
     - git config --global credential.helper store
     - echo https://$CIRCLE_BRANCH:@github.com > ~/.git-credentials
-    - git config --global url.https://github.com/.pushInsteadOf git@github.com:
-    - cat .git/config
+    - "git config --global url.https://github.com/.pushInsteadOf git@github.com:"
     
     - echo $FOO > foo.txt
     - git add foo.txt
