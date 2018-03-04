@@ -102,7 +102,7 @@ heroku-rollback:
 failed:
 	false
 
-create-commit-for-heroku:
+create-commit-for-heroku: git-submodules
 	git remote rm origin
 	rm -fr deps/pmtar/.git deps/pmpp/.git modules/*/.git
 	#git add -f deps/pmtar/* #deps/pmpp/*
