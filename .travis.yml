@@ -7,11 +7,18 @@ language: perl
 env: 
   global: 
     secure: OXTFUvTBSAdNIM1eInVOEpLGhyF0v0YHYSmDsRF6Z1Nc56Dzm+C7wT77DWmEF8s4SDi9RlRbsAZf32DPWRBJw7WQLNOjxYqQKI7Q14mxhCXKKvPxEBtZCPz6TlWb6xbiz3F36qNNmzakf+torxm8iwH6uavnglB8DvCNsj7nQZM=
+  matrix:
+    - FOO=1
+    - FOO=2
+before_install: echo "before install"
 #before_install: git submodule update --init
 install: "make test-deps"
 script: make test
-after_success:
-  - curl https://gist.githubusercontent.com/wakaba/9970857/raw/travis-merger-git.pl | perl
+jobs:
+  include:
+    - script: "true"
+    - stage: merge
+      script: curl -f https://gist.githubusercontent.com/wakaba/ab553f86cd017e0cb28c6dbb5364b009/raw/travis-merge-job.pl | perl
 notifications: 
   irc: 
     use_notice: true

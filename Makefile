@@ -22,10 +22,11 @@ ciconfig:
 
 ## ------ Setup ------
 
-deps:
-	$(MAKE) local/bin/pmbp.pl
-	perl local/bin/pmbp.pl --update-pmbp-pl-staging
-	perl local/bin/pmbp.pl --install-openssl
+deps: 
+	echo "make deps executed"
+#	$(MAKE) local/bin/pmbp.pl
+#	perl local/bin/pmbp.pl --update-pmbp-pl-staging
+#	perl local/bin/pmbp.pl --install-openssl
 
 a:
 	which sed
@@ -58,7 +59,9 @@ git-submodules:
 
 PROVE = ./prove
 
-test: test-deps test-1 test-main test-https
+test: test-deps
+	echo "make test executed!"
+#test-1 test-main test-https
 
 test-deps: deps
 
