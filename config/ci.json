@@ -1,0 +1,6 @@
+
+{
+  "circleci": {
+    "heroku": 1
+  }
+}
