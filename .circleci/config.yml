@@ -68,6 +68,8 @@
       "nightly": {
         "jobs": [
           "hello"
+        ],
+        "triggers": [
         ]
       },
       "version" : 2
