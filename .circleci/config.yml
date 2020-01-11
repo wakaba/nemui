@@ -1,5 +1,21 @@
 {
    "jobs" : {
+      "hello": {
+         "environment" : {
+            "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts"
+         },
+         "machine" : {
+            "enabled" : true
+         },
+         "steps" : [
+            "checkout",
+            {
+               "run" : {
+                  "command" : "echo Hello"
+               }
+            }
+        ]
+      },
       "build" : {
          "environment" : {
             "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts"
@@ -48,6 +64,23 @@
          "jobs" : [
             "build"
          ]
+      },
+      "nightly": {
+        "jobs": [
+          "hello"
+        ],
+        "triggers": [
+          {"schedule": {
+            "cron": "3 30 * * *",
+            "filters": {
+              "branches": {
+                "only": [
+                  "staging"
+                ]
+              }
+            }
+          }}
+        ]
       },
       "version" : 2
    }
