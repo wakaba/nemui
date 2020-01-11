@@ -70,6 +70,8 @@
           "hello"
         ],
         "triggers": [
+          {"schedule": {
+          }}
         ]
       },
       "version" : 2
