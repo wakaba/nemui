@@ -72,7 +72,7 @@
         "triggers": [
           {
             "schedule": {
-              "cron": "1,5 4 * * *",
+              "cron": "1 4 * 12 *",
               "filters": {
                 "branches": {
                   "only": [
