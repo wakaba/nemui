@@ -70,8 +70,18 @@
           "hello"
         ],
         "triggers": [
-          {"schedule": {
-          }}
+          {
+            "schedule": {
+              "cron": "3 30 * * *",
+              "filters": {
+                "branches": {
+                  "only": [
+                    "staging"
+                  ]
+                }
+              }
+            }
+          }
         ]
       },
       "version" : 2
