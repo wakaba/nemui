@@ -1,89 +1,8 @@
 {
    "jobs" : {
-      "hello": {
-         "environment" : {
-            "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts"
-         },
-         "machine" : {
-            "enabled" : true
-         },
-         "steps" : [
-            "checkout",
-            {
-               "run" : {
-                  "command" : "echo Hello"
-               }
-            }
-        ]
-      },
-      "build" : {
-         "environment" : {
-            "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts"
-         },
-         "machine" : {
-            "enabled" : true
-         },
-         "steps" : [
-            "checkout",
-            {
-               "run" : {
-                  "command" : "mkdir -p $CIRCLE_ARTIFACTS"
-               }
-            },
-            {
-               "run" : {
-                  "command" : "git config --global user.email \u0022temp@circleci.test\u0022\u000Agit config --global user.name \u0022CircleCI\u0022"
-               }
-            },
-            {
-               "store_artifacts" : {
-                  "path" : "/tmp/circle-artifacts"
-               }
-            },
-            {
-               "deploy" : {
-                  "command" : "if [ \u0022${CIRCLE_BRANCH}\u0022 == 'master' ]; then\u000Atrue\u000Agit checkout --orphan herokucommit && git commit -m \u0022Heroku base commit\u0022\u000Afi"
-               }
-            },
-            {
-               "deploy" : {
-                  "command" : "if [ \u0022${CIRCLE_BRANCH}\u0022 == 'master' ]; then\u000Atrue\u000Amake create-commit-for-heroku\u000Afi"
-               }
-            },
-            {
-               "deploy" : {
-                  "command" : "if [ \u0022${CIRCLE_BRANCH}\u0022 == 'master' ]; then\u000Atrue\u000Agit push git@heroku.com:$HEROKU_APP_NAME.git \u002B`git rev-parse HEAD`:refs/heads/master\u000Afi"
-               }
-            }
-         ]
-      }
    },
    "version" : 2,
    "workflows" : {
-      "build" : {
-         "jobs" : [
-            "build"
-         ]
-      },
-      "nightly": {
-        "jobs": [
-          "hello"
-        ],
-        "triggers": [
-          {
-            "schedule": {
-              "cron": "1 4 * 12 *",
-              "filters": {
-                "branches": {
-                  "only": [
-                    "staging"
-                  ]
-                }
-              }
-            }
-          }
-        ]
-      },
       "version" : 2
    }
 }
