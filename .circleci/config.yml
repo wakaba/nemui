@@ -6,6 +6,8 @@
        },
        "steps": [
          {"run": {"command": "echo 1; mkdir -p /tmp/abc/foo; echo 1 > /tmp/abc/foo/aaa.txt"}},
+         {"run": {"command": "docker build -t dockertest1 docker"}},
+         {"run": {"command": "docker save -o /tmp/abc/foo/dockertest1.tar dockertest1"}},
          {"persist_to_workspace": {
            "root": "/tmp/abc",
            "paths": ["foo"]
@@ -18,7 +20,9 @@
        },
        "steps": [
          {"attach_workspace": {"at": "/tmp/abc"}},
-         {"run": {"command": "echo 2; cat /tmp/abc/foo/aaa.txt"}}
+         {"run": {"command": "docker load -i /tmp/abc/foo/dockertest1.tar"}},
+         {"run": {"command": "echo 2; cat /tmp/abc/foo/aaa.txt"}},
+         {"run": {"command": "docker run -it dockertest1"}}
        ]
      }
    },
