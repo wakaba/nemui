@@ -1,5 +1,6 @@
 {
    "jobs" : {
+     {"command": "echo 1"}
    },
    "version" : 2,
    "workflows" : {
