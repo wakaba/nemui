@@ -1,9 +1,21 @@
 {
    "jobs" : {
-     {"command": "echo 1"}
+     "build1": {
+       "steps": {
+         {"command": "echo 1"}
+       }
+     },
+     "build2": {
+       "steps": {
+         {"command": "echo 2"}
+       }
+     }
    },
    "version" : 2,
    "workflows" : {
-      "version" : 2
+      "version" : 2,
+      "build": {
+        "jobs": ["build1", "build2"]
+      }
    }
 }
