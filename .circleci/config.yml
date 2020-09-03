@@ -11,7 +11,7 @@
          {"run": {"command": "docker save -o /tmp/abc/foo/dockertest1.tar dockertest1"}},
          {"persist_to_workspace": {
            "root": "/tmp/abc",
-           "paths": ["foo"]
+           "paths": ["foo", "aaa", "12334", "aa/bb"]
          }}
 
 ]
