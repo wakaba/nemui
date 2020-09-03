@@ -5,7 +5,11 @@
                  "enabled" : true
        },
        "steps": [
-         {"run": {"command": "echo 1"}}
+         {"run": {"command": "echo 1; mkdir -p /tmp/abc/foo; echo 1 > /tmp/abc/foo/aaa.txt"}},
+         {"persist_to_workspace": {
+           "root": "/tmp/abc",
+           "paths": ["foo"]
+         }}
        ]
      },
      "build2": {
@@ -13,7 +17,8 @@
                  "enabled" : true
        },
        "steps": [
-         {"run": {"command": "echo 2"}}
+         {"attach_workspace": {"at": "/tmp/abc"}},
+         {"run": {"command": "echo 2; cat /tmp/abc/foo/aaa.txt"}}
        ]
      }
    },
@@ -21,7 +26,7 @@
    "workflows" : {
       "version" : 2,
       "build": {
-        "jobs": ["build1", "build2"]
+        "jobs": ["build1", {"build2": {"requires": ["build1"]}}]
       }
    }
 }
