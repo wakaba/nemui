@@ -5,11 +5,11 @@
          {"run": {"command": "echo 1"}}
        ]
      },
-     "build2": [
+     "build2": {
        "steps": [
          {"run": {"command": "echo 2"}}
        ]
-     ]
+     }
    },
    "version" : 2,
    "workflows" : {
