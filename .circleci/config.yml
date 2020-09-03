@@ -2,12 +2,12 @@
    "jobs" : {
      "build1": {
        "steps": [
-         {"command": "echo 1"}
+         {"run": {"command": "echo 1"}}
        ]
      },
      "build2": [
        "steps": [
-         {"command": "echo 2"}
+         {"run": {"command": "echo 2"}}
        ]
      ]
    },
