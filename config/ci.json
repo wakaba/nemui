@@ -1,0 +1,27 @@
+{
+  "travisci": {},
+  "circleci": {
+    "docker-build": "quay.io/wakaba/apploach",
+    "required_docker_images": [
+      "quay.io/wakaba/docker-perl-app-base",
+      "minio/minio",
+      "mariadb"
+    ],
+    "merger": 1,
+    "gaa": 1,
+    "heroku": true,
+
+    "build": [
+      "make deps-circleci"
+    ],
+    "tests": [
+      "rm -fr $CIRCLE_ARTIFACTS/ss.pid",
+      {"TEST_APP_DOCKER_IMAGE=quay.io/wakaba/apploach ./perl t_deps/bin/env-for-circleci.pl > $CIRCLE_ARTIFACTS/servers-http-$CIRCLE_NODE_INDEX.txt.dat 2>&1": {
+        "background": true}},
+      "while [ ! -e $CIRCLE_ARTIFACTS/ss.pid ]; do sleep 1; done",
+      "if [ ! -e $CIRCLE_ARTIFACTS/ss.pid ]; then cat $CIRCLE_ARTIFACTS/ss.env; fi; cat $CIRCLE_ARTIFACTS/ss.pid",
+      
+      "SS_ENV_FILE=$CIRCLE_ARTIFACTS/ss.env make test"
+    ]
+  }
+}
