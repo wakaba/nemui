@@ -12,6 +12,10 @@
          {"persist_to_workspace": {
            "root": "/tmp/abc",
            "paths": ["foo", "aaa", "12334", "aa/bb", "c.txt"]
+         }},
+         {"persist_to_workspace": {
+           "root": "./",
+           "paths": ["foo", "aaa", "12334", "aa/bb", "c.txt"]
          }}
 
 ]
@@ -21,7 +25,9 @@
                  "enabled" : true
        },
        "steps": [
+         "checkout",
          {"attach_workspace": {"at": "/tmp/abc"}},
+         {"attach_workspace": {"at": "./"}},
          {"run": {"command": "docker load -i /tmp/abc/foo/dockertest1.tar"}},
          {"run": {"command": "echo 2; cat /tmp/abc/foo/aaa.txt"}},
          {"run": {"command": "cat c.txt"}},
