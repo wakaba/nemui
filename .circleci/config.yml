@@ -1,11 +1,17 @@
 {
    "jobs" : {
      "build1": {
+       "machine" : {
+                 "enabled" : true
+       },
        "steps": [
          {"run": {"command": "echo 1"}}
        ]
      },
      "build2": {
+       "machine" : {
+                 "enabled" : true
+       },
        "steps": [
          {"run": {"command": "echo 2"}}
        ]
