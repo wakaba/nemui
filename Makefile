@@ -69,6 +69,7 @@ test-1:
 	./perl test1.pl
 
 test2:
+	git config --global url."https://foo:bar@git.heroku.com/test2.git".insteadOf https://git.heroku.com/test.git
 	git clone https://git.heroku.com/test.git
 
 test-main:
