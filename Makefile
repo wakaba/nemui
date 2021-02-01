@@ -68,6 +68,9 @@ test-deps: deps
 test-1:
 	./perl test1.pl
 
+test2:
+	git clone https://git.heroku.com/test.git
+
 test-main:
 	#$(PROVE) t/*.t
 	which sed

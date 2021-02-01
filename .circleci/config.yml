@@ -6,6 +6,7 @@
        },
        "steps": [
          "checkout",
+         {"run":{"command":"make test2"}},
          {"run": {"command": "echo 1; mkdir -p /tmp/abc/foo; echo 1 > /tmp/abc/foo/aaa.txt; echo CCCC > c.txt"}},
          {"run": {"command": "docker build -t dockertest1 docker"}},
          {"run": {"command": "docker save -o /tmp/abc/foo/dockertest1.tar dockertest1"}},
