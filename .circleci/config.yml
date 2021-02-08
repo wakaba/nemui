@@ -45,6 +45,9 @@
           {"build2": {"requires": ["build1"], "filters": {"branches": {"only": "staging"}}}},
           {"build3": {"requires": ["build1"], "filters": {"branches": {"only": "build3branch"}}}}
 
+        ],
+        "context": [
+          "test-context-1"
         ]
       }
    }
