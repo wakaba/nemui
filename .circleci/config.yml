@@ -6,6 +6,7 @@
        },
        "steps": [
          "checkout",
+         {"run":{"command":"echo $ABC"}},
          {"run":{"command":"make test2"}},
          {"run": {"command": "echo 1; mkdir -p /tmp/abc/foo; echo 1 > /tmp/abc/foo/aaa.txt; echo CCCC > c.txt"}},
          {"run": {"command": "docker build -t dockertest1 docker"}},
@@ -41,13 +42,16 @@
       "version" : 2,
       "build": {
         "jobs": [
-          "build1",
+          {
+            "build1": {
+              "context": [
+                "test-context-1"
+              ]
+            }
+          },
           {"build2": {"requires": ["build1"], "filters": {"branches": {"only": "staging"}}}},
           {"build3": {"requires": ["build1"], "filters": {"branches": {"only": "build3branch"}}}}
 
-        ],
-        "context": [
-          "test-context-1"
         ]
       }
    }
