@@ -6,6 +6,8 @@
        },
        "steps": [
          "checkout",
+         {"run":{"command":"docker version"}},
+         {"run":{"command":"docker run -it debian:sid ping host.docker.internal"}},
          {"run":{"command":"echo pp${ABC}qq"}},
          {"run":{"command":"make test2"}},
          {"run": {"command": "echo 1; mkdir -p /tmp/abc/foo; echo 1 > /tmp/abc/foo/aaa.txt; echo CCCC > c.txt"}},
