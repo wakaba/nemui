@@ -2,7 +2,7 @@
    "jobs" : {
      "build1": {
        "machine" : {
-                 "enabled" : true
+"image": "ubuntu-2004:202101-01"
        },
        "steps": [
          "checkout",
