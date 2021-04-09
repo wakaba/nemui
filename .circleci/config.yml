@@ -6,6 +6,7 @@
        },
        "steps": [
          "checkout",
+         {"run":{"command":"ip route   "}},
          {"run":{"command":"docker version"}},
          {"run":{"command":"docker run -it quay.io/wakaba/docker-perl-app-base curl host.docker.internal"}},
          {"run":{"command":"echo pp${ABC}qq"}},
