@@ -13,6 +13,21 @@
   <p><a href=https://wakaba.github.io/nemui/app.html>app</a>
   <p><a href=https://wakaba.github.io/nemui/app2.html>app-2</a>
 
+    <p><button type=button onclick="
+      navigator.share ({text: new URL ('14581424120353790909.gpx', location.href).toString ()});
+    ">Share text</button>
+    <p><button type=button onclick="
+      navigator.share ({url: '14581424120353790909.gpx'});
+    ">Share URL</button>
+    <p><button type=button onclick="
+      fetch ('14581424120353790909.gpx').then (res => {
+        return res.blob ();
+      }).then (blob => {
+        var file = new File (blob, '14581424120353790909.gpx');
+        navigator.share ({files: [file]});
+      });
+    ">Share file</button>
+
 <pre></pre>
 
 <script>
