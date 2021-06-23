@@ -1,0 +1,35 @@
+{
+  "name": "nemui",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "512x512",
+      "type": "image/jpg"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "scope": "/",
+  "share_target": {
+    "action": "/open",
+    "enctype": "multipart/form-data",
+    "method": "POST",
+    "params": {
+      "files": [
+        {
+          "name": "media",
+          "accept": [
+            "audio/*",
+            "image/*",
+            "video/*"
+          ]
+        }
+      ]
+    }
+  },
+  "start_url": "/app.html"
+}
