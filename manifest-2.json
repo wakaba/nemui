@@ -1,0 +1,35 @@
+{
+  "name": "nemui-2",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "sw.png",
+      "sizes": "512x512",
+      "type": "image/jpg"
+    },
+    {
+      "src": "sw.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "scope": "/nemui/",
+  "share_target": {
+    "action": "/nemui/open",
+    "enctype": "multipart/form-data",
+    "method": "POST",
+    "params": {
+      "files": [
+        {
+          "name": "media",
+          "accept": [
+            ".gpx",
+            "application/gpx+xml",
+            "application/octet-stream"
+          ]
+        }
+      ]
+    }
+  },
+  "start_url": "/nemui/app.html"
+}
