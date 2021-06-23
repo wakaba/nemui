@@ -1,5 +1,5 @@
 {
-  "name": "nemui2",
+  "name": "nemui3",
   "display": "standalone",
   "icons": [
     {
@@ -23,12 +23,9 @@
         {
           "name": "media",
           "accept": [
-            "audio/*",
-            "image/*",
-            "video/*",
-            ".ogg",
             ".gpx",
-            "application/gpx+xml"
+            "application/gpx+xml",
+            "application/octet-stream"
           ]
         }
       ]
