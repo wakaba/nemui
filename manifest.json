@@ -13,9 +13,9 @@
       "type": "image/png"
     }
   ],
-  "scope": "/",
+  "scope": "/nemui/",
   "share_target": {
-    "action": "/open",
+    "action": "/nemui/open",
     "enctype": "multipart/form-data",
     "method": "POST",
     "params": {
@@ -31,5 +31,5 @@
       ]
     }
   },
-  "start_url": "/app.html"
+  "start_url": "/nemui/app.html"
 }
