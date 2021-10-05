@@ -4,11 +4,6 @@
     "push": {},
     "schedule": [{"cron": "25 6 5 10 *"}]
   },
-  "strategy": {
-    "matrix": {
-      "os": ["ubuntu-latest", "windows-latest"]
-    }
-  },
   "jobs": {
     "foo": {
       "runs-on": "ubuntu-latest",
@@ -38,6 +33,11 @@
       ]
     },
     "baz": {
+      "strategy": {
+        "matrix": {
+          "os": ["ubuntu-latest", "windows-latest"]
+        }
+      },
       "runs-on": "${{ matrix.os }}",
       "needs": ["foo", "bar"],
       "steps": [
