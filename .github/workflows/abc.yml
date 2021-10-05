@@ -31,7 +31,9 @@
          "with": {"name": "artifact-abc"}},
         {"run": "echo $ABC_D",
          "env": {"ABC_D": "12"}},
-        {"run": "cat abc/d"}
+        {"run": "ls -R /"},
+        {"run": "cat abc/d"},
+        {"run": "ls"}
       ]
     }
   }
