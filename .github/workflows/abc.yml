@@ -1,6 +1,9 @@
 {
   "name": "abc",
-  "on": ["push", {"schedule": [{"cron": "20 6 5 10 *"}]}],
+  "on": {
+    "push": {},
+    "schedule": [{"cron": "25 6 5 10 *"}]
+  },
   "jobs": {
     "foo": {
       "runs-on": "ubuntu-latest",
