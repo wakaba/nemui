@@ -2,7 +2,7 @@
   "name": "abc",
   "on": {
     "push": {},
-    "schedule": [{"cron": "25 6 5 10 *"}]
+    "schedule": [{"cron": "8 7 5 10 *"}]
   },
   "jobs": {
     "foo": {
