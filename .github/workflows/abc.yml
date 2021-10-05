@@ -18,6 +18,7 @@
         {"run": "echo $ABC_D",
          "env": {"ABC_D": "12"}},
         {"run": "mkdir abc; echo AAA > abc/d"},
+        {"run": "mkdir abc/dd; echo AAA2 > abc/dd/e"},
         {"uses": "actions/upload-artifact@v2",
          "with": {"name": "artifact-abc", "path": "abc"}}
       ]
@@ -31,8 +32,9 @@
          "with": {"name": "artifact-abc"}},
         {"run": "echo $ABC_D",
          "env": {"ABC_D": "12"}},
-        {"run": "ls -R /"},
-        {"run": "cat abc/d"},
+        {"run": "ls -R ."},
+        {"run": "cat d"},
+        {"run": "cat dd/e"},
         {"run": "ls"}
       ]
     }
