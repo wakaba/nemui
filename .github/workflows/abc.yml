@@ -8,7 +8,12 @@
         {"uses": "actions/checkout@v2"},
         {"run": "ls /"},
         {"run": "pwd; ls"},
-        {"run": "echo $EN1"}
+        {"run": "echo $EN1"},
+        {"run": "echo $EN2"},
+        {"run": "echo $X1",
+         "env": {"X1": "${{ secrets.EN1 }}"}},
+        {"run": "echo $X2",
+         "env": {"X2": "${{ secrets.EN2 }}"}}
       ]
     },
     "bar": {
