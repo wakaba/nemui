@@ -6,12 +6,14 @@
   "jobs": {
     "mat": {
       "runs-on": "ubuntu-latest",
-      "matrix": {
-        "include": [
-          {"abc": "abc1"},
-          {"abc": "abc2", "xyz": "xyz2"},
-          {"abc": "abc3", "xyz": "xyz3"}
-        ]
+      "strategy": {
+        "matrix": {
+          "include": [
+            {"abc": "abc1"},
+            {"abc": "abc2", "xyz": "xyz2"},
+            {"abc": "abc3", "xyz": "xyz3"}
+          ]
+        },
       },
       "env": {"XYZ": "${{ matrix.xyz }}"},
       "steps": [
