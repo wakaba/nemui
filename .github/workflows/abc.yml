@@ -40,7 +40,7 @@
          {"run": "echo ' ' >> .github/workflows/cron.yml; git add .github/workflows/cron.yml; git commit -m new"},
          {"run": "git remote add origin2 https://$G_USER@github.com/wakaba/nemui",
          "env": {"G_USER": "${{ secrets.GH_ACCESS_TOKEN }}"}},
-        {"run": "git push origin2 "}
+        {"run": "git push origin2"}
       ]
     },
     "bar": {
