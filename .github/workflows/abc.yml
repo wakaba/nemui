@@ -1,8 +1,7 @@
 {
   "name": "abc",
   "on": {
-    "push": {},
-    "schedule": [{"cron": "28 2 * * *"}]
+    "push": {}
   },
   "jobs": {
     "foo": {
