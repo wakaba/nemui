@@ -19,7 +19,9 @@
       "steps": [
         {"run": "echo $XYZ"},
         {"run": "echo $ABC",
-         "env": {"ABC": "${{ matrix.abc }}"}}
+         "env": {"ABC": "${{ matrix.abc }}"}},
+        {"run": "cat .git/config"},
+        {"run": "cat ~/.gitconfig"}
       ]
     },
     "foo": {
