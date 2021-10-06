@@ -25,8 +25,7 @@
     "foo": {
       "runs-on": "ubuntu-latest",
       "steps": [
-        {"uses": "actions/checkout@v2",
-         "with": {"submodules": false}},
+        {"run": "git clone https://github.com/wakaba/nemui --branch gh-pages && cd nemui"},
         {"run": "ls /"},
         {"run": "pwd; ls"},
         {"run": "echo $EN1"},
