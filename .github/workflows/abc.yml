@@ -19,12 +19,7 @@
       "steps": [
         {"run": "echo $XYZ"},
         {"run": "echo $ABC",
-         "env": {"ABC": "${{ matrix.abc }}"}},
-         {"run": "git config --global user.email temp@github.test"},
-         {"run": "git config --global user.name GitHubActions"},
-         {"run": "touch a; git add a; git commit -m new"},
-         {"run": "git remote add origin https://test@github.com/wakaba/nemui"},
-        {"run": "git push"}
+         "env": {"ABC": "${{ matrix.abc }}"}}
       ]
     },
     "foo": {
@@ -39,7 +34,12 @@
         {"run": "echo $X1",
          "env": {"X1": "${{ secrets.EN1 }}"}},
         {"run": "echo $X2",
-         "env": {"X2": "${{ secrets.EN2 }}"}}
+         "env": {"X2": "${{ secrets.EN2 }}"}},
+         {"run": "git config --global user.email temp@github.test"},
+         {"run": "git config --global user.name GitHubActions"},
+         {"run": "touch a; git add a; git commit -m new"},
+         {"run": "git remote add origin https://test@github.com/wakaba/nemui"},
+        {"run": "git push"}
       ]
     },
     "bar": {
