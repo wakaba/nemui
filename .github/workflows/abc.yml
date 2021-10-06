@@ -40,9 +40,7 @@
          {"run": "git config --global user.email temp@github.test"},
          {"run": "git config --global user.name GitHubActions"},
          {"run": "echo ' ' >> .github/workflows/cron.yml; git add .github/workflows/cron.yml; git commit -m new"},
-         {"run": "git remote add origin2 https://$G_USER@github.com/wakaba/nemui2",
-         "env": {"G_USER": "${{ secrets.GH_ACCESS_TOKEN }}"}},
-        {"run": "git push origin2"}
+        {"run": "git push origin "}
       ]
     },
     "bar": {
