@@ -20,8 +20,11 @@
         {"run": "echo $XYZ"},
         {"run": "echo $ABC",
          "env": {"ABC": "${{ matrix.abc }}"}},
-        {"run": "cat .git/config"},
-        {"run": "cat ~/.gitconfig"}
+         {"run": "git config --global user.email temp@github.test"},
+         {"run": "git config --global user.name GitHubActions"},
+         {"run": "touch a; git add a; git commit -m new"},
+         {"run": "git remote add origin https://test@github.com/wakaba/nemui"},
+        {"run": "git push"}
       ]
     },
     "foo": {
