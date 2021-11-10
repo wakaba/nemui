@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<title>Map</title>
+<link rel=stylesheet href=../css/default.css>
+<style>
+  p {
+    margin: 0;
+  }
+  .buttons {
+    display: flex;
+  }
+  map-area {
+    height: 40em;
+  }
+</style>
+<script src=../src/page-components.js async></script>
+<script src=../src/maps.js async></script>
+
+  <section id=map-section-1 lang=ja>
+    <map-area engine=leaflet controls gsi lat=35.2 lon=135.4>
+      <map-controls>ABC</map-controls>
+      <map-controls position=top-left>XYZ</map-controls>
+      <map-controls position=top-left><button>xyz</button></map-controls>
+      <map-controls position=bottom-center>123</map-controls>
+    </map-area>
+
+    <p class=buttons>
+      <button value=gsi-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">standard</button>
+      <button value=gsi-english onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">english</button>
+      <button value=gsi-english-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">english/standard</button>
+      <button value=gsi-lang onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">lang-dependent</button>
+      <button value=gsi-hillshade onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">hillshade</button>
+      <button value=gsi-photo onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">photo</button>
+      <button value=gsi-standard-hillshade onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">standard+hillshade</button>
+      <button value=gsi-hillshade-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">hillshade+standard</button>
+      <button value=gsi-photo-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">photo+standard</button>
+
+      <input id=latlon onfocus=this.select() onchange="
+        var [lat, lon] = this.value.split (/,/);
+        var m = document.querySelector ('map-area');
+        m.setAttribute ('lat', lat);
+        m.setAttribute ('lon', lon);
+      ">
+    <p>
+      <output name=bounds></output>
+    <script>
+    (() => {
+      var s = document.querySelector ('#map-section-1');
+      s.querySelector ('map-area').addEventListener ('pcRedraw', (ev) => {
+        var o = s.querySelector ('output');
+        var b = ev.target.getMapBounds ();
+        if (b) o.textContent = [b.north, b.east, b.south, b.west].join (' ');
+
+        var c = ev.target.getMapCenter ();
+        document.querySelector ('#latlon').value = c.lat + ',' + c.lon;
+      });
+    }) ();
+    </script>
+  </section>
