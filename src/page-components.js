@@ -725,12 +725,18 @@
   }); // button[is=mode-button]
 
   function parseCSSString (cssText, defaultText) {
-    var m = (cssText || 'auto').match (/^\s*"([^"\\]*)"\s*$/); // XXX escape
+    var t = (cssText || 'auto');
+
+    // XXX
+    t = t.replace (/\\(00[89A-Fa-f][0-9A-Fa-f]|[1-9A-Fa-f][0-9A-Fa-f]{3}|[1-9A-Fa-f][0-9A-Fa-f]{4})/g,
+                   (__, _) => String.fromCodePoint (parseInt (_, 16)));
+    
+    var m = t.match (/^\s*"([^"\\]*)"\s*$/); // XXX escape
     if (m) {
       return m[1];
     }
 
-    var m = (cssText || 'auto').match (/^\s*'([^'\\]*)'\s*$/); // XXX escape
+    var m = t.match (/^\s*'([^'\\]*)'\s*$/); // XXX escape
     if (m) {
       return m[1];
     }
@@ -1194,7 +1200,7 @@
       b.appendChild (opts.fragment);
     } else { // no opts.fragment
       // recompute!
-      var t = parseCSSString (getComputedStyle (b).getPropertyValue ('--paco-close-button-label'), '×');
+      var t = parseCSSString (getComputedStyle (b).getPropertyValue ('--paco-close-button-label'), '\u00D7');
       
       var h = document.createElement ('toast-box-header');
       var button = document.createElement ('button');
