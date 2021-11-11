@@ -678,6 +678,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   --paco-leaflet-menu-color: #333;
   --paco-leaflet-menu-selected-background-color: var(--paco-leaflet-control-selected-background-color);
   --paco-leaflet-menu-selected-color: var(--paco-leaflet-control-selected-color);
+  --paco-leaflet-menu-item-padding: .3em;
 }
 
 popup-menu:not([open]) > menu-main {
@@ -881,6 +882,7 @@ map-area {
   --paco-maptype-map-text: 'Map';
   --paco-maptype-hillshade-text: 'Hillshade';
   --paco-maptype-photo-text: 'Photo';
+  --paco-maptype-jmanowc-current-text: 'Rain';
 }
 map-area:lang(en) {
   --paco--gsi-lang: gsi-english-standard;
@@ -899,6 +901,7 @@ map-area:lang(ja) {
   --paco-maptype-map-text: '\5730\56F3';
   --paco-maptype-hillshade-text: '\5730\5F62'; /* '\9670\5F71\8D77\4F0F' */
   --paco-maptype-photo-text: '\822A\7A7A\5199\771F';
+  --paco-maptype-jmanowc-current-text: '\96E8\96F2\306E\52D5\304D';
 }
 
 map-area > iframe.googlemapsembed:not([hidden]) {
@@ -974,15 +977,19 @@ map-area popup-menu > menu-main > menu-item:not([hidden]) {
   align-items: center;
 }
 
-map-area popup-menu > menu-main > menu-item a:not([hidden]) {
+map-area popup-menu > menu-main > menu-item a:not([hidden]),
+map-area.leaflet-container popup-menu > menu-main > menu-item > label:only-child:not([hidden]) {
   display: block;
 }
 map-area popup-menu > menu-main > menu-item a,
-map-area.leaflet-container popup-menu > menu-main > menu-item a {
+map-area.leaflet-container popup-menu > menu-main > menu-item a,
+map-area.leaflet-container popup-menu > menu-main > menu-item > label:only-child {
   text-decoration: none;
   color: inherit;
   background-color: transparent;
-  padding: .3em;
+  padding: var(--paco-leaflet-menu-item-padding);
+  cursor: pointer;
+  flex: 1;
 }
 map-area popup-menu > menu-main > menu-item a:hover,
 map-area popup-menu > menu-main > menu-item a:focus,
@@ -995,7 +1002,7 @@ map-area popup-menu > menu-main > menu-item > button {
   flex: 1;
   -webkit-appearance: none;
   border: none;
-  padding: .3em;
+  padding: var(--paco-leaflet-menu-item-padding);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -1006,6 +1013,22 @@ map-area popup-menu > menu-main > menu-item > button {
 map-area popup-menu > menu-main > menu-item.selected > button {
   background-color: var(--paco-leaflet-menu-selected-background-color);
   color: var(--paco-leaflet-menu-selected-color);
+}
+
+map-area .paco-timestamp-control a {
+  text-decoration: none;
+}
+
+map-area .paco-jma-timestamp-control {
+  background: rgba(255, 255, 255, 0.5);
+  color: #333;
+}
+
+map-area .paco-jma-timestamp-control time:not([hidden]) {
+  display: block;
+}
+map-area .paco-jma-timestamp-control time {
+  --timejs-serialization: dtsjp2;
 }
 
 template-set {
