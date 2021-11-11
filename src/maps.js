@@ -251,10 +251,20 @@
       mi[2].textContent = e.pcInternal.parseCSSString (s.getPropertyValue ('--paco-open-geohack-text'), 'Open in others...');
       mi[3].textContent = e.pcInternal.parseCSSString (s.getPropertyValue ('--paco-copy-center-text'), 'Copy center coordinates');
 
+      if (e.hasAttribute ('jma')) {
+        var mm = m.querySelector ('menu-main');
+        var nodes = document.createElement ('div');
+        nodes.innerHTML = '<menu-item><label><input type=checkbox> <span>Rain</span></label></menu-item><hr>';
+        nodes.querySelector ('input').onchange = (ev) => e.toggleJMANowc (ev.target.checked);
+        var sRain = e.pcInternal.parseCSSString (s.getPropertyValue ('--paco-maptype-jmanowc-current-text'), 'Rain');
+        nodes.querySelector ('label span').textContent = sRain;
+        Array.prototype.slice.call (nodes.childNodes).reverse ().forEach (_ => mm.insertBefore (_, mm.firstChild));
+      } // jma=""
+
       if (e.hasAttribute ('gsi')) {
         var mm = m.querySelector ('menu-main');
         var nodes = document.createElement ('div');
-        nodes.innerHTML = '<menu-item data-class-field=mapClassName data-true=gsi-standard-hillshade data-false=gsi-lang><button>Map</button> <label><input type=checkbox> <span>Hillshade</span></label></menu-item><menu-item data-class-field=photoClassName data-true=gsi-photo-standard data-false=gsi-photo><button>Photo</button> <label><input type=checkbox> <span>Map</span></label></menu-item><menu-item data-class-field=hillshadeClassName data-true=gsi-hillshade-standard data-false=gsi-hillshade><button>Hillshade</button> <label><input type=checkbox> <span>Map</span></label></menu-item><hr>'
+        nodes.innerHTML = '<menu-item data-class-field=mapClassName data-true=gsi-standard-hillshade data-false=gsi-lang><button>Map</button> <label><input type=checkbox> <span>Hillshade</span></label></menu-item><menu-item data-class-field=photoClassName data-true=gsi-photo-standard data-false=gsi-photo><button>Photo</button> <label><input type=checkbox> <span>Map</span></label></menu-item><menu-item data-class-field=hillshadeClassName data-true=gsi-hillshade-standard data-false=gsi-hillshade><button>Hillshade</button> <label><input type=checkbox> <span>Map</span></label></menu-item><hr>';
         var mis = nodes.querySelectorAll ('menu-item');
         mis[0].onclick = mis[1].onclick = mis[2].onclick = function () {
           e.setMapType (this.getAttribute ('data-' + this.querySelector ('input[type=checkbox]').checked));
@@ -270,7 +280,7 @@
         mis[2].querySelector ('button').textContent = sHillshade;
         mis[2].querySelector ('span').textContent = sMap;
         Array.prototype.slice.call (nodes.childNodes).reverse ().forEach (_ => mm.insertBefore (_, mm.firstChild));
-      }
+      } // gsi=""
 
       m.addEventListener ('toggle', () => {
         if (m.hasAttribute ('open')) {
@@ -300,7 +310,95 @@
     };
     return new L.Control.ElementControl (opts);
   }; // L.control.mapTypeMenu
+  
+  L.control.timestampControl = function (opts) {
+    var t = document.createElement ('map-controls');
+    t.className = 'paco-timestamp-control paco-jma-timestamp-control';
+    t.innerHTML = '<a href=https://www.jma.go.jp/ target=_blank rel=noreferrer>\u6C17\u8C61\u5E81</a>\u300C<a href=https://www.jma.go.jp/bosai/nowc/ target=_blank rel=noreferrer>\u96E8\u96F2\u306E\u52D5\u304D</a>\u300D <time data-format=abstime></time>';
+    opts.element = t;
+    opts.styling = b => {
+      var e = b.pcMap.getContainer ();
+      var time = b.querySelector ('time');
+      var tzo = e.getAttribute ('tzoffset');
+      if (tzo) time.setAttribute ('data-tzoffset', tzo);
+    };
+    opts.setTimeElement (t.querySelector ('time'));
+    return new L.Control.ElementControl (opts);
+  }; // L.control.timestampControl
+  L.tileLayer.jmaNowc = function (opts) {
+    var getTime = () => {
+      var realNow = (new Date).valueOf ();
+      var now = realNow - 100*1000;
+      var prev = Math.floor (now / (5*60*1000)) * 5*60*1000;
+      var next = prev + 5*60*1000;
+      var delta = next - now;
+          // next + 100*1000 - realNow
+          // = next + 100*1000 - (now + 100*1000)
+      if (delta < 60*1000) delta = 60*1000;
+      var prevHTML = new Date (prev).toISOString ();
+      var prevFormatted = prevHTML
+          .replace (/(?:\.[0-9]+|)Z$/, '').replace (/[-:T]/g, '');
+      return {realNow, prev, prevFormatted, prevHTML, next, delta};
+    }; // getTime
 
+    var time = getTime ();
+    var u = 'https://www.jma.go.jp/bosai/jmatile/data/nowc/{urlTimestamp}/none/{urlTimestamp}/surf/hrpns/{z}/{x}/{y}.png';
+    var layer = L.tileLayer (u, {
+      attribution: '<a href=https://www.jma.go.jp/jma/kishou/info/coment.html target=_blank rel=noreferrer>\u6C17\u8C61\u5E81</a>',
+      errorTileUrl: opts.errorTileUrl,
+      maxNativeZoom: 10,
+      minNativeZoom: 4,
+      opacity: 0.8,
+      urlTimestamp: time.prevFormatted,
+    });
+    
+    var needReload = false;
+    var timeout;
+    var timeElement;
+    var requestReload = (layer, time) => {
+      if (!needReload) return;
+      time = time || getTime ();
+      timeout = setTimeout (() => {
+        if (!needReload) return;
+        var time = getTime ();
+        layer.options.urlTimestamp = time.prevFormatted;
+        layer.setUrl (u, false);
+        timeElement.textContent = time.prevHTML;
+        timeElement.removeAttribute ('datetime');
+        requestReload (layer, time);
+      }, time.delta);
+    }; // requestReload
+
+    var ts = L.control.timestampControl ({
+      position: 'bottomleft',
+      setTimeElement: _ => {
+        timeElement = _;
+        timeElement.textContent = time.prevHTML;
+        timeElement.removeAttribute ('datetime');
+      },
+    });
+
+    var map;
+    var ba = layer.beforeAdd;
+    layer.beforeAdd = function (_) {
+      map = _;
+      return ba.apply (this, arguments);
+    };
+
+    layer.on ('add', ev => {
+      needReload = true;
+      requestReload (ev.target, null);
+      ts.addTo (map);
+    });
+    layer.on ('remove', ev => {
+      needReload = false;
+      clearTimeout (timeout);
+      ts.remove ();
+    });
+
+    return layer;
+  }; // L.tileLayer.jmaNowc
+  
   var gmPromise;
   var loadGoogleMaps = () => {
     return gmPromise = gmPromise || new Promise ((resolve, reject) => {
@@ -458,13 +556,12 @@
         return Promise.resolve ().then (() => this.maRedraw ({all: true}));
       }, // maInitGoogleMapsEmbed
       pcInitLeaflet: function () {
-        var mo = new MutationObserver ((mutations) => {
+        (new MutationObserver ((mutations) => {
           this.pcLMap.panTo ({
             lat: this.maAttrFloat ('lat', 0),
             lng: this.maAttrFloat ('lon', 0),
           });
-        });
-        mo.observe (this, {attributeFilter: ['lat', 'lon']});
+        })).observe (this, {attributeFilter: ['lat', 'lon']});
         this.maCenter = {
           lat: this.maAttrFloat ('lat', 0),
           lon: this.maAttrFloat ('lon', 0),
@@ -734,6 +831,10 @@
         this.pcMapType = type;
         this.maRedraw ({mapType: true});
       }, // setMapType
+      toggleJMANowc: function (_) {
+        this.pcJMANowc = !!_;
+        this.maRedraw ({mapType: true});
+      }, // toggleJMANowc
       pcChangeMapType: function () {
         var sType = this.pcMapType;
         var map = this.pcLMap;
@@ -862,10 +963,16 @@
           });
           layers.push (lGSI);
         }
+
+        if (this.pcJMANowc) {
+          var lNowc = L.tileLayer.jmaNowc ({
+            errorTileUrl,
+          });
+          layers.push (lNowc);
+        }
         
         map.eachLayer (l => map.removeLayer (l));
         layers.forEach (l => map.addLayer (l));
-        
       }, // pcChangeMapType
 
       pcLocateCurrentPosition: function (opts) {
