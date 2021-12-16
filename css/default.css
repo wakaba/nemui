@@ -936,7 +936,7 @@ map-area map-credit a {
 }
 
 map-area button.paco-control-button {
-  appearance: none;
+  -webkit-appearance: none;
   width: auto;
   border: 2px solid rgba(0,0,0,0.2);
   border-radius: 2px;
