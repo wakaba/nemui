@@ -936,13 +936,16 @@ map-area map-credit a {
 }
 
 map-area button.paco-control-button {
+  appearance: none;
+  width: auto;
   border: 2px solid rgba(0,0,0,0.2);
   border-radius: 2px;
+  padding: 5px;
   background-color: var(--paco-leaflet-control-default-background-color);
   color: var(--paco-leaflet-control-default-color);
   min-width: 30px;
   min-height: 30px;
-  line-height: 30px;
+  line-height: 1;
   font-size: 22px;
   cursor: pointer;
   user-select: none;
@@ -976,6 +979,7 @@ map-area popup-menu > button::after {
   font-family: var(--paco-symbol-font);
   font-size: 50%;
   margin: .2em 0 .2em .4em;
+  vertical-align: middle;
 }
 
 map-area popup-menu > menu-main {
