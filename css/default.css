@@ -1,3 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols&display=swap');
+
+/*
+
+Per CC0 <https://creativecommons.org/publicdomain/zero/1.0/>, to the
+extent possible under law, the author has waived all copyright and
+related or neighboring rights to this work.
+
+*/
 /* Leaflet default styles */
 /* required styles */
 
@@ -679,6 +688,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   --paco-leaflet-menu-selected-background-color: var(--paco-leaflet-control-selected-background-color);
   --paco-leaflet-menu-selected-color: var(--paco-leaflet-control-selected-color);
   --paco-leaflet-menu-item-padding: .3em;
+  --paco-symbol-font: "Noto Sans Symbols";
 }
 
 popup-menu:not([open]) > menu-main {
@@ -941,7 +951,7 @@ map-area button.paco-control-button:hover {
   background-color: var(--paco-leaflet-control-hover-background-color);
   color: var(--paco-leaflet-control-hover-color);
 }
-map-area:fullscreen button.paco-control-button {
+map-area:fullscreen button.paco-fullscreen-control-button {
   background-color: var(--paco-leaflet-control-selected-background-color);
   color: var(--paco-leaflet-control-selected-color);
 }
@@ -955,8 +965,15 @@ map-area popup-menu[open] > button.paco-control-button {
   color: var(--paco-leaflet-control-selected-color);
 }
 
+map-area .paco-fullscreen-control-button,
+map-area .paco-currentposition-control-button,
+map-area .paco-maptype-control-button {
+  font-family: var(--paco-symbol-font);
+}
+
 map-area popup-menu > button::after {
   content: "\25BC";
+  font-family: var(--paco-symbol-font);
   font-size: 50%;
   margin: .2em 0 .2em .4em;
 }
@@ -1036,11 +1053,13 @@ template-set {
 }
 
 a[is=copy-url],
-button[is=copy-text-content] {
+button[is=copy-text-content],
+can-copy {
   --paco-copied-message: "Copied to the clipboard!";
 }
 a[is=copy-url]:lang(ja),
-button[is=copy-text-content]:lang(ja) {
+button[is=copy-text-content]:lang(ja),
+can-copy:lang(ja) {
   --paco-copied-message: "\30AF\30EA\30C3\30D7\30DC\30FC\30C9\306B\30B3\30D4\30FC\3057\307E\3057\305F\3002";
 }
 
