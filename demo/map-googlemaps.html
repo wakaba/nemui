@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html data-google-maps-key=AIzaSyCeVv3Uyen18Jk8wZoyrJvxPjqIdPevE7M>
+<title>Map</title>
+<link rel=stylesheet href=../css/default.css>
+<script src=../src/page-components.js async></script>
+<script src=../src/maps.js async></script>
+
+<tab-set>
+  <tab-menu></tab-menu>
+  <section id=map-section-1>
+    <h1>Map #1</h1>
+    <map-area lat=35.2 lon=135.4 engine=googlemaps></map-area>
+    <output name=bounds></output>
+    <script>
+    (() => {
+      var s = document.querySelector ('#map-section-1');
+      s.querySelector ('map-area').addEventListener ('pcRedraw', (ev) => {
+        var o = s.querySelector ('output');
+        var b = ev.target.getMapBounds ();
+        if (b) o.textContent = [b.north, b.east, b.south, b.west].join (' ');
+      });
+    }) ();
+    </script>
+  </section>
+  <section id=map-section-2>
+    <h1>Map #2</h1>
+    <map-area lat=-30.2 lon=-85.4 engine=googlemaps></map-area>
+    <output name=bounds></output>
+    <script>
+    (() => {
+      var s = document.querySelector ('#map-section-2');
+      s.querySelector ('map-area').addEventListener ('pcRedraw', (ev) => {
+        var o = s.querySelector ('output');
+        var b = ev.target.getMapBounds ();
+        if (b) o.textContent = [b.north, b.east, b.south, b.west].join (' ');
+      });
+    }) ();
+    </script>
+  </section>
+  <section id=map-section-3>
+    <h1>Map #3</h1>
+    <map-area lat=-30.2 lon=-85.4 engine=googlemaps>
+      <map-controls>
+        Hello!
+      </map-controls>
+      <map-controls position=top-left>
+        @1
+      </map-controls>
+      <map-controls position=top-center>
+        @2
+      </map-controls>
+      <map-controls position=top-right>
+        @3
+      </map-controls>
+      <map-controls position=bottom-left>
+        @4
+      </map-controls>
+      <map-controls position=bottom-center>
+        @5
+      </map-controls>
+      <map-controls position=bottom-right>
+        @6
+      </map-controls>
+      <map-controls position=left-top>
+        @7
+      </map-controls>
+      <map-controls position=left-center>
+        @8
+      </map-controls>
+      <map-controls position=left-bottom>
+        @9
+      </map-controls>
+      <map-controls position=right-top>
+        @10
+      </map-controls>
+      <map-controls position=right-center>
+        @11
+      </map-controls>
+      <map-controls position=right-bottom>
+        @12
+      </map-controls>
+    </map-area>
+  </section>
+</tab-set>
+
+<section>
+  <h1>controls=zoom</h1>
+  <map-area engine=googlemaps controls=zoom></map-area>
+</section>
+
+<section>
+  <h1>controls="currentposition streetview zoom"</h1>
+  <map-area engine=googlemaps controls="currentposition streetview zoom"></map-area>
+</section>
+<!--
+  License: Public Domain.
+-->

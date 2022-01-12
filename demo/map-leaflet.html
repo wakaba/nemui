@@ -20,7 +20,7 @@
 <script src=https://wiki.suikawiki.org/scripts/time async data-time-selector=time></script>
 
   <section id=map-section-1 lang=ja>
-    <map-area engine=leaflet controls gsi jma lat=35.2 lon=135.4 >
+    <map-area engine=leaflet controls="type typebuttons scale fullscreen currentposition zoom streetview" gsi jma lat=35.2 lon=135.4 >
       <map-controls>ABC</map-controls>
       <map-controls position=top-left>XYZ</map-controls>
       <map-controls position=top-left><button>xyz</button></map-controls>
@@ -55,6 +55,9 @@
       <button value=gsi-photo-standard onclick="
         document.querySelector('map-area').setMapType(this.value);
       ">photo+standard</button>
+      <button value=none onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">none</button>
 
       <input id=latlon onfocus=this.select() onchange="
         var [lat, lon] = this.value.split (/,/);

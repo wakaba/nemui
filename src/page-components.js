@@ -850,6 +850,21 @@
             this.pmToggle (true);
           }
         }, 100);
+
+        // recompute!
+        var s = getComputedStyle (this);
+        var ha = s.getPropertyValue ('--paco-hover-action') || '';
+        if (/^\s*open\s*$/.test (ha)) {
+          this.addEventListener ('mouseover', function () {
+            if (!this.hasAttribute ('open')) {
+              this.setAttribute ('open', '');
+              this.pcSetOpenByHover = true;
+              var ev = new Event ('click');
+              ev.pmEventHandledBy = this;
+              window.dispatchEvent (ev);
+            }
+          });
+        }
       }, // pcInit
       pmClick: function (ev) {
         var current = ev.target;
@@ -861,6 +876,9 @@
           } else if (current.localName === 'button') {
             if (current.parentNode === this) {
               targetType = 'button';
+              break;
+            } else if (current.parentNode.localName === 'popup-menu') {
+              targetType = 'submenu';
               break;
             } else {
               targetType = 'command';
@@ -878,10 +896,15 @@
         } // current
 
         if (targetType === 'button') {
-          this.toggle ();
-        } else if (targetType === 'menu') {
-          //
+          if (this.pcOpenByHover && this.hasAttribute ('open')) {
+            delete this.pcOpenByHover;
+          } else {
+            this.toggle ();
+          }
+        } else if (targetType === 'menu' || targetType === 'submenu') {
+          ev.stopPropagation ();
         } else {
+          ev.stopPropagation ();
           this.toggle (false);
         }
         ev.pmEventHandledBy = this;
@@ -901,7 +924,11 @@
         if (show) {
           if (!this.pmGlobalClickHandler) {
             this.pmGlobalClickHandler = (ev) => {
-              if (ev.pmEventHandledBy === this) return;
+              var p = ev.pmEventHandledBy;
+              while (p) {
+                if (p === this) return;
+                p = p.parentNode;
+              }
               this.toggle (false);
             };
             window.addEventListener ('click', this.pmGlobalClickHandler);
@@ -915,6 +942,11 @@
             var ev = new Event ('toggle', {bubbles: true});
             this.dispatchEvent (ev);
           }
+        }
+        delete this.pcOpenByHover;
+        if (this.pcSetOpenByHover) {
+          this.pcOpenByHover = true;
+          delete this.pcSetOpenByHover;
         }
       }, // pmToggle
 

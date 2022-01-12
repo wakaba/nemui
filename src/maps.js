@@ -187,6 +187,7 @@
       var e = this.options.element;
       e.pcMap = map;
       if (this.options.styling) this.options.styling (e);
+      L.DomEvent.disableClickPropagation (e);
       return e;
     }, // onAdd
   });
@@ -233,14 +234,39 @@
     };
     return new L.Control.ElementControl (opts);
   }; // L.control.currentPositionButton
+  L.control.streetViewButton = function (opts) {
+    var b = document.createElement ('button');
+    b.className = 'paco-control-button paco-streetview-control-button';
+    b.type = 'button';
+    b.textContent = '\u{1F6B6}';
+    b.setAttribute ('draggable', 'true');
+    b.ondragstart = () => {
+      var e = b.pcMap.getContainer ();
+      e.pcStartStreetViewDragMode (b);
+    };
+    opts.element = b;
+    opts.styling = b => {
+      var e = b.pcMap.getContainer ();
+      // recompute!
+      var m = e.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-streetview-title'), 'Street View');
+      b.title = m;
+    };
+    return new L.Control.ElementControl (opts);
+  }; // L.control.streetViewButton
   L.control.mapTypeMenu = function (opts) {
+    var c = document.createElement ('span');
+    c.className = 'paco-menu-container';
+    
     var m = document.createElement ('popup-menu');
     m.className = 'paco-map-type-menu';
     m.innerHTML = '<button type=button class="paco-control-button paco-maptype-control-button">\u{1F5FA}</button><menu-main><menu-item><a data-href-template="https://www.google.com/maps?ll={lat},{lon}&z={zoomLevel}" target=_blank rel=noreferrer>Google Maps</a></menu-item><menu-item><a data-href-template="https://www.openstreetmap.org/?mlat={lat}&mlon={lon}&zoom={zoomLevel}" target=_blank rel=noreferrer>OpenStreetMap</a></menu-item><menu-item><a data-href-template="https://geohack.toolforge.org/geohack.php?params={lat};{lon}" target=_blank rel=noreferrer>Others...</a></menu-item><menu-item><a data-href-template="geo:{lat},{lon}" is=copy-url>Copy</a></menu-item></menu-main>';
     m.addEventListener ('dblclick', ev => ev.stopPropagation ());
-    opts.element = m;
-    opts.styling = m => {
-      var e = m.pcMap.getContainer ();
+    c.appendChild (m);
+
+    opts.element = c;
+    opts.styling = c => {
+      var e = c.pcMap.getContainer ();
+      var m = c.querySelector ('popup-menu.paco-map-type-menu');
       
       // recompute!
       var s = getComputedStyle (e);
@@ -264,50 +290,74 @@
       if (e.hasAttribute ('gsi')) {
         var mm = m.querySelector ('menu-main');
         var nodes = document.createElement ('div');
-        nodes.innerHTML = '<menu-item data-class-field=mapClassName data-true=gsi-standard-hillshade data-false=gsi-lang><button>Map</button> <label><input type=checkbox> <span>Hillshade</span></label></menu-item><menu-item data-class-field=photoClassName data-true=gsi-photo-standard data-false=gsi-photo><button>Photo</button> <label><input type=checkbox> <span>Map</span></label></menu-item><menu-item data-class-field=hillshadeClassName data-true=gsi-hillshade-standard data-false=gsi-hillshade><button>Hillshade</button> <label><input type=checkbox> <span>Map</span></label></menu-item><hr>';
-        var mis = nodes.querySelectorAll ('menu-item');
-        mis[0].onclick = mis[1].onclick = mis[2].onclick = function () {
-          e.setMapType (this.getAttribute ('data-' + this.querySelector ('input[type=checkbox]').checked));
-          this.dispatchEvent (new Event ('toggle', {bubbles: true}));
-        };
+        nodes.innerHTML = '<menu-item><popup-menu data-true=gsi-standard-hillshade data-false=gsi-lang><button class=paco-control-button>Map</button><menu-main><menu-item><label><input type=checkbox> <span>Hillshade</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><popup-menu data-true=gsi-photo-standard data-false=gsi-photo><button class=paco-control-button>Photo</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><popup-menu data-true=gsi-hillshade-standard data-false=gsi-hillshade><button class=paco-control-button>Hillshade</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><button data-true=none>None</button></menu-item><hr>';
+        var nb = nodes.querySelector ('menu-item:last-of-type button');
+        
+        var pms = Array.prototype.slice.call (nodes.querySelectorAll ('popup-menu'));
+        Array.prototype.slice.call (nodes.childNodes).reverse ().forEach (_ => mm.insertBefore (_, mm.firstChild));
+        
+        if (opts.buttons) {
+          var n = document.createElement ('span');
+          n.className = 'paco-menu-button-container';
+          n.innerHTML = '<popup-menu data-true=gsi-standard-hillshade data-false=gsi-lang><button class=paco-control-button>Map</button><menu-main><menu-item><label><input type=checkbox> <span>Hillshade</span></label></menu-item></menu-main></popup-menu><popup-menu data-true=gsi-photo-standard data-false=gsi-photo><button class=paco-control-button>Photo</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu><popup-menu data-true=gsi-hillshade-standard data-false=gsi-hillshade><button class=paco-control-button>Hillshade</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu>';
+          pms = pms.concat (Array.prototype.slice.call (n.querySelectorAll ('popup-menu')));
+
+          c.insertBefore (n, c.firstChild);
+          m.firstChild.textContent = '\u22EF';
+        } // controls=typebuttons
+
         var sMap = e.pcInternal.parseCSSString (s.getPropertyValue ('--paco-maptype-map-text'), 'Map');
+        var sMapLabel = e.pcInternal.parseCSSString (s.getPropertyValue ('--paco-maptype-maplabel-text'), 'Labels');
         var sHillshade = e.pcInternal.parseCSSString (s.getPropertyValue ('--paco-maptype-hillshade-text'), 'Hillshade');
         var sPhoto = e.pcInternal.parseCSSString (s.getPropertyValue ('--paco-maptype-photo-text'), 'Photo');
-        mis[0].querySelector ('button').textContent = sMap;
-        mis[0].querySelector ('span').textContent = sHillshade;
-        mis[1].querySelector ('button').textContent = sPhoto;
-        mis[1].querySelector ('span').textContent = sMap;
-        mis[2].querySelector ('button').textContent = sHillshade;
-        mis[2].querySelector ('span').textContent = sMap;
-        Array.prototype.slice.call (nodes.childNodes).reverse ().forEach (_ => mm.insertBefore (_, mm.firstChild));
+        var sNone = e.pcInternal.parseCSSString (s.getPropertyValue ('--paco-maptype-none-text'), 'None');
+        var buttonLabels = {
+          'gsi-lang': sMap,
+          'gsi-photo': sPhoto,
+          'gsi-hillshade': sHillshade,
+          'gsi-standard-hillshade': sHillshade,
+          'gsi-photo-standard': sMapLabel,
+          'gsi-hillshade-standard': sMapLabel,
+        };
+        
+        pms.forEach (pm => {
+          var button = pm.querySelector ('button');
+          button.addEventListener ('click', function () {
+            var checked = pm.querySelector ('input[type=checkbox]').checked;
+            e.setMapType (pm.getAttribute ('data-' + checked));
+          });
+          button.textContent = buttonLabels[pm.getAttribute ('data-false')];
+
+          pm.querySelector ('input[type=checkbox]').onclick = function () {
+            e.setMapType (pm.getAttribute ('data-' + this.checked));
+          };
+          pm.querySelector ('span').textContent = buttonLabels[pm.getAttribute ('data-true')];
+        });
+
+        nb.textContent = sNone;
+        nb.onclick = () => {
+          e.setMapType ('none');
+        };
       } // gsi=""
 
-      m.addEventListener ('toggle', () => {
-        if (m.hasAttribute ('open')) {
-          var mapClassName = '';
-          var hillshadeClassName = '';
-          var photoClassName = '';
-          var mt = e.pcMapType;
-          if (mt === 'gsi-lang' || mt === 'gsi-standard-hillshade') {
-            mapClassName = 'selected';
-          }
-          if (mt === 'gsi-photo' || mt === 'gsi-photo-standard') {
-            photoClassName = 'selected';
-          }
-          if (mt === 'gsi-hillshade' || mt === 'gsi-hillshade-standard') {
-            hillshadeClassName = 'selected';
-          }
-          e.pcInternal.$fill (m, {
-            lat: e.maCenter.lat,
-            lon: e.maCenter.lon,
-            zoomLevel: e.pcZoomLevel,
-            mapClassName,
-            hillshadeClassName,
-            photoClassName,
+      e.addEventListener ('pcMapTypeChange', () => {
+        var mt = e.pcMapType;
+        c.querySelectorAll ('popup-menu[data-true], button[data-true]').forEach (pm => {
+          var tt = mt === pm.getAttribute ('data-true');
+          var ff = mt === pm.getAttribute ('data-false');
+          pm.classList.toggle ('selected', tt || ff);
+          pm.querySelectorAll ('input[type=checkbox]').forEach (_ => {
+            _.checked = tt;
           });
-        }
+        });
+        e.pcInternal.$fill (c, {
+          lat: e.maCenter.lat,
+          lon: e.maCenter.lon,
+          zoomLevel: e.pcZoomLevel,
+        });
       });
     };
+
     return new L.Control.ElementControl (opts);
   }; // L.control.mapTypeMenu
   
@@ -478,6 +528,7 @@
 
           var applyControls = () => {
             var opts = {};
+            var cp = false;
             var value = this.getAttribute ('controls');
             if (value === null) {
               opts.scaleControl = opts.fullscreenControl =
@@ -497,9 +548,37 @@
                   type: 'mapTypeControl',
                 }[v];
                 if (key) opts[key] = true;
+                if (v === 'currentposition') cp = true;
               });
-            }
+            } // value
             this.maGoogleMap.setOptions (opts);
+
+            if (cp && !this.pcCurrentPositionButtonAdded) {
+              this.pcCurrentPositionButtonAdded = true;
+              var e = document.createElement ('map-controls');
+              e.setAttribute ('position', 'right-bottom');
+              e.className = 'paco-currentposition-container';
+              var b = document.createElement ('button');
+              b.className = 'paco-control-button paco-currentposition-control-button';
+              b.type = 'button';
+              b.textContent = '\u26EF';
+              b.onclick = () => {
+                this.pcLocateCurrentPosition ({pan: true});
+              };
+              
+              // recompute!
+              var mCP = this.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-currentposition-title'), 'Current position');
+              b.title = mCP;
+              
+              e.appendChild (b);
+              if (controls) {
+                controls.push (e);
+              } else {
+                this.appendChild (e);
+                this.maRedraw ({controls: true});
+              }
+              this.pcInitCurrentPosition ();
+            } // cp
           }; // applyControls
           new MutationObserver (applyControls)
               .observe (this, {attributeFilter: ['controls']});
@@ -529,6 +608,7 @@
             this.maRedraw ({controls: true});
           }).observe (this, {childList: true});
           controls.forEach (e => this.appendChild (e));
+          controls = null;
           
           this.maRedraw ({all: true});
         }).then (() => {
@@ -575,7 +655,8 @@
             c.forEach (_ => controls[_] = true);
           } else {
             controls = {zoom: true, scale: true, fullscreen: true,
-                        currentposition: true, type: true};
+                        currentposition: true, type: true,
+                        streetview: true};
           }
         }
 
@@ -599,19 +680,22 @@
         if (controls.type) {
           L.control.mapTypeMenu ({
             position: 'topleft',
+            buttons: controls.typebuttons,
           }).addTo (map);
         }
         if (controls.fullscreen) L.control.fullscreenButton ({}).addTo (map);
+
+        if (controls.streetview) {
+          L.control.streetViewButton ({
+            position: 'bottomright',
+          }).addTo (map);
+        }
 
         if (controls.currentposition) {
           L.control.currentPositionButton ({
             position: 'bottomright',
           }).addTo (map);
-          if (navigator.permissions && navigator.permissions.query) {
-            navigator.permissions.query ({name: "geolocation"}).then (ps => {
-              if (ps.state === 'granted') this.pcLocateCurrentPosition ({});
-            });
-          }
+          this.pcInitCurrentPosition ();
         }
 
         // Map need to be recomputed if it is initialized when not
@@ -828,8 +912,10 @@
       }, // maEnableGoogleMapGSI
 
       setMapType: function (type) {
-        this.pcMapType = type;
-        this.maRedraw ({mapType: true});
+        if (this.pcMapType !== type) {
+          this.pcMapType = type;
+          this.maRedraw ({mapType: true});
+        }
       }, // setMapType
       toggleJMANowc: function (_) {
         this.pcJMANowc = !!_;
@@ -962,6 +1048,8 @@
             minNativeZoom: 5,
           });
           layers.push (lGSI);
+        } else if (type === 'none') {
+          //
         }
 
         if (this.pcJMANowc) {
@@ -973,8 +1061,17 @@
         
         map.eachLayer (l => map.removeLayer (l));
         layers.forEach (l => map.addLayer (l));
+        this.classList.toggle ('paco-maptype-none', type === 'none');
+        this.dispatchEvent (new Event ('pcMapTypeChange'));
       }, // pcChangeMapType
 
+      pcInitCurrentPosition: function () {
+        if (navigator.permissions && navigator.permissions.query) {
+          navigator.permissions.query ({name: "geolocation"}).then (ps => {
+            if (ps.state === 'granted') this.pcLocateCurrentPosition ({});
+          });
+        }
+      }, // pcInitCurrentPosition
       pcLocateCurrentPosition: function (opts) {
         if (opts.pan) {
           if (this.pcCurrentPosition) {
@@ -1011,6 +1108,24 @@
           console.log (e);
         });
       }, // pcLocateCurrentPosition
+
+      pcStartStreetViewDragMode: function (src) {
+        var handlers = [];
+        this.addEventListener ('dragover', handlers[0] = ev => {
+          ev.preventDefault ();
+        });
+        this.addEventListener ('drop', handlers[1] = ev => {
+          var ll = this.pcLMap.mouseEventToLatLng (ev);
+          var u = 'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + ll.lat + ',' + ll.lng;
+          window.open (u, '_blank', 'noreferrer');
+        });
+
+        src.addEventListener ('dragend', handlers[2] = ev => {
+          this.removeEventListener ('dragover', handlers[0]);
+          this.removeEventListener ('drop', handlers[1]);
+          src.removeEventListener ('dragend', handlers[2]);
+        });
+      }, // pcStartStreetViewDragMode
       
     },
   }); // <map-area>
@@ -1019,7 +1134,7 @@
 
 /*
 
-Copyright 2017-2021 Wakaba <wakaba@suikawiki.org>.
+Copyright 2017-2022 Wakaba <wakaba@suikawiki.org>.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
