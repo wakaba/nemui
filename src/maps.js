@@ -862,14 +862,27 @@
               }
               if (!markerURL) console.log ("Bad |--paco-marker-currentposition| value: |"+v+"|");
 
-              L.marker (this.pcCurrentPosition, {
-                //draggable: true,
-                //title: "",
-                icon: L.icon ({
-                  iconUrl: markerURL,
-                  iconSize: markerSize,
-                }),
-              }).addTo (this.pcLMap);
+              if (this.pcLMap) {
+                L.marker (this.pcCurrentPosition, {
+                  //draggable: true,
+                  //title: "",
+                  icon: L.icon ({
+                    iconUrl: markerURL,
+                    iconSize: markerSize,
+                  }),
+                }).addTo (this.pcLMap);
+              } else {
+                new google.maps.Marker ({
+                  position: {
+                    lat: this.pcCurrentPosition.lat,
+                    lng: this.pcCurrentPosition.lon,
+                  },
+                  map: this.googleMap,
+                  //title: "",
+                  icon: markerURL,
+                });
+                
+              }
             }
           } // currentPositionMarker
         } // isShown
