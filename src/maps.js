@@ -1075,7 +1075,7 @@
       pcLocateCurrentPosition: function (opts) {
         if (opts.pan) {
           if (this.pcCurrentPosition) {
-            this.pcLMap.panTo ({
+            (this.pcLMap || this.googleMap).panTo ({
               lat: this.pcCurrentPosition.lat,
               lng: this.pcCurrentPosition.lon,
             });
@@ -1091,7 +1091,7 @@
             //latLonAccuracy: p.coords.accuracy,
           };
           if (this.pcLocateCurrentPositionPanRequested) {
-            this.pcLMap.panTo ({
+            (this.pcLMap || this.googleMap).panTo ({
               lat: this.pcCurrentPosition.lat,
               lng: this.pcCurrentPosition.lon,
             });
