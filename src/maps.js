@@ -831,6 +831,47 @@
               });
             }
           } // controls
+
+          if (updates.currentPositionMarker || updates.all) {
+            if (this.pcCurrentPosition) {
+              // recompute!
+              var s = getComputedStyle (this);
+              var v = s.getPropertyValue ('--paco-marker-currentposition') || 'auto';
+
+              var markerURL = null;
+              var markerSize = null;
+              var m = v.match (/^\s*("[^"]*"|'[^']*')\s+(\S+)\s+(\S+)\s*$/);
+              if (m) {
+                var mt = document.createElement ('span');
+                var s = this.pcInternal.parseCSSString (m[1], null);
+                if (s) {
+                  mt.textContent = s;
+                  var mc = document.createElement ('span');
+                  mc.textContent = m[2];
+                  var ms = document.createElement ('span');
+                  ms.textContent = m[3];
+                  markerSize = [m[3], m[3]];
+                  var mss = ms.innerHTML;
+                  markerURL = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+mss+' '+mss+'"><text x="calc('+mss+'/2)" y="calc('+mss+'/2)" width="'+mss+'" height="'+mss+'" font-size="'+mss+'" text-anchor="middle" alignment-baseline="central" fill="'+mc.innerHTML+'">'+mt.innerHTML+'</text></svg>');
+                }
+              } else {
+                m = v.match (/^\s*url\(([^()"\\]+)\)\s*$/);
+                if (m) {
+                  markerURL = m[1];
+                }
+              }
+              if (!markerURL) console.log ("Bad |--paco-marker-currentposition| value: |"+v+"|");
+
+              L.marker (this.pcCurrentPosition, {
+                //draggable: true,
+                //title: "",
+                icon: L.icon ({
+                  iconUrl: markerURL,
+                  iconSize: markerSize,
+                }),
+              }).addTo (this.pcLMap);
+            }
+          } // currentPositionMarker
         } // isShown
         
         if (updates.onready) {
@@ -1058,8 +1099,12 @@
           });
           layers.push (lNowc);
         }
+
+        layers.forEach (l => l.pcIsMapTypeLayer = true);
         
-        map.eachLayer (l => map.removeLayer (l));
+        map.eachLayer (l => {
+          if (l.pcIsMapTypeLayer) map.removeLayer (l);
+        });
         layers.forEach (l => map.addLayer (l));
         this.classList.toggle ('paco-maptype-none', type === 'none');
         this.dispatchEvent (new Event ('pcMapTypeChange'));
@@ -1090,6 +1135,7 @@
             lon: p.coords.longitude,
             //latLonAccuracy: p.coords.accuracy,
           };
+          this.maRedraw ({currentPositionMarker: true});
           if (this.pcLocateCurrentPositionPanRequested) {
             (this.pcLMap || this.googleMap).panTo ({
               lat: this.pcCurrentPosition.lat,

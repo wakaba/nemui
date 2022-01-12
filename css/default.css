@@ -901,6 +901,7 @@ map-area {
   --paco-maptype-none-text: 'None';
   --paco-maptype-jmanowc-current-text: 'Rain';
   --paco-maptype-none-text: 'None';
+  --paco-marker-currentposition: "\25CF" purple 24px;
 }
 map-area:lang(en) {
   --paco--gsi-lang: gsi-english-standard;
@@ -1157,6 +1158,7 @@ map-area .paco-currentposition-container button.paco-control-button {
   background: white;
   color: black;
   font-size: 32px;
+  user-select: none;
 }
 
 template-set {
