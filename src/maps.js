@@ -593,9 +593,11 @@
             this.maRedrawEvent ();
           });
           var mo = new MutationObserver ((mutations) => {
-            this.maGoogleMap.setCenter ({
-              lat: this.maAttrFloat ('lat', 0),
-              lng: this.maAttrFloat ('lon', 0),
+            this.maRedraw ({
+              center: {
+                lat: this.maAttrFloat ('lat', 0),
+                lon: this.maAttrFloat ('lon', 0),
+              },
             });
           });
           mo.observe (this, {attributeFilter: ['lat', 'lon']});
@@ -622,11 +624,10 @@
       }, // maInitGoogleMaps
       maInitGoogleMapsEmbed: function () {
         var mo = new MutationObserver ((mutations) => {
-          this.maCenter = {
+          this.maRedraw ({center: {
             lat: this.maAttrFloat ('lat', 0),
             lon: this.maAttrFloat ('lon', 0),
-          };
-          this.maRedraw ({all: true});
+          }});
         });
         mo.observe (this, {attributeFilter: ['lat', 'lon']});
         this.maCenter = {
@@ -637,10 +638,10 @@
       }, // maInitGoogleMapsEmbed
       pcInitLeaflet: function () {
         (new MutationObserver ((mutations) => {
-          this.pcLMap.panTo ({
+          this.maRedraw ({center: {
             lat: this.maAttrFloat ('lat', 0),
-            lng: this.maAttrFloat ('lon', 0),
-          });
+            lon: this.maAttrFloat ('lon', 0),
+          }});
         })).observe (this, {attributeFilter: ['lat', 'lon']});
         this.maCenter = {
           lat: this.maAttrFloat ('lat', 0),
@@ -735,8 +736,29 @@
       }, // ma_RedrawEvent
       maRedraw: function (opts) {
         for (var n in opts) {
-          if (opts[n]) this.maRedrawNeedUpdated[n] = true;
+          if (opts[n]) this.maRedrawNeedUpdated[n] = opts[n];
         }
+
+        if (this.maRedrawNeedUpdated.center) {
+          var p = {
+            lat: this.maRedrawNeedUpdated.center.lat,
+            lng: this.maRedrawNeedUpdated.center.lon,
+          };
+          if (this.pcLMap) {
+            this.pcLMap.panTo (p);
+          } else if (this.maGoogleMap) {
+            if (this.maRedrawNeedUpdated.pan) {
+              this.maGoogleMap.panTo (p);
+            } else {
+              this.maGoogleMap.setCenter (p);
+            }
+          } else {
+            this.maCenter = this.maRedrawNeedUpdated.center;
+            this.maRedrawNeedUpdated.all = true;
+          }
+          delete this.maRedrawNeedUpdated.center;
+          delete this.maRedrawNeedUpdated.pan;
+        } // center
         
         if (this.maRedrawNeedUpdated.relocate) {
           if (this.maEngine === 'leaflet') {
@@ -1150,9 +1172,9 @@
       pcLocateCurrentPosition: function (opts) {
         if (opts.pan) {
           if (this.pcCurrentPosition) {
-            (this.pcLMap || this.googleMap).panTo ({
-              lat: this.pcCurrentPosition.lat,
-              lng: this.pcCurrentPosition.lon,
+            this.maRedraw ({
+              center: this.pcCurrentPosition,
+              pan: true,
             });
           } else {
             this.pcLocateCurrentPositionPanRequested = true;
@@ -1167,9 +1189,9 @@
           };
           this.maRedraw ({currentPositionMarker: true});
           if (this.pcLocateCurrentPositionPanRequested) {
-            (this.pcLMap || this.googleMap).panTo ({
-              lat: this.pcCurrentPosition.lat,
-              lng: this.pcCurrentPosition.lon,
+            this.maRedraw ({
+              center: this.pcCurrentPosition,
+              pan: true,
             });
             delete this.pcLocateCurrentPositionPanRequested;
           }
