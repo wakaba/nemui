@@ -48,6 +48,8 @@
       "needs": ["foo"],
       "steps": [
         {"uses": "actions/checkout@v2"},
+        {"run": "make docker"},
+        {"run": "docker version"},
         {"run": "echo $ABC_D",
          "env": {"ABC_D": "12"}},
         {"run": "mkdir abc; echo AAA > abc/d"},
