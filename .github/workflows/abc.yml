@@ -7,6 +7,7 @@
     "mat": {
       "runs-on": "ubuntu-latest",
       "strategy": {
+        "fail-fast": false,
         "matrix": {
           "include": [
             {"abc": "abc1"},
@@ -43,7 +44,7 @@
         {"run": "#git push origin "}
       ]
     },
-    "bar": {
+    "macbar": {
       "runs-on": "macos-latest",
       "needs": ["foo"],
       "steps": [
