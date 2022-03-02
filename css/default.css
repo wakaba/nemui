@@ -1024,6 +1024,8 @@ map-area .paco-fullscreen-control-button,
 map-area .paco-currentposition-control-button,
 map-area .paco-maptype-control-button {
   font-family: var(--paco-symbol-font);
+  width: 30px;
+  height: 30px;
 }
 
 map-area popup-menu > button {
