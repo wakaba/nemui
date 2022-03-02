@@ -7,6 +7,7 @@
     "mat": {
       "runs-on": "ubuntu-latest",
       "strategy": {
+        "fail-fast": false,
         "matrix": {
           "include": [
             {"abc": "abc1"},
@@ -43,11 +44,12 @@
         {"run": "#git push origin "}
       ]
     },
-    "bar": {
-      "runs-on": "macos-latest",
-      "needs": ["foo"],
+    "macbar": {
+      "runs-on": "macos-latest", 
       "steps": [
         {"uses": "actions/checkout@v2"},
+        {"run": "make docker"},
+        {"run": "docker version"},
         {"run": "echo $ABC_D",
          "env": {"ABC_D": "12"}},
         {"run": "mkdir abc; echo AAA > abc/d"},
@@ -63,7 +65,7 @@
         }
       },
       "runs-on": "${{ matrix.os }}",
-      "needs": ["foo", "bar"],
+      "needs": ["foo", "macbar"],
       "steps": [
         {"uses": "actions/checkout@v2"},
         {"uses": "actions/download-artifact@v2",
