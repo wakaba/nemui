@@ -1020,9 +1020,11 @@ map-area popup-menu[open] > button.paco-control-button {
 
 map-area .paco-fullscreen-control-button,
 map-area .paco-currentposition-control-button,
-map-area .paco-maptype-control-button {
+map-area .paco-maptype-control-button,
+map-area .paco-streetview-control-button {
   font-family: var(--paco-symbol-font);
-  max-width: 36px;
+  max-width: 33px;
+  background-color: red !important;/*XXX*/
 }
 
 map-area popup-menu > button {
