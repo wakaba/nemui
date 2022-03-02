@@ -856,6 +856,7 @@
         var ha = s.getPropertyValue ('--paco-hover-action') || '';
         if (/^\s*open\s*$/.test (ha)) {
           this.addEventListener ('mouseover', function () {
+            if (this.pcTouching) return;
             if (!this.hasAttribute ('open')) {
               this.setAttribute ('open', '');
               this.pcSetOpenByHover = true;
@@ -865,7 +866,11 @@
             }
           });
           this.addEventListener ('touchstart', function () {
-            delete this.pcSetOpenByHover;
+//            delete this.pcSetOpenByHover;
+            this.pcTouching = true;
+          });
+          this.addEventListener ('touchend', function () {
+            this.pcTouching = false;
           });
         }
       }, // pcInit
