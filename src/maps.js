@@ -213,8 +213,14 @@
       var e = c.pcMap.getContainer ();
       if (document.fullscreenElement) {
         document.exitFullscreen ();
+      } else if (document.webkitFullscreenElement) { // Safari
+        document.webkitExitFullscreen ();
       } else {
-        e.requestFullscreen ();
+        if (e.requestFullscreen) {
+          e.requestFullscreen ();
+        } else { // Safari
+          e.webkitRequestFullscreen ();
+        }
       }
     };
     c.appendChild (b);
