@@ -859,13 +859,11 @@
           if (navigator.vendor === "Apple Computer, Inc.") { // WebKit
             var me = new MouseEvent ("mouseover");
             if (me.sourceCapabilities === undefined) { // not implemented yet
-              var ua = navigator.userAgent;
-              if (/Mobile|iPad/.test (ua)) {
-                isLegacyTouchDevice = true;
-              }
+              isLegacyTouchDevice = true;
+              /* Set true even for Desktop Safari, for "desktop browser 
+                 mode" of Mobile Safari. */
             }
           }
-          alert([isLegacyTouchDevice,navigator.vendor,me,navigator.userAgent]);
           if (!isLegacyTouchDevice)
           this.addEventListener ('mouseover', function (event) {
             if (event.sourceCapabilities &&
