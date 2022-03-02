@@ -813,7 +813,7 @@
         this.appendChild (b);
       }, // pcInit
       pcCopy: function () {
-        var e = this.querySelector ('code, data, time');
+        var e = this.querySelector ('code, data, time, output');
         if (!e) throw new Error ('No copied data element');
 
         var text;
@@ -855,7 +855,7 @@
         var s = getComputedStyle (this);
         var ha = s.getPropertyValue ('--paco-hover-action') || '';
         if (/^\s*open\s*$/.test (ha)) {
-          this.addEventListener ('mouseover', function () {
+          this.addEventListener ('XXXmouseover', function () {
             if (!this.hasAttribute ('open')) {
               this.setAttribute ('open', '');
               this.pcSetOpenByHover = true;

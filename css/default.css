@@ -985,7 +985,7 @@ map-area button.paco-control-button {
   overflow: hidden;
   user-select: none;
   /*XXX*/
-  border-color: orange;
+  border-color: green;
 }
 map-area button.paco-control-button:hover {
   background-color: var(--paco-leaflet-control-hover-background-color);
@@ -1024,8 +1024,6 @@ map-area .paco-fullscreen-control-button,
 map-area .paco-currentposition-control-button,
 map-area .paco-maptype-control-button {
   font-family: var(--paco-symbol-font);
-  width: 30px;
-  height: 30px;
 }
 
 map-area popup-menu > button {
