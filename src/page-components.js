@@ -855,8 +855,20 @@
         var s = getComputedStyle (this);
         var ha = s.getPropertyValue ('--paco-hover-action') || '';
         if (/^\s*open\s*$/.test (ha)) {
-          this.addEventListener ('mouseover', function () {
-            if (this.pcTouching) return;
+          var isLegacyTouchDevice = false;
+          if (navigator.vendor === "Apple Computer, Inc.") { // WebKit
+            var me = new MouseEvent ("mouseover");
+            if (me.sourceCapabilities === undefined) { // not implemented yet
+              var ua = navigator.userAgent;
+              if (/Mobile|iPad/.test (ua)) {
+                isLegacyTouchDevice = true;
+              }
+            }
+          }
+          if (!isLegacyTouchDevice)
+          this.addEventListener ('mouseover', function (event) {
+            if (event.sourceCapabilities &&
+                event.sourceCapabilities.firesTouchEvents) return;
             if (!this.hasAttribute ('open')) {
               this.setAttribute ('open', '');
               this.pcSetOpenByHover = true;
@@ -864,13 +876,6 @@
               ev.pmEventHandledBy = this;
               window.dispatchEvent (ev);
             }
-          });
-          this.addEventListener ('touchstart', function () {
-//            delete this.pcSetOpenByHover;
-            this.pcTouching = true;
-          });
-          this.addEventListener ('touchend', function () {
-            this.pcTouching = false;
           });
         }
       }, // pcInit
