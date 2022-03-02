@@ -855,7 +855,7 @@
         var s = getComputedStyle (this);
         var ha = s.getPropertyValue ('--paco-hover-action') || '';
         if (/^\s*open\s*$/.test (ha)) {
-          this.addEventListener ('XXXmouseover', function () {
+          this.addEventListener ('mouseover', function () {
             if (!this.hasAttribute ('open')) {
               this.setAttribute ('open', '');
               this.pcSetOpenByHover = true;
@@ -863,6 +863,9 @@
               ev.pmEventHandledBy = this;
               window.dispatchEvent (ev);
             }
+          });
+          this.addEventListener ('touchstart', function () {
+            delete this.pcSetOpenByHover;
           });
         }
       }, // pcInit

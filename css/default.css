@@ -985,7 +985,7 @@ map-area button.paco-control-button {
   overflow: hidden;
   user-select: none;
   /*XXX*/
-  border-color: green;
+  border-color: red;
 }
 map-area button.paco-control-button:hover {
   background-color: var(--paco-leaflet-control-hover-background-color);
