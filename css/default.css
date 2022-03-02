@@ -904,6 +904,9 @@ map-area {
   --paco-maptype-none-text: 'None';
   --paco-marker-currentposition: "\25CF" purple 24px;
   --paco-marker-value: none;
+  --paco-legend-show-text: "Show legend";
+  --paco-legend-hide-text: "Hide legend";
+  --paco-map-legend-initial: shown;
 }
 map-area:lang(en) {
   --paco--gsi-lang: gsi-english-standard;
@@ -926,7 +929,16 @@ map-area:lang(ja) {
   --paco-maptype-photo-text: '\822A\7A7A\5199\771F';
   --paco-maptype-none-text: '\306A\3057';
   --paco-maptype-jmanowc-current-text: '\96E8\96F2\306E\52D5\304D';
+  --paco-legend-show-text: "\51E1\4F8B\3092\8868\793A";
+  --paco-legend-hide-text: "\51E1\4F8B\3092\96A0\3059";
   --paco-map-click-action: none;
+}
+
+
+@media (max-width: 500px) {
+  map-area {
+    --paco-map-legend-initial: hidden;
+  }
 }
 
 map-area[formcontrol] {
@@ -968,7 +980,8 @@ map-area .paco-button-container {
   overflow: auto;
 }
 
-map-area button.paco-control-button {
+map-area button.paco-control-button,
+map-area button.paco-control-toggle-button {
   -webkit-appearance: none;
   width: auto;
   margin: 0;
@@ -982,13 +995,21 @@ map-area button.paco-control-button {
   line-height: 1;
   font-size: 22px;
   cursor: pointer;
+  text-align: center;
   overflow: hidden;
   user-select: none;
 }
-map-area button.paco-control-button:hover {
+map-area button.paco-control-button:hover,
+map-area button.paco-control-toggle-button:hover {
   background-color: var(--paco-leaflet-control-hover-background-color);
   color: var(--paco-leaflet-control-hover-color);
 }
+
+map-area button.paco-control-toggle-button {
+  min-height: 18px;
+  font-size: 12px;
+}
+
 map-area:fullscreen button.paco-fullscreen-control-button {
   background-color: var(--paco-leaflet-control-selected-background-color);
   color: var(--paco-leaflet-control-selected-color);
@@ -1024,7 +1045,6 @@ map-area .paco-maptype-control-button,
 map-area .paco-streetview-control-button {
   font-family: var(--paco-symbol-font);
   max-width: 33px;
-  background-color: red !important;/*XXX*/
 }
 
 map-area popup-menu > button {
@@ -1194,6 +1214,26 @@ map-area .paco-currentposition-container button.paco-control-button {
 map-area .paco-zoomstart {
   transition: opacity .3s;
   opacity: 0;
+}
+
+map-area button.paco-control-toggle-button {
+  border: none;
+}
+map-area button.paco-control-toggle-button:not(:hover):not(:active):not(:focus) {
+  background: rgba(255, 255, 255, 0.5);
+  color: black;
+}
+
+map-area .leaflet-left .paco-legend-toggle-button-container {
+  margin-left: 5px;
+}
+map-area .leaflet-bottom .paco-legend-toggle-button-container {
+  margin-bottom: 5px;
+}
+
+map-area.paco-legend-hidden .leaflet-control-scale,
+map-area.paco-legend-hidden .paco-legend-control {
+  display: none;
 }
 
 template-set {

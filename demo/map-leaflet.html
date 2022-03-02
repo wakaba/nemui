@@ -13,18 +13,34 @@
   }
   map-area {
     height: 40em;
+    /*--paco-map-touch-scroll-viewport: none;*/
   }
+  map-area[formcontrol] {
+    /*--paco-marker-value: circle red 1000m green 2px;*/
+  }
+  x-1, x-2, x-3, x-4 {
+    position: absolute;
+    display: block;
+    border: 5px solid gray;
+    min-width: 10px;
+    min-height: 10px;
+  }
+  x-2 { border-color: blue }
+  x-3 { border-color: green }
+  x-4 { border-color: red }
 </style>
 <script src=../src/page-components.js async></script>
 <script src=../src/maps.js async></script>
 <script src=https://wiki.suikawiki.org/scripts/time async data-time-selector=time></script>
 
   <section id=map-section-1 lang=ja>
-    <map-area engine=leaflet controls="type typebuttons scale fullscreen currentposition zoom streetview" gsi jma lat=35.2 lon=135.4 >
+    <map-area engine=leaflet controls="type typebuttons scale fullscreen currentposition zoom streetview togglelegend" gsi jma lat=35.2 lon=135.4 formcontrol>
       <map-controls>ABC</map-controls>
       <map-controls position=top-left>XYZ</map-controls>
       <map-controls position=top-left><button>xyz</button></map-controls>
       <map-controls position=top-center>123</map-controls>
+      <map-controls position=bottom-left legend>A legend</map-controls>
+      <map-controls position=bottom-left>Not a legend</map-controls>
     </map-area>
 
     <p class=buttons>
@@ -67,17 +83,119 @@
       ">
     <p>
       <output name=bounds></output>
+    <p>
+      <output name=value></output>
     <script>
     (() => {
+      var testRenderCount = 0;
       var s = document.querySelector ('#map-section-1');
       s.querySelector ('map-area').addEventListener ('pcRedraw', (ev) => {
-        var o = s.querySelector ('output');
+        var o = s.querySelector ('output[name=bounds]');
         var b = ev.target.getMapBounds ();
         if (b) o.textContent = [b.north, b.east, b.south, b.west].join (' ');
 
         var c = ev.target.getMapCenter ();
         document.querySelector ('#latlon').value = c.lat + ',' + c.lon;
+
+        var n = ++testRenderCount;
+        ev.target.setMouseHandlers ({
+          mousedown: obj => {
+            console.log (n, "mousedown", obj.getMouseButton (), obj.getPoint ());
+          },
+          mousemove: obj => {
+            //console.log (n, "mousemove", obj.getMouseButton (), obj.getPoint ());
+          },
+          mouseup: obj => {
+            console.log (n, "mouseup", obj.getMouseButton (), obj.getPoint ());
+          },
+        });
+      });
+      s.querySelector ('map-area').addEventListener ('change', (ev) => {
+        var o = s.querySelector ('output[name=value]');
+
+        var v = ev.target.valueAsLatLon;
+        o.textContent = [v.lat, v.lon];
       });
     }) ();
     </script>
+    <p>
+      <button type=button onclick="
+        parentNode.parentNode.querySelector ('map-area').noMapDraggable = false;
+      ">Draggable</button>
+      <button type=button onclick="
+        parentNode.parentNode.querySelector ('map-area').noMapDraggable = true;
+      ">Non-draggable</button>
+      <button type=button onclick="
+        var map = document.querySelector ('map-area');
+        var e1 = document.createElement ('x-1');
+        var e2 = document.createElement ('x-2');
+        var e3 = document.createElement ('x-3');
+        var e4 = document.createElement ('x-4');
+        var pp = map.addElementOverlays ({
+          background: e1, foreground: e2, tooltip: e3, interactive: e4,
+        }, () => {
+          var center = map.getMapCenter ();
+          var p1 = pp.getProjection ().divPoint (center);
+          e1.style.left = p1.x + 'px';
+          e1.style.top = p1.y + 'px';
+          
+          e2.style.left = p1.x + 100 + 'px';
+          e2.style.top = p1.y + 'px';
+          
+          e3.style.left = p1.x + 'px';
+          e3.style.top = p1.y + 100 + 'px';
+          
+          e4.style.left = p1.x + 100 + 'px';
+          e4.style.top = p1.y + 100 + 'px';
+        });
+      ">addElementOverlays</button>
+
+    <hr style="margin-top: 10em">
+
+    <form>
+      <input type=number name=lat value=0 step=0.0001>
+      <input type=number name=lon value=0 step=0.0001>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          center: {lat: form.elements.lat.value,
+                   lon: form.elements.lon.value},
+        });
+      ">setCenter</button>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          center: {lat: form.elements.lat.value,
+                   lon: form.elements.lon.value},
+          setValue: true,
+        });
+      ">setCenter + setValue</button>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          center: {lat: form.elements.lat.value,
+                   lon: form.elements.lon.value},
+          intoView: true,
+        });
+      ">setCenter + scrollIntoView</button>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          center: {lat: form.elements.lat.value,
+                   lon: form.elements.lon.value},
+          intoView: true,
+          ifNeeded: true,
+        });
+      ">setCenter + scrollIntoViewIfNeeded</button>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          bounds: {north: form.elements.lat.valueAsNumber,
+                   west: form.elements.lon.valueAsNumber,
+                   south: form.elements.lat.valueAsNumber + 1,
+                   east: form.elements.lon.valueAsNumber + 1,
+                   },
+        });
+      ">setBounds</button>
+    </form>
+
+    <hr style="margin-top: 10em">
+
+    <p><map-area gsi controls style="height:28em"></map-area>
+    <p><map-area controls style="height:17em"></map-area>
   </section>

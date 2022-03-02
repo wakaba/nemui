@@ -186,6 +186,7 @@
     onAdd: function (map) {
       var e = this.options.element;
       e.pcMap = map;
+      if (this.options.isLegend) e.classList.toggle ('paco-legend-control', true);
       if (this.options.styling) this.options.styling (e);
       L.DomEvent.disableClickPropagation (e);
       return e;
@@ -381,6 +382,51 @@
 
     return new L.Control.ElementControl (opts);
   }; // L.control.mapTypeMenu
+
+  L.control.legendToggleButton = function (opts) {
+    var c = document.createElement ('div');
+    c.className = 'paco-button-container paco-legend-toggle-button-container';
+    opts.element = c;
+    
+    var b = document.createElement ('button');
+    b.className = 'paco-control-toggle-button paco-control-legend-toggle-button';
+    b.type = 'button';
+    c.appendChild (b);
+
+    var active = true;
+    var sync = () => {
+      var e = c.pcMap.getContainer ();
+      e.classList.toggle ('paco-legend-hidden', !active);
+
+      b.classList.toggle ('active', active);
+      if (active) {
+        b.textContent = b.getAttribute ('data-hide-text');
+      } else {
+        b.textContent = b.getAttribute ('data-show-text');
+      }
+    }; // sync
+    
+    b.onclick = async () => {
+      active = !active;
+      sync ();
+    };
+    opts.styling = c => {
+      var e = c.pcMap.getContainer ();
+      var p = getComputedStyle (e);
+      // recompute!
+      var m1 = e.pcInternal.parseCSSString (p.getPropertyValue ('--paco-legend-show-text'), 'Show legend');
+      var m2 = e.pcInternal.parseCSSString (p.getPropertyValue ('--paco-legend-hide-text'), 'Hide legend');
+      var initial = (p.getPropertyValue ('--paco-map-legend-initial') || 'shown').replace (/^\s+/, '').replace (/\s+$/, '');
+
+      if (initial === 'hidden') active = false;
+      
+      b.setAttribute ('data-show-text', m1);
+      b.setAttribute ('data-hide-text', m2);
+      sync ();
+    };
+    
+    return new L.Control.ElementControl (opts);
+  }; // L.control.legendToggleButton
   
   L.control.timestampControl = function (opts) {
     var t = document.createElement ('map-controls');
@@ -447,6 +493,7 @@
         timeElement.textContent = time.prevHTML;
         timeElement.removeAttribute ('datetime');
       },
+      isLegend: true,
     });
 
     var map;
@@ -819,6 +866,13 @@
             position: 'bottomright',
           }).addTo (map);
         }
+
+        if (controls.togglelegend) {
+          L.control.legendToggleButton ({
+            position: 'bottomleft',
+          }).addTo (map);
+        }
+        
         if (controls.scale) L.control.scale ({}).addTo (map);
 
         if (controls.type) {
@@ -1018,6 +1072,7 @@
                   var c = L.control.elementControl ({
                     element: e,
                     position,
+                    isLegend: e.hasAttribute ('legend'),
                   });
                   c.addTo (this.pcLMap);
                 }
