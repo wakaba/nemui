@@ -865,6 +865,7 @@
               }
             }
           }
+          alert([isLegacyTouchDevice,navigator.vendor,me,navigator.userAgent]);
           if (!isLegacyTouchDevice)
           this.addEventListener ('mouseover', function (event) {
             if (event.sourceCapabilities &&
