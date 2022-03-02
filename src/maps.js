@@ -181,7 +181,7 @@
   L.gridLayer.gsiOverlay = function (opts) {
     return new L.GridLayer.GSIOverlay (opts);
   };
-
+  
   L.Control.ElementControl = L.Control.extend ({
     onAdd: function (map) {
       var e = this.options.element;
@@ -195,62 +195,77 @@
     return new L.Control.ElementControl (opts);
   };
   L.control.fullscreenButton = function (opts) {
+    var c = document.createElement ('div');
+    c.className = 'paco-button-container';
+    opts.element = c;
+    opts.styling = c => {
+      var e = c.pcMap.getContainer ();
+      // recompute!
+      var m = e.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-fullscreen-title'), 'Fullscreen');
+      c.title = m;
+    };
+    
     var b = document.createElement ('button');
     b.className = 'paco-control-button paco-fullscreen-control-button';
     b.type = 'button';
     b.textContent = '\u26F6';
     b.onclick = async () => {
-      var e = b.pcMap.getContainer ();
+      var e = c.pcMap.getContainer ();
       if (document.fullscreenElement) {
         document.exitFullscreen ();
       } else {
         e.requestFullscreen ();
       }
     };
-    opts.element = b;
-    opts.styling = b => {
-      var e = b.pcMap.getContainer ();
-      // recompute!
-      var m = e.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-fullscreen-title'), 'Fullscreen');
-      b.title = m;
-    };
+    c.appendChild (b);
+    
     return new L.Control.ElementControl (opts);
   }; // L.control.fullscreenButton
   L.control.currentPositionButton = function (opts) {
+    var c = document.createElement ('div');
+    c.className = 'paco-button-container';
+    opts.element = c;
+    opts.styling = c => {
+      var e = c.pcMap.getContainer ();
+      // recompute!
+      var m = e.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-currentposition-title'), 'Current position');
+      c.title = m;
+    };
+    
     var b = document.createElement ('button');
     b.className = 'paco-control-button paco-currentposition-control-button';
     b.type = 'button';
     b.textContent = '\u26EF';
     b.onclick = async () => {
-      var e = b.pcMap.getContainer ();
+      var e = c.pcMap.getContainer ();
       e.pcLocateCurrentPosition ({pan: true});
     };
-    opts.element = b;
-    opts.styling = b => {
-      var e = b.pcMap.getContainer ();
-      // recompute!
-      var m = e.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-currentposition-title'), 'Current position');
-      b.title = m;
-    };
+    c.appendChild (b);
+    
     return new L.Control.ElementControl (opts);
   }; // L.control.currentPositionButton
   L.control.streetViewButton = function (opts) {
+    var c = document.createElement ('div');
+    c.className = 'paco-button-container';
+    opts.element = c;
+    opts.styling = c => {
+      var e = c.pcMap.getContainer ();
+      // recompute!
+      var m = e.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-streetview-title'), 'Street View');
+      c.title = m;
+    };
+
     var b = document.createElement ('button');
     b.className = 'paco-control-button paco-streetview-control-button';
     b.type = 'button';
     b.textContent = '\u{1F6B6}';
     b.setAttribute ('draggable', 'true');
     b.ondragstart = () => {
-      var e = b.pcMap.getContainer ();
+      var e = c.pcMap.getContainer ();
       e.pcStartStreetViewDragMode (b);
     };
-    opts.element = b;
-    opts.styling = b => {
-      var e = b.pcMap.getContainer ();
-      // recompute!
-      var m = e.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-streetview-title'), 'Street View');
-      b.title = m;
-    };
+    c.appendChild (b);
+    
     return new L.Control.ElementControl (opts);
   }; // L.control.streetViewButton
   L.control.mapTypeMenu = function (opts) {
@@ -290,7 +305,7 @@
       if (e.hasAttribute ('gsi')) {
         var mm = m.querySelector ('menu-main');
         var nodes = document.createElement ('div');
-        nodes.innerHTML = '<menu-item><popup-menu data-true=gsi-standard-hillshade data-false=gsi-lang><button class=paco-control-button>Map</button><menu-main><menu-item><label><input type=checkbox> <span>Hillshade</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><popup-menu data-true=gsi-photo-standard data-false=gsi-photo><button class=paco-control-button>Photo</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><popup-menu data-true=gsi-hillshade-standard data-false=gsi-hillshade><button class=paco-control-button>Hillshade</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><button data-true=none>None</button></menu-item><hr>';
+        nodes.innerHTML = '<menu-item><popup-menu data-true=gsi-standard-hillshade data-false=gsi-lang><button type=button class=paco-control-button>Map</button><menu-main><menu-item><label><input type=checkbox> <span>Hillshade</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><popup-menu data-true=gsi-photo-standard data-false=gsi-photo><button type=button class=paco-control-button>Photo</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><popup-menu data-true=gsi-hillshade-standard data-false=gsi-hillshade><button type=button class=paco-control-button>Hillshade</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu></menu-item><menu-item><button type=button data-true=none>None</button></menu-item><hr>';
         var nb = nodes.querySelector ('menu-item:last-of-type button');
         
         var pms = Array.prototype.slice.call (nodes.querySelectorAll ('popup-menu'));
@@ -299,7 +314,7 @@
         if (opts.buttons) {
           var n = document.createElement ('span');
           n.className = 'paco-menu-button-container';
-          n.innerHTML = '<popup-menu data-true=gsi-standard-hillshade data-false=gsi-lang><button class=paco-control-button>Map</button><menu-main><menu-item><label><input type=checkbox> <span>Hillshade</span></label></menu-item></menu-main></popup-menu><popup-menu data-true=gsi-photo-standard data-false=gsi-photo><button class=paco-control-button>Photo</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu><popup-menu data-true=gsi-hillshade-standard data-false=gsi-hillshade><button class=paco-control-button>Hillshade</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu>';
+          n.innerHTML = '<popup-menu data-true=gsi-standard-hillshade data-false=gsi-lang><button type=button class=paco-control-button>Map</button><menu-main><menu-item><label><input type=checkbox> <span>Hillshade</span></label></menu-item></menu-main></popup-menu><popup-menu data-true=gsi-photo-standard data-false=gsi-photo><button type=button class=paco-control-button>Photo</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu><popup-menu data-true=gsi-hillshade-standard data-false=gsi-hillshade><button type=button class=paco-control-button>Hillshade</button><menu-main><menu-item><label><input type=checkbox> <span>Labels</span></label></menu-item></menu-main></popup-menu>';
           pms = pms.concat (Array.prototype.slice.call (n.querySelectorAll ('popup-menu')));
 
           c.insertBefore (n, c.firstChild);
@@ -478,6 +493,40 @@
       pcInit: function () {
         this.maRedrawNeedUpdated = {};
         this.ready = new Promise ((r) => this.maRedrawNeedUpdated.onready = r);
+
+        this.pcValue = {lat: 0, lon: 0};
+        var initialValue = this.valueAsLatLon;
+        if (initialValue) {
+          this.setAttribute ('lat', initialValue.lat);
+          this.setAttribute ('lon', initialValue.lon);
+        }
+        Object.defineProperty (this, 'valueAsLatLon', {
+          get: function () {
+            return {
+              lat: this.pcValue.lat,
+              lon: this.pcValue.lon,
+            };
+          },
+          set: function (newValue) {
+            newValue = newValue || {};
+            this.pcValue = {lat: parseFloat (newValue.lat),
+                            lon: parseFloat (newValue.lon)};
+            if (!Number.isFinite (this.pcValue.lat)) this.pcValue.lat = 0;
+            if (!Number.isFinite (this.pcValue.lon)) this.pcValue.lon = 0;
+            this.maRedraw ({valueMarker: true});
+          },
+        });
+
+        this.pcZoomLevel = this.maAttrFloat ('zoom', 8);
+
+        this.pcNoMapDraggable = !!this.noMapDraggable;
+        Object.defineProperty (this, 'noMapDraggable', {
+          get: () => this.pcNoMapDraggable,
+          set: function (newValue) {
+            this.pcNoMapDraggable = !!newValue;
+            this.maRedraw ({mapDraggable: true});
+          },
+        });
         
         this.maEngine = this.getAttribute ('engine');
         if (this.maEngine === 'googlemaps') {
@@ -505,7 +554,13 @@
           });
 
           var mapOpts = {
-            zoom: 8,
+            zoom: this.pcZoomLevel,
+            gestureHandling: "greedy",
+            styles: [
+              {featureType: "poi", elementType: "all", stylers: [{visibility: "off"}]},
+              {featureType: "landscape", elementType: "all", stylers: [{visibility: "off"}]},
+            ],
+            draggable: !this.pcNoMapDraggable,
           };
           var center = {lat: this.maAttrFloat ('lat', 0),
                         lng: this.maAttrFloat ('lon', 0)};
@@ -567,7 +622,7 @@
               };
               
               // recompute!
-              var mCP = this.pcInternal.parseCSSString (getComputedStyle (e).getPropertyValue ('--paco-currentposition-title'), 'Current position');
+              var mCP = this.pcInternal.parseCSSString (getComputedStyle (this).getPropertyValue ('--paco-currentposition-title'), 'Current position');
               b.title = mCP;
               
               e.appendChild (b);
@@ -593,15 +648,30 @@
             this.maRedrawEvent ();
           });
           var mo = new MutationObserver ((mutations) => {
-            this.maRedraw ({
+            var latlon = false;
+            mutations.forEach (mr => {
+              if (mr.attributeName === 'lat' ||
+                  mr.attributeName === 'lon') {
+                latlon = true;
+              } else if (mr.attributeName === 'readonly') {
+                this.maRedraw ({readonly: true});
+              } else if (mr.attributeName === 'zoom') {
+                this.pcZoomLevel = this.maAttrFloat ('zoom', 8);
+                this.maRedraw ({zoom: true});
+              }
+            });
+
+            if (latlon) this.maRedraw ({
               center: {
                 lat: this.maAttrFloat ('lat', 0),
                 lon: this.maAttrFloat ('lon', 0),
               },
+              value: true,
             });
           });
-          mo.observe (this, {attributeFilter: ['lat', 'lon']});
-          this.maCenter = {
+          mo.observe (this, {attributeFilter: ['lat', 'lon', 'readonly',
+                                               'zoom']});
+          this.maCenter = this.pcValue = {
             lat: this.maAttrFloat ('lat', 0),
             lon: this.maAttrFloat ('lon', 0),
           };
@@ -611,6 +681,39 @@
           }).observe (this, {childList: true});
           controls.forEach (e => this.appendChild (e));
           controls = null;
+
+          // recompute!
+          var s = getComputedStyle (this);
+          var v = s.getPropertyValue ('--paco-map-click-action') || 'none';
+          var w = s.getPropertyValue ('--paco-map-touch-scroll-viewport') || 'auto';
+          
+          if (v.match (/^\s*set-value\s*$/)) {
+            this.maGoogleMap.addListener ('click', ev => {
+              var p = ev.latLng;
+              this.pcMarkerMoveEnd ({lat: p.lat (), lon: p.lng ()});
+              this.maRedraw ({valueMarker: true, userActivated: true});
+            });
+          }
+
+          if (w.match (/^\s*none\s*$/)) {
+            // Disable viewport scrolling behavior triggerred by touch
+            // (when map scrolling is disabled)
+            this.addEventListener ('touchstart', (ev) => {
+              var t = ev.target;
+              if ({
+                'map-credit': true,
+                'label': true,
+                'a': true,
+                'button': true,
+              }[t.localName] ||
+              t.hasAttribute ('aria-label') ||
+              t.hasAttribute ('controlwidth') ||
+              (t.localName === 'img' && t.parentNode.localName === 'button')) {
+                return;
+              }
+              ev.preventDefault ();
+            }, {passive: false});
+          }
           
           this.maRedraw ({all: true});
         }).then (() => {
@@ -624,13 +727,27 @@
       }, // maInitGoogleMaps
       maInitGoogleMapsEmbed: function () {
         var mo = new MutationObserver ((mutations) => {
-          this.maRedraw ({center: {
-            lat: this.maAttrFloat ('lat', 0),
-            lon: this.maAttrFloat ('lon', 0),
-          }});
+          var latlon = false;
+          mutations.forEach (mr => {
+            if (mr.attributeName === 'lat' ||
+                mr.attributeName === 'lon') {
+              latlon = true;
+            } else if (mr.attributeName === 'zoom') {
+              this.pcZoomLevel = this.maAttrFloat ('zoom', 8);
+              this.maRedraw ({zoom: true});
+            }
+          });
+
+          if (latlon) this.maRedraw ({
+            center: {
+              lat: this.maAttrFloat ('lat', 0),
+              lon: this.maAttrFloat ('lon', 0),
+            },
+            value: true,
+          });
         });
-        mo.observe (this, {attributeFilter: ['lat', 'lon']});
-        this.maCenter = {
+        mo.observe (this, {attributeFilter: ['lat', 'lon', 'zoom']});
+        this.maCenter = this.pcValue = {
           lat: this.maAttrFloat ('lat', 0),
           lon: this.maAttrFloat ('lon', 0),
         };
@@ -638,12 +755,31 @@
       }, // maInitGoogleMapsEmbed
       pcInitLeaflet: function () {
         (new MutationObserver ((mutations) => {
-          this.maRedraw ({center: {
-            lat: this.maAttrFloat ('lat', 0),
-            lon: this.maAttrFloat ('lon', 0),
-          }});
-        })).observe (this, {attributeFilter: ['lat', 'lon']});
-        this.maCenter = {
+          var latlon = false;
+          mutations.forEach (mr => {
+            if (mr.attributeName === 'lat' ||
+                mr.attributeName === 'lon') {
+              latlon = true;
+            } else if (mr.attributeName === 'readonly') {
+              this.maRedraw ({readonly: true});
+            } else if (mr.attributeName === 'zoom') {
+              this.pcZoomLevel = this.maAttrFloat ('zoom', 8);
+              this.maRedraw ({zoom: true});
+            } else if (mr.attributeName === 'maptype') {
+              this.setMapType (this.getAttribute ('maptype'));
+            }
+          });
+
+          if (latlon) this.maRedraw ({
+            center: {
+              lat: this.maAttrFloat ('lat', 0),
+              lon: this.maAttrFloat ('lon', 0),
+            },
+            value: true,
+          });
+        })).observe (this, {attributeFilter: ['lat', 'lon', 'readonly',
+                                              'zoom', 'maptype']});
+        this.maCenter = this.pcValue = {
           lat: this.maAttrFloat ('lat', 0),
           lon: this.maAttrFloat ('lon', 0),
         };
@@ -663,6 +799,7 @@
 
         var map = this.pcLMap = L.map (this, {
           zoomControl: false,
+          dragging: !this.pcNoMapDraggable,
         });
 
         if (controls.zoom) {
@@ -712,16 +849,36 @@
           this.pcZoomLevel = map.getZoom ();
           this.maRedrawEvent ();
         });
-        map.setView (this.maCenter, 8);
+        map.setView (this.maCenter, this.pcZoomLevel);
 
-        if (this.hasAttribute ('gsi')) {
-          this.setMapType ('gsi-lang');
+        // recompute!
+        var s = getComputedStyle (this);
+        var v = s.getPropertyValue ('--paco-map-click-action') || 'none';
+        var w = s.getPropertyValue ('--paco-map-touch-scroll-viewport') || 'auto';
+        
+        if (v.match (/^\s*set-value\s*$/)) {
+          map.on ('click', ev => {
+            var p = ev.latlng;
+            this.pcMarkerMoveEnd ({lat: p.lat, lon: p.lng});
+            this.maRedraw ({valueMarker: true, userActivated: true});
+          });            
         }
+
+        if (w.match (/^\s*none\s*$/)) {
+          this.classList.toggle ('paco-touch-scroll-viewport-none', true);
+        }
+
+        var initialMapType = this.getAttribute ('maptype');
+        if (this.hasAttribute ('gsi') && !initialMapType) {
+          initialMapType = 'gsi-lang';
+        }
+        if (initialMapType) this.setMapType (initialMapType);
         
         new MutationObserver ((mutations) => {
           this.maRedraw ({controls: true});
         }).observe (this, {childList: true});
-        this.maRedraw ({controls: true});
+        this.maRedraw ({controls: true, valueMarker: true,
+                        relocate: true});
       }, // pcInitLeaflet
       
       maRedrawEvent: function () {
@@ -747,18 +904,39 @@
           if (this.pcLMap) {
             this.pcLMap.panTo (p);
           } else if (this.maGoogleMap) {
-            if (this.maRedrawNeedUpdated.pan) {
-              this.maGoogleMap.panTo (p);
-            } else {
-              this.maGoogleMap.setCenter (p);
-            }
+            this.maGoogleMap.panTo (p);
           } else {
             this.maCenter = this.maRedrawNeedUpdated.center;
             this.maRedrawNeedUpdated.all = true;
           }
+          if (this.maRedrawNeedUpdated.value) {
+            this.pcValue = this.maRedrawNeedUpdated.center;
+            this.maRedrawNeedUpdated.valueMarker = true;
+          }
           delete this.maRedrawNeedUpdated.center;
+          delete this.maRedrawNeedUpdated.value;
           delete this.maRedrawNeedUpdated.pan;
         } // center
+
+        if (this.maRedrawNeedUpdated.zoom ||
+            this.maRedrawNeedUpdated.all) {
+          if (this.pcLMap || this.maGoogleMap) {
+            (this.pcLMap || this.maGoogleMap).setZoom (this.pcZoomLevel);
+          }
+        }
+
+        if (this.maRedrawNeedUpdated.mapDraggable) {
+          if (this.pcLMap) {
+            if (this.pcNoMapDraggable) {
+              this.pcLMap.dragging.disable ();
+            } else {
+              this.pcLMap.dragging.enable ();
+            }
+          } else if (this.maGoogleMap) {
+            this.maGoogleMap.setOptions ({draggable: !this.pcNoMapDraggable});
+          }
+          delete this.maRedrawNeedUpdated.mapDraggable;
+        }
         
         if (this.maRedrawNeedUpdated.relocate) {
           if (this.maEngine === 'leaflet') {
@@ -778,9 +956,13 @@
           }
           delete this.maRedrawNeedUpdated.mapType;
         }
-        
+
         clearTimeout (this.maRedrawTimer);
-        this.maRedrawTimer = setTimeout (() => this.ma_Redraw (), 300);
+        if (this.maRedrawNeedUpdated.userActivated) {
+          requestAnimationFrame (() => this.ma_Redraw ());
+        } else {
+          this.maRedrawTimer = setTimeout (() => this.ma_Redraw (), 300);
+        }
       }, // maRedraw
       ma_Redraw: function () {
         var isShown = this.offsetWidth > 0 && this.offsetHeight > 0;
@@ -793,7 +975,10 @@
           if (updates.size || updates.all) {
             if (this.maEngine === 'googlemaps') {
               google.maps.event.trigger (this.maGoogleMap, 'resize');
-            } else if (this.maEngine === 'googlemapsembed') {
+            }
+          }
+          if (updates.size || updates.zoom || updates.all) {
+            if (this.maEngine === 'googlemapsembed') {
               if (!this.maIframe) {
                 this.maIframe = document.createElement ('iframe');
                 this.maIframe.className = 'googlemapsembed';
@@ -802,7 +987,7 @@
                 this.maIframe.onload = () => this.maRedrawEvent ();
                 this.appendChild (this.maIframe);
               }
-              this.maIframe.src = "https://www.google.com/maps/embed/v1/view?key=" + encodeURIComponent (document.documentElement.getAttribute ('data-google-maps-key')) + "&center=" + encodeURIComponent (this.maCenter.lat) + "," + encodeURIComponent (this.maCenter.lon) + "&zoom=8";
+              this.maIframe.src = "https://www.google.com/maps/embed/v1/view?key=" + encodeURIComponent (document.documentElement.getAttribute ('data-google-maps-key')) + "&center=" + encodeURIComponent (this.maCenter.lat) + "," + encodeURIComponent (this.maCenter.lon) + "&zoom=" + encodeURIComponent (this.pcZoomLevel);
               // &maptype=satellite
             }
           }
@@ -854,76 +1039,158 @@
             }
           } // controls
 
+          var computedStyle;
+          var updateMarker = (markerName, propName, pos, opts) => {
+            if (this[markerName]) {
+              if (this[markerName].setLatLng) {
+                this[markerName].setLatLng (pos);
+              } else {
+                this[markerName].setPosition ({
+                  lat: pos.lat,
+                  lng: pos.lon,
+                });
+              }
+              if (this[markerName].dragging) {
+                if (opts.draggable) {
+                  this[markerName].dragging.enable ();
+                } else {
+                  this[markerName].dragging.disable ();
+                }
+              }
+              if (this[markerName].setOptions) {
+                this[markerName].setOptions ({draggable: opts.draggable});
+              }
+              return;
+            }
+              
+            // recompute!
+            computedStyle = computedStyle || getComputedStyle (this);
+            var v = computedStyle.getPropertyValue (propName) || 'none';
+
+            if (v.match (/^\s*none\s*$/)) {
+              this[markerName] = {setLatLng: () => {}};
+              return;
+            }
+
+            var icon = null;
+            var m = v.match (/^\s*("[^"]*"|'[^']*')\s+(\S+)\s+(\S+)\s*$/);
+            if (m) {
+              var mt = document.createElement ('span');
+              var s = this.pcInternal.parseCSSString (m[1], null);
+              if (s) {
+                mt.textContent = s;
+                var mc = document.createElement ('span');
+                mc.textContent = m[2];
+                var ms = document.createElement ('span');
+                ms.textContent = m[3];
+                icon = {iconSize: [m[3], m[3]]};
+                var mss = ms.innerHTML;
+                icon.iconUrl = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+mss+' '+mss+'"><text x="calc('+mss+'/2)" y="calc('+mss+'/2)" width="'+mss+'" height="'+mss+'" font-size="'+mss+'" text-anchor="middle" alignment-baseline="central" fill="'+mc.innerHTML+'">'+mt.innerHTML+'</text></svg>');
+              }
+            } else {
+              m = v.match (/^\s*url\(((?:[^()"'\\]|\\[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E])+)\)\s*$/);
+              if (m) {
+                icon = {
+                  // XXX
+                  iconAnchor: [12, 41],
+                  popupAnchor: [1, -34],
+                  tooltipAnchor: [16, -28],
+                };
+                icon.iconUrl = m[1].replace (/\\(.)/g, (_, v) => v);
+              }
+            }
+
+            if (icon) {
+              if (this.pcLMap) {
+                this[markerName] = L.marker (pos, {
+                  draggable: !!opts.draggable,
+                  //title: "",
+                  icon: L.icon (icon),
+                }).addTo (this.pcLMap);
+                this[markerName].on ('moveend', ev => {
+                  var p = this[markerName].getLatLng ();
+                  this.pcMarkerMoveEnd ({
+                    lat: p.lat,
+                    lon: p.lng,
+                  });
+                });
+                return;
+              } else if (this.maGoogleMap) {
+                var size = null;
+                if (icon.iconSize) size = { // must be in px
+                  width: parseFloat (icon.iconSize[0]),
+                  height: parseFloat (icon.iconSize[1]),
+                };
+                this[markerName] = new google.maps.Marker ({
+                  position: {
+                    lat: pos.lat,
+                    lng: pos.lon,
+                  },
+                  map: this.googleMap,
+                  draggable: !!opts.draggable,
+                  //title: "",
+                  icon: {
+                    url: icon.iconUrl,
+                    size,
+                    anchor: (icon.iconAnchor ? {x: icon.iconAnchor[0], y: icon.iconAnchor[1]} : undefined),
+                  },
+                });
+                this[markerName].addListener ('dragend', ev => {
+                  var p = ev.latLng;
+                  this.pcMarkerMoveEnd ({
+                    lat: p.lat (),
+                    lon: p.lng (),
+                  });
+                });
+                return;
+              }
+            } // markerURL
+
+            m = v.match (/^\s*circle\s+(\S+)\s+([0-9.]+)m\s+(\S+)\s+([0-9.]+)px\s*$/);
+            if (m) {
+              var fill = m[1];
+              var radius = parseFloat (m[2]);
+              var stroke = m[3];
+              var strokeSize = parseFloat (m[4]);
+              if (this.pcLMap) {
+                this[markerName] = L.circle (pos, {
+                  fill: true,
+                  fillColor: fill,
+                  radius: radius,
+                  color: stroke,
+                  weight: strokeSize,
+                }).addTo (this.pcLMap);
+                return;
+              } else if (this.maGoogleMap) {
+                this[markerName] = new google.maps.Circle ({
+                  center: {
+                    lat: pos.lat,
+                    lng: pos.lon,
+                  },
+                  radius,
+                  fillColor: fill,
+                  strokeColor: stroke,
+                  strokeWeight: strokeSize,
+                  map: this.googleMap,
+                });
+                return;
+              }
+            } // circle
+            
+            if (!markerURL) console.log ("Bad |"+propName+"| value: |"+v+"|");
+          }; // updateMarker
+
           if (updates.currentPositionMarker || updates.all) {
             if (this.pcCurrentPosition) {
-              if (!this.pcCurrentPositionMarker) {
-                // recompute!
-                var s = getComputedStyle (this);
-                var v = s.getPropertyValue ('--paco-marker-currentposition') || 'auto';
-
-                var markerURL = null;
-                var markerSize = null;
-                var m = v.match (/^\s*("[^"]*"|'[^']*')\s+(\S+)\s+(\S+)\s*$/);
-                if (m) {
-                  var mt = document.createElement ('span');
-                  var s = this.pcInternal.parseCSSString (m[1], null);
-                  if (s) {
-                    mt.textContent = s;
-                    var mc = document.createElement ('span');
-                    mc.textContent = m[2];
-                    var ms = document.createElement ('span');
-                    ms.textContent = m[3];
-                    markerSize = [m[3], m[3]];
-                    var mss = ms.innerHTML;
-                    markerURL = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+mss+' '+mss+'"><text x="calc('+mss+'/2)" y="calc('+mss+'/2)" width="'+mss+'" height="'+mss+'" font-size="'+mss+'" text-anchor="middle" alignment-baseline="central" fill="'+mc.innerHTML+'">'+mt.innerHTML+'</text></svg>');
-                  }
-                } else {
-                  m = v.match (/^\s*url\(([^()"\\]+)\)\s*$/);
-                  if (m) {
-                    markerURL = m[1];
-                  }
-                }
-                if (!markerURL) console.log ("Bad |--paco-marker-currentposition| value: |"+v+"|");
-
-                if (this.pcLMap) {
-                  this.pcCurrentPositionMarker = L.marker (this.pcCurrentPosition, {
-                    //draggable: true,
-                    //title: "",
-                    icon: L.icon ({
-                      iconUrl: markerURL,
-                      iconSize: markerSize,
-                    }),
-                  }).addTo (this.pcLMap);
-                } else {
-                  if (markerSize) markerSize = { // must be in px
-                    width: parseFloat (markerSize[0]),
-                    height: parseFloat (markerSize[1]),
-                  };
-                  this.pcCurrentPositionMarker = new google.maps.Marker ({
-                    position: {
-                      lat: this.pcCurrentPosition.lat,
-                      lng: this.pcCurrentPosition.lon,
-                    },
-                    map: this.googleMap,
-                    //title: "",
-                    icon: {
-                      url: markerURL,
-                      size: markerSize,
-                    },
-                  });
-                }
-              } else { // pcCurrentPositionMarker
-                if (this.pcCurrentPositionMarker.setLatLng) {
-                  this.pcCurrentPositionMarker.setLatLng (this.pcCurrentPosition);
-                } else {
-                  this.pcCurrentPositionMarker.setPosition ({
-                    lat: this.pcCurrentPosition.lat,
-                    lng: this.pcCurrentPosition.lon,
-                  });
-                }
-              } // pcCurrentPositionMarker
+              updateMarker ('pcCurrentPositionMarker', '--paco-marker-currentposition', this.pcCurrentPosition, {});
             }
           } // currentPositionMarker
+
+          if (updates.valueMarker || updates.readonly || updates.all) {
+            updateMarker ('pcValueMarker', '--paco-marker-value', this.pcValue, {
+              draggable: !this.hasAttribute ('readonly'),
+            });
+          } // valueMarker
         } // isShown
         
         if (updates.onready) {
@@ -968,6 +1235,61 @@
         throw new DOMException ('The map engine does not support this operation', 'NotSupportedError');
       }, // getMapBounds
 
+      pcScroll: function (opts) {
+        /*
+          m.pcScroll ({center})
+          m.pcScroll ({center, setValue: true})
+          m.pcScroll ({intoView: true})
+          m.pcScroll ({intoView: true, ifNeeded: true})
+        */
+
+        if (opts.center) {
+          var p = {
+            lat: parseFloat (opts.center.lat),
+            lon: parseFloat (opts.center.lon),
+          };
+          if (!Number.isFinite (p.lat)) p.lat = 0;
+          if (!Number.isFinite (p.lon)) p.lon = 0;
+          this.maRedraw ({center: p, value: opts.setValue});
+        }
+
+        if (opts.bounds || opts.includes) {
+          var bounds = {};
+          if (opts.bounds) {
+            bounds.north = opts.bounds.north;
+            bounds.south = opts.bounds.south;
+            bounds.east = opts.bounds.east;
+            bounds.west = opts.bounds.west;
+          }
+          if (opts.includes && opts.includes.length) {
+            bounds.north = bounds.south = opts.includes[0].lat;
+            bounds.east = bounds.west = opts.includes[0].lon;
+            opts.includes.forEach (_ => {
+              if (_.lat < bounds.south) bounds.south = _.lat;
+              if (bounds.north < _.lat) bounds.north = _.lat;
+              // XXX if _.lon ~ 180, ...
+              if (_.lon < bounds.west) bounds.west = _.lon;
+              if (bounds.east < _.lon) bounds.east = _.lon;
+            });
+          }
+          if (Number.isFinite (bounds.north)) {
+            if (this.pcLMap) this.pcLMap.fitBounds ([
+              [bounds.north, bounds.west],
+              [bounds.south, bounds.east],
+            ]);
+            if (this.maGoogleMap) this.maGoogleMap.fitBounds (bounds);
+          }
+        }
+
+        if (opts.intoView) {
+          if (opts.ifNeeded) {
+            this.scrollIntoViewIfNeeded ();
+          } else {
+            this.scrollIntoView ();
+          }
+        }
+      }, // pcScroll
+      
       maGoogleMapTypeGSI: 'GSI',
       maEnableGoogleMapGSI: function  () {
         var map = this.googleMap;
@@ -1174,7 +1496,6 @@
           if (this.pcCurrentPosition) {
             this.maRedraw ({
               center: this.pcCurrentPosition,
-              pan: true,
             });
           } else {
             this.pcLocateCurrentPositionPanRequested = true;
@@ -1191,7 +1512,6 @@
           if (this.pcLocateCurrentPositionPanRequested) {
             this.maRedraw ({
               center: this.pcCurrentPosition,
-              pan: true,
             });
             delete this.pcLocateCurrentPositionPanRequested;
           }
@@ -1224,6 +1544,183 @@
           src.removeEventListener ('dragend', handlers[2]);
         });
       }, // pcStartStreetViewDragMode
+
+      pcMarkerMoveEnd: function (p) {
+        this.pcValue = p;
+        this.dispatchEvent (new Event ('input', {bubbles: true, composed: true}));
+        this.dispatchEvent (new Event ('change', {bubbles: true}));
+      }, // pcMarkerMoveEnd
+
+      addElementOverlays: function (elements, redraw) {
+        var map = this.maGoogleMap;
+        if (map) {
+          var Overlay = function () { };
+          Overlay.prototype = new google.maps.OverlayView ();
+          Overlay.prototype.onAdd = function () {
+            var panes = this.getPanes ();
+            panes.overlayLayer.appendChild (elements.background);
+            panes.overlayLayer.appendChild (elements.foreground);
+            panes.floatPane.appendChild (elements.tooltip);
+            panes.floatPane.appendChild (elements.interactive);
+          }; // onAdd
+          Overlay.prototype.draw = redraw;
+          Overlay.prototype.onRemove = function () {
+            Object.values (elements).forEach (_ => _.remove ());
+          }; // onRemove
+
+          var overlay = new Overlay;
+          overlay.setMap (map);
+          
+          return {
+            ready: () => !!overlay.getProjection (),
+            getProjection: function () {
+              var projection = overlay.getProjection ();
+              return {
+                divPoint: p => projection.fromLatLngToDivPixel ({lat: p.lat, lng: p.lon}),
+                containerPoint: p => {
+                  // Force Google Maps API to recalc, otherwise it
+                  // sometimes return wrong result:-<
+                  projection.fromLatLngToContainerPixel ({lat: p.lat, lng: p.lon});
+
+                  return projection.fromLatLngToContainerPixel ({lat: p.lat, lng: p.lon});
+                },
+              };
+            }, // getProjection
+          };
+        } // maGoogleMap
+
+        var zoomstart = () => Object.values (elements).forEach (_ => _.classList.toggle ('paco-zoomstart', true));
+        var zoom = () => Object.values (elements).forEach (_ => _.classList.toggle ('paco-zoomstart', false));
+        
+        var Layer = L.Layer.extend ({
+          onAdd: function (map) {
+            // overlay shadow marker tooltip popup
+            var p1 = map.getPane ('overlayPane');
+            p1.appendChild (elements.background);
+            var p2 = map.getPane ('shadowPane');
+            p2.appendChild (elements.foreground);
+            var p3 = map.getPane ('tooltipPane');
+            p3.appendChild (elements.tooltip);
+            p3.appendChild (elements.interactive);
+
+            map.on ('zoomstart', zoomstart);
+            map.on ('zoom', zoom);
+            map.on ('zoomend zoom viewreset moveend', redraw);
+
+            Promise.resolve ().then (redraw);
+          }, // onAdd
+          onRemove: function(map) {
+            Object.values (elements).forEach (_ => _.remove ());
+            map.off ('zoomstart', zoomstart);
+            map.off ('zoom', zoom);
+            map.off ('zoomend zoom viewreset moveend', redraw);
+          }, // onRemove
+        }); // Layer
+
+        var map = this.pcLMap;
+        
+        var l = new Layer ({});
+        map.addLayer (l);
+        
+        var pp = {
+          divPoint: p => map.latLngToLayerPoint ({lat: p.lat, lng: p.lon}),
+          containerPoint: p => map.latLngToContainerPoint ({lat: p.lat, lng: p.lon}),
+        };
+        return {
+          ready: () => true,
+          getProjection: () => pp,
+        };
+      }, // addElementOverlays
+
+
+      setMouseHandlers: function (opts) {
+        var handlers = this.pcMouseHandlers || {};
+        handlers.mousedown = opts.mousedown || (() => {});
+        handlers.mousemove = opts.mousemove || (() => {});
+        handlers.mouseup = opts.mouseup || (() => {});
+
+        if (this.pcMouseHandlers) return;
+        this.pcMouseHandlers = handlers;
+
+        var TE = window.TouchEvent || function () {};
+        var getMouseButton = function () {
+          // this.event: Leaflet MouseEvent || Google Maps MouseEvent
+          var ev = this.event;
+          var me = ev.originalEvent; // Leaflet
+          if (!me) {
+            var x = [];
+            for (var n in ev) {
+              x.push (n);
+              if (ev[n] instanceof MouseEvent || ev[n] instanceof TE) {
+                me = ev[n];
+                break;
+              }
+            }
+          }
+          if (!me) return 'default';
+          
+          if (me instanceof TE) {
+            // me.button : undefined, me.which : 0
+            return 'left';
+          }
+          
+          // MouseEvent
+          if (me.button === 0) {
+            return 'left';
+          } else if (me.button === 2) {
+            return 'right';
+          } else {
+            return 'other';
+          }
+        }; // getMouseButton
+
+        if (this.pcLMap) {
+          var getPoint = function () {
+            var p = this.event.latlng;
+            return {lat: p.lat, lon: p.lng};
+          };
+          this.pcLMap.on ('mousedown', event => {
+            handlers.mousedown ({event, getMouseButton, getPoint});
+          });
+          this.pcLMap.on ('mousemove', event => {
+            handlers.mousemove ({event, getMouseButton, getPoint});
+          });
+          this.pcLMap.on ('mouseup', event => {
+            var obj = {event, getMouseButton, getPoint};
+            handlers.mousemove (obj);
+            handlers.mouseup (obj);
+          }); // mouseup
+        } else if (this.maGoogleMap) {
+          var getPoint = function () {
+            var p = this.event.latLng;
+            return {lat: p.lat (), lon: p.lng ()};
+          };
+          this.maGoogleMap.addListener ('mousedown', event => {
+            handlers.mousedown ({event, getMouseButton, getPoint});
+          });
+          this.maGoogleMap.addListener ('mousemove', event => {
+            handlers.mousemove ({event, getMouseButton, getPoint});
+          });
+          this.maGoogleMap.addListener ('mouseup', event => {
+            var obj = {event, getMouseButton, getPoint};
+            
+            // This is redundant but required for ChromeDriver + Google Maps :-<
+            handlers.mousemove (obj);
+            
+            handlers.mouseup (obj);
+          }); // mouseup
+        }
+      }, // setMouseHandlers
+      
+      pcModifyFormData: function (fd) {
+        var latname = this.getAttribute ('latname') || '';
+        var lonname = this.getAttribute ('lonname') || '';
+        if (latname || lonname) {
+          var v = this.valueAsLatLon;
+          if (latname) fd.set (latname, v.lat);
+          if (lonname) fd.set (lonname, v.lon);
+        }
+      }, // pcModifyFormData
       
     },
   }); // <map-area>

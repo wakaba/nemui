@@ -676,6 +676,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* page-components.js default styles */
 
 :root {
+  --paco-has-menu-z-index: 2000;
   --paco-menu-z-index: 99999999;
   --paco-leaflet-control-default-background-color: white;
   --paco-leaflet-control-default-color: black;
@@ -902,6 +903,7 @@ map-area {
   --paco-maptype-jmanowc-current-text: 'Rain';
   --paco-maptype-none-text: 'None';
   --paco-marker-currentposition: "\25CF" purple 24px;
+  --paco-marker-value: none;
 }
 map-area:lang(en) {
   --paco--gsi-lang: gsi-english-standard;
@@ -924,6 +926,12 @@ map-area:lang(ja) {
   --paco-maptype-photo-text: '\822A\7A7A\5199\771F';
   --paco-maptype-none-text: '\306A\3057';
   --paco-maptype-jmanowc-current-text: '\96E8\96F2\306E\52D5\304D';
+  --paco-map-click-action: none;
+}
+
+map-area[formcontrol] {
+  --paco-marker-value: url(https://raw.githubusercontent.com/wakaba/html-page-components/master/intermediate/leaflet/marker-icon.png);
+  --paco-map-click-action: set-value;
 }
 
 map-area > iframe.googlemapsembed:not([hidden]) {
@@ -952,9 +960,18 @@ map-area.leaflet-container.paco-maptype-none {
   color: var(--paco-opaque-color);
 }
 
+map-area.leaflet-container.paco-touch-scroll-viewport-none {
+  touch-action: none;
+}
+map-area .leaflet-control-zoom,
+map-area .paco-button-container {
+  overflow: auto;
+}
+
 map-area button.paco-control-button {
   -webkit-appearance: none;
   width: auto;
+  margin: 0;
   border: 2px solid rgba(0,0,0,0.2);
   border-radius: 2px;
   padding: 5px;
@@ -965,6 +982,7 @@ map-area button.paco-control-button {
   line-height: 1;
   font-size: 22px;
   cursor: pointer;
+  overflow: hidden;
   user-select: none;
 }
 map-area button.paco-control-button:hover {
@@ -976,12 +994,14 @@ map-area:fullscreen button.paco-fullscreen-control-button {
   color: var(--paco-leaflet-control-selected-color);
 }
 
+map-area .leaflet-top.leaflet-left {
+  z-index: var(--paco-has-menu-z-index);
+}
 map-area .leaflet-control.paco-menu-container {
   z-index: var(--paco-menu-z-index);
 }
 
 map-area .paco-menu-button-container popup-menu,
-map-area .paco-map-type-menu,
 map-area .paco-map-type-menu popup-menu {
   --paco-hover-action: open;
 }
@@ -1081,12 +1101,6 @@ map-area.leaflet-container popup-menu > menu-main > menu-item > label:only-child
   cursor: pointer;
   flex: 1;
 }
-map-area popup-menu > menu-main > menu-item a:hover,
-map-area popup-menu > menu-main > menu-item a:focus,
-map-area popup-menu > menu-main > menu-item a:active {
-  background-color: var(--paco-leaflet-control-hover-background-color);
-  color: var(--paco-leaflet-control-hover-color);
-}
 
 map-area popup-menu > menu-main > menu-item > button {
   flex: 1;
@@ -1098,6 +1112,19 @@ map-area popup-menu > menu-main > menu-item > button {
   font: inherit;
   text-align: start;
   cursor: pointer;
+}
+
+map-area popup-menu > menu-main > menu-item a:hover,
+map-area popup-menu > menu-main > menu-item a:focus,
+map-area popup-menu > menu-main > menu-item a:active,
+map-area.leaflet-container popup-menu > menu-main > menu-item label:hover,
+map-area.leaflet-container popup-menu > menu-main > menu-item label:focus,
+map-area.leaflet-container popup-menu > menu-main > menu-item label:active,
+map-area popup-menu > menu-main > menu-item button:hover,
+map-area popup-menu > menu-main > menu-item button:focus,
+map-area popup-menu > menu-main > menu-item button:active {
+  background-color: var(--paco-leaflet-control-hover-background-color);
+  color: var(--paco-leaflet-control-hover-color);
 }
 
 map-area popup-menu > menu-main > menu-item > popup-menu {
@@ -1159,6 +1186,11 @@ map-area .paco-currentposition-container button.paco-control-button {
   color: black;
   font-size: 32px;
   user-select: none;
+}
+
+map-area .paco-zoomstart {
+  transition: opacity .3s;
+  opacity: 0;
 }
 
 template-set {
