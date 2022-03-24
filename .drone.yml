@@ -7,7 +7,8 @@ steps:
 - name: buikd
   image: debian
   volumes:
-  - path: /var/run/docker.sock 
+    - name: hoge
+      path: /var/run/docker.sock 
   commands:
   - ls
   - df
