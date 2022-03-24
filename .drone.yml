@@ -11,7 +11,7 @@ steps:
   commands:
   - ls
   - df
-  - ls -l /var/run
+  - ls -l /var/run/
   - uname --all
   - apt-get update && apt-get install -y curl
   - curl -sSLf https://raw.githubusercontent.com/wakaba/perl-setupenv/master/bin/pmbp.pl > pmbp.pl
