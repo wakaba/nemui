@@ -10,3 +10,5 @@ steps:
   - ls
   - df
   - uname --all
+  - docker pull debian
+  - docker pull quay.io/wakaba/firefoxdriver:stable
