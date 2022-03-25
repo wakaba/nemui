@@ -18,7 +18,7 @@ steps:
   - curl -sSLf https://raw.githubusercontent.com/wakaba/perl-setupenv/master/bin/pmbp.pl > pmbp.pl
   - CI=1 perl pmbp.pl --install-commands "make git docker mysqld wget curl"
   - docker version
-  - docker run -it debian bash -c 'perl -e "warn sprintf q{%vd}, scalar gethostbyname q{host.docker.internal}"'
+  - docker run -i debian bash -c 'perl -e "warn sprintf q{%vd}, scalar gethostbyname q{host.docker.internal}"'
   - docker pull debian
   - docker pull quay.io/wakaba/firefoxdriver:stable
 
