@@ -12,6 +12,7 @@ steps:
   commands:
   - ls
   - df
+  - ip route
   - ls -l /var/run/
   - uname --all
   - apt-get update && apt-get install -y curl
