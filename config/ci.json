@@ -18,6 +18,11 @@
           "nested": true,
           "shared_dir": true
         },
+        {
+          "command": "cd app && make test",
+          "nested": true,
+          "shared_dir": true
+        },
         "echo foo > bar"
       ]
     },
