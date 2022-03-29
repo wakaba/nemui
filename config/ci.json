@@ -19,9 +19,27 @@
           "shared_dir": true
         },
         {
-          "command": "cd app && make test",
+          "command": "cd app && make local/bin/pmbp.pl",
           "nested": true,
           "shared_dir": true
+        },
+        {
+          "command": "./perl local/bin/pmbp.pl --install-module IO::Interface::Simple",
+          "nested": true,
+          "shared_dir": true,
+          "wd": "app"
+        },
+        {
+          "command": "./perl -MIO::Interface::Simple -e 'print IO::Interface::Simple->new (q{eth0})->address' > ipaddr",
+          "nested": true,
+          "shared_dir": true,
+          "wd": "app"
+        },
+        {
+          "command": "cat ipaddr",
+          "nested": true,
+          "shared_dir": true,
+          "wd": "app"
         },
         "echo foo > bar"
       ]
