@@ -10,11 +10,13 @@
         "pwd"
       ],
       "_": [
-        "pwd"
+        "pwd",
+        "echo foo > bar"
       ]
     },
     "tests": {
       "test1": [
+        "cat bar",
         "ls"
       ],
       "test2": [

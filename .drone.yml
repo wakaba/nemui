@@ -7,13 +7,51 @@
             "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
             "pwd",
             "pwd",
-            "make test-deps",
-            "make test",
-            "ls",
-            "docker version"
+            "echo foo > bar",
+            "make test-deps"
          ],
          "image" : "quay.io/wakaba/docker-perl-app-base",
          "name" : "build",
+         "volumes" : [
+            {
+               "name" : "dockersock",
+               "path" : "/var/run/docker.sock"
+            }
+         ]
+      },
+      {
+         "commands" : [
+            "make test"
+         ],
+         "image" : "quay.io/wakaba/docker-perl-app-base",
+         "name" : "test-pmbp",
+         "volumes" : [
+            {
+               "name" : "dockersock",
+               "path" : "/var/run/docker.sock"
+            }
+         ]
+      },
+      {
+         "commands" : [
+            "cat bar",
+            "ls"
+         ],
+         "image" : "quay.io/wakaba/docker-perl-app-base",
+         "name" : "test-test1",
+         "volumes" : [
+            {
+               "name" : "dockersock",
+               "path" : "/var/run/docker.sock"
+            }
+         ]
+      },
+      {
+         "commands" : [
+            "docker version"
+         ],
+         "image" : "quay.io/wakaba/docker-perl-app-base",
+         "name" : "test-test2",
          "volumes" : [
             {
                "name" : "dockersock",
