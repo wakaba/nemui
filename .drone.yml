@@ -4,7 +4,9 @@
    "steps" : [
       {
          "commands" : [
-            "cd /app && perl local/bin/pmbp.pl --install-commands docker",
+            "cd \u005C/app && perl local/bin/pmbp.pl --install-commands docker",
+            "pwd",
+            "pwd",
             "make test-deps",
             "make test",
             "ls",

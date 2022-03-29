@@ -5,6 +5,14 @@
   },
   "droneci": {
     "pmbp": true,
+    "build": {
+      "": [
+        "pwd"
+      ],
+      "_": [
+        "pwd"
+      ]
+    },
     "tests": {
       "test1": [
         "ls"
