@@ -8,11 +8,11 @@
     "build": {
       "": [
         "pwd",
-        "cat .ciconfigdockershareddir",
-        "ls `cat .ciconfigdockershareddir`"
+        "cat local/ciconfig/dockershareddir",
+        "ls `cat local/ciconfig/dockershareddir`"
       ],
       "_": [
-        "cp -R . `cat .ciconfigdockershareddir`/app",
+        "cp -R . `cat local/ciconfig/dockershareddir`/app",
         {
           "command": "cd app && ls && pwd",
           "nested": true,
