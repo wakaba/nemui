@@ -36,6 +36,7 @@
       },
       {
          "commands" : [
+            "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
             "docker stop `cat .ciconfigdockername`",
             "docker logs --tail 50 `cat .ciconfigdockername`",
             "rm -fr `cat .ciconfigdockershareddir`"
