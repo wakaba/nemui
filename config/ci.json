@@ -19,10 +19,18 @@
           "shared_dir": true
         },
         {
+          "command": "echo $DRONE_COMMIT_SHA",
+          "nested": {
+            "envs": ["CI", "DRONE_COMMIT_SHA"]
+          }
+        },
+        {
           "command": "make deps",
-          "nested": true,
           "shared_dir": true,
-          "wd": "app"
+          "wd": "app",
+          "nested": {
+            "envs": ["CI", "DRONE_COMMIT_SHA"]
+          }
         },
         {
           "command": "./perl local/bin/pmbp.pl --install-module IO::Interface::Simple",
