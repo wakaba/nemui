@@ -12,7 +12,8 @@
         "ls `cat .ciconfigdockershareddir`"
       ],
       "_": [
-        "pwd",
+        "cp -R . `cat .ciconfigdockershareddir`/app",
+        "docker exec -t `cat .ciconfigdockername` bash -c 'cd '`cat .ciconfigdockershareddir`'/app && ls && pwd'",
         "echo foo > bar"
       ]
     },
