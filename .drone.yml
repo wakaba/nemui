@@ -7,7 +7,8 @@
             "perl -e 'print \u0022/var/lib/docker/shareddir/\u0022 . rand' > .ciconfigdockershareddir",
             "mkdir -p `cat .ciconfigdockershareddir`",
             "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
-            "docker run --name ciconfig-`cat .ciconfigdockershareddir` -v `cat .ciconfigdockershareddir`:`cat .ciconfigdockershareddir` -v /var/run/docker.sock:/var/run/docker.sock -d -t quay.io/wakaba/docker-perl-app-base bash",
+            "perl -e 'print \u0022ciconfig-\u0022 . rand' > .ciconfigdockername",
+            "docker run --name `cat .ciconfigdockername` -v `cat .ciconfigdockershareddir`:`cat .ciconfigdockershareddir` -v /var/run/docker.sock:/var/run/docker.sock -d -t quay.io/wakaba/docker-perl-app-base bash",
             "pwd",
             "cat .ciconfigdockershareddir",
             "ls `cat .ciconfigdockershareddir`",
@@ -34,8 +35,9 @@
       },
       {
          "commands" : [
-            "docker stop ciconfig-`cat .ciconfigdockershareddir`",
-            "docker logs --tail 50 ciconfig-`cat .ciconfigdockershareddir`"
+            "docker stop `cat .ciconfigdockername`",
+            "docker logs --tail 50 `cat .ciconfigdockername`",
+            "rm -fr `cat .ciconfigdockershareddir`"
          ],
          "image" : "quay.io/wakaba/docker-perl-app-base",
          "name" : "cleanup-nested",
