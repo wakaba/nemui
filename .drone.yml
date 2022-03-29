@@ -5,7 +5,9 @@
       {
          "commands" : [
             "make test-deps",
-            "make test"
+            "make test",
+            "ls",
+            "docker version"
          ],
          "image" : "quay.io/wakaba/docker-perl-app-base",
          "name" : "build"

@@ -4,6 +4,14 @@
     "heroku": 1
   },
   "droneci": {
-    "pmbp": true
+    "pmbp": true,
+    "tests": {
+      "test1": [
+        "ls"
+      ],
+      "test2": [
+        "docker version"
+      ]
+    }
   }
 }
