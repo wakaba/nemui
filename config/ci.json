@@ -4,5 +4,6 @@
     "heroku": 1
   },
   "droneci": {
+    "pmbp": true
   }
 }
