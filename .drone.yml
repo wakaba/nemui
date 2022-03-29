@@ -14,7 +14,7 @@
             "ls `cat .ciconfigdockershareddir`",
             "cp -R . `cat .ciconfigdockershareddir`/app",
             "docker exec -t `cat .ciconfigdockername` bash -c cd\u005C `cat .ciconfigdockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C ls\u005C \u005C&\u005C&\u005C pwd",
-            "docker exec -t `cat .ciconfigdockername` bash -c cd\u005C `cat .ciconfigdockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C make\u005C local\u005C/bin\u005C/pmbp\u005C.pl",
+            "docker exec -t `cat .ciconfigdockername` bash -c cd\u005C `cat .ciconfigdockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C make\u005C deps",
             "docker exec -t `cat .ciconfigdockername` bash -c cd\u005C `cat .ciconfigdockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C \u005C.\u005C/perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-module\u005C IO\u005C:\u005C:Interface\u005C:\u005C:Simple",
             "docker exec -t `cat .ciconfigdockername` bash -c cd\u005C `cat .ciconfigdockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C \u005C.\u005C/perl\u005C \u005C-MIO\u005C:\u005C:Interface\u005C:\u005C:Simple\u005C \u005C-e\u005C \u005C'print\u005C IO\u005C:\u005C:Interface\u005C:\u005C:Simple\u005C-\u005C>new\u005C \u005C(q\u005C{eth0\u005C}\u005C)\u005C-\u005C>address\u005C'\u005C \u005C>\u005C ipaddr",
             "docker exec -t `cat .ciconfigdockername` bash -c cd\u005C `cat .ciconfigdockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C cat\u005C ipaddr",
@@ -42,7 +42,6 @@
          "commands" : [
             "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
             "docker stop `cat .ciconfigdockername`",
-            "docker logs --tail 50 `cat .ciconfigdockername`",
             "rm -fr `cat .ciconfigdockershareddir`"
          ],
          "image" : "quay.io/wakaba/docker-perl-app-base",

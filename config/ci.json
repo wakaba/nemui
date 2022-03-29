@@ -19,9 +19,10 @@
           "shared_dir": true
         },
         {
-          "command": "cd app && make local/bin/pmbp.pl",
+          "command": "make deps",
           "nested": true,
-          "shared_dir": true
+          "shared_dir": true,
+          "wd": "app"
         },
         {
           "command": "./perl local/bin/pmbp.pl --install-module IO::Interface::Simple",
