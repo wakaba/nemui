@@ -4,8 +4,9 @@
    "steps" : [
       {
          "commands" : [
-         "pwd",
-            "cd \u005C/app && perl local/bin/pmbp.pl --install-commands docker",
+            "cd \u005C/app",
+            "perl local/bin/pmbp.pl --install-commands docker",
+            "cd /drone/src",
             "pwd",
             "pwd",
             "make test-deps",
