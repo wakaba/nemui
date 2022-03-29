@@ -7,7 +7,9 @@
     "pmbp": true,
     "build": {
       "": [
-        "pwd"
+        "pwd",
+        "cat .ciconfigdockershareddir",
+        "ls `cat .ciconfigdockershareddir`"
       ],
       "_": [
         "pwd",
@@ -23,6 +25,8 @@
         "docker version"
       ]
     },
-    "docker": true
+    "docker": {
+      "nested": true
+    }
   }
 }
