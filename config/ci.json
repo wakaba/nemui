@@ -50,6 +50,14 @@
           "shared_dir": true,
           "wd": "app"
         },
+        {
+          "command": "make deps",
+          "shared_dir": true,
+          "wd": "app",
+          "nested": {
+            "envs": ["CI", "DRONE_COMMIT_SHA"]
+          }
+        },
         "echo foo > bar"
       ]
     },

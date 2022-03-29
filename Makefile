@@ -22,8 +22,9 @@ ciconfig:
 
 ## ------ Setup ------
 
-deps: 
+deps:  local/bin/pmbp.pl
 	echo "make deps executed"
+	perl local/bin/pmbp.pl --install-commands "mysqld wget"
 	apt-cache search gnuplot
 	sudo apt-get install -y gnuplot
 #	$(MAKE) local/bin/pmbp.pl
