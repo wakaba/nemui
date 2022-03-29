@@ -10,8 +10,20 @@
             "docker version"
          ],
          "image" : "quay.io/wakaba/docker-perl-app-base",
-         "name" : "build"
+         "name" : "build",
+         "volumes" : [
+            {
+               "name" : "dockersock",
+               "path" : "/var/run/docker.sock"
+            }
+         ]
       }
    ],
-   "type" : "docker"
+   "type" : "docker",
+   "volumes" : [
+      {
+         "name" : "dockersock",
+         "path" : "/var/run/docker.sock"
+      }
+   ]
 }

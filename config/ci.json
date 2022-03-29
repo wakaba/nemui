@@ -12,6 +12,7 @@
       "test2": [
         "docker version"
       ]
-    }
+    },
+    "docker": true
   }
 }
