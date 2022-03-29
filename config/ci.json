@@ -13,7 +13,11 @@
       ],
       "_": [
         "cp -R . `cat .ciconfigdockershareddir`/app",
-        "docker exec -t `cat .ciconfigdockername` bash -c 'cd '`cat .ciconfigdockershareddir`'/app && ls && pwd'",
+        {
+          "command": "cd app && ls && pwd",
+          "nested": true,
+          "shared_dir": true
+        },
         "echo foo > bar"
       ]
     },

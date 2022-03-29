@@ -13,7 +13,7 @@
             "cat .ciconfigdockershareddir",
             "ls `cat .ciconfigdockershareddir`",
             "cp -R . `cat .ciconfigdockershareddir`/app",
-            "docker exec -t `cat .ciconfigdockername` bash -c 'cd '`cat .ciconfigdockershareddir`'/app && ls && pwd'",
+            "docker exec -t `cat .ciconfigdockername` bash -c cd\u005C `cat .ciconfigdockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C ls\u005C \u005C&\u005C&\u005C pwd",
             "echo foo > bar",
             "make test-deps",
             "make test",
