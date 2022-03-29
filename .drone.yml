@@ -1,30 +1,13 @@
-
-kind: pipeline
-type: docker
-name: default
-
-steps:
-- name: buikd
-  image: debian
-  volumes:
-    - name: dockersock
-      path: /var/run/docker.sock 
-  commands:
-  - ls
-  - df
-  - ls -l /var/run/
-  - uname --all
-  - apt-get update && apt-get install -y curl iproute2
-  - ip route
-  - curl -sSLf https://raw.githubusercontent.com/wakaba/perl-setupenv/master/bin/pmbp.pl > pmbp.pl
-  - CI=1 perl pmbp.pl --install-commands "make git docker mysqld wget curl"
-  - docker version
-  - docker run -i debian bash -c 'perl -e "warn sprintf q{%vd}, scalar gethostbyname q{host.docker.internal}"'
-  - docker pull debian
-  - docker pull quay.io/wakaba/firefoxdriver:stable
-
-volumes:
-  - name: dockersock
-    host:
-      path: /var/run/docker.sock 
-
+{
+   "kind" : "pipeline",
+   "name" : "default",
+   "steps" : [
+      {
+         "commands" : [
+         ],
+         "image" : "quay.io/wakaba/docker-perl-app-base",
+         "name" : "build"
+      }
+   ],
+   "type" : "docker"
+}

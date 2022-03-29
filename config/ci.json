@@ -2,5 +2,7 @@
 {
   "circleci": {
     "heroku": 1
+  },
+  "droneci": {
   }
 }
