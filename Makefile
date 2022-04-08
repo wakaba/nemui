@@ -63,6 +63,7 @@ git-submodules:
 PROVE = ./prove
 
 test: test-deps
+	echo "FOO=$$FOO BAR=$$BAR"
 	echo "make test executed!"
 #test-1 test-main test-https
 

@@ -1,0 +1,82 @@
+{
+   "jobs" : {
+      "test" : {
+         "continue-on-error" : "${{ matrix.experimental }}",
+         "env" : {
+            "BAR" : "${{ matrix.env_BAR }}",
+            "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts/test",
+            "FOO" : "${{ matrix.env_FOO }}",
+            "PMBP_PERL_VERSION" : "${{ matrix.perl_version }}"
+         },
+         "runs-on" : "ubuntu-latest",
+         "steps" : [
+            {
+               "uses" : "actions/checkout@v2"
+            },
+            {
+               "run" : "mkdir -p $CIRCLE_ARTIFACTS"
+            },
+            {
+               "run" : "make test-deps"
+            },
+            {
+               "run" : "make test"
+            },
+            {
+               "uses" : "actions/upload-artifact@v3",
+               "with" : {
+                  "path" : "/tmp/circle-artifacts/test"
+               }
+            }
+         ],
+         "strategy" : {
+            "fail-fast" : false,
+            "matrix" : {
+               "include" : [
+                  {
+                     "env_BAR" : 10,
+                     "env_FOO" : 1,
+                     "experimental" : false,
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 10,
+                     "env_FOO" : 2,
+                     "experimental" : false,
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 10,
+                     "env_FOO" : 3,
+                     "experimental" : false,
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 11,
+                     "env_FOO" : 1,
+                     "experimental" : false,
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 11,
+                     "env_FOO" : 2,
+                     "experimental" : true,
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 11,
+                     "env_FOO" : 3,
+                     "experimental" : false,
+                     "perl_version" : "latest"
+                  }
+               ]
+            }
+         }
+      }
+   },
+   "name" : "test",
+   "on" : {
+      "push" : {
+      }
+   }
+}

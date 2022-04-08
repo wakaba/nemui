@@ -3,6 +3,16 @@
   "circleci": {
     "heroku": 1
   },
+  "github": {
+    "pmbp": "latest",
+    "env_matrix": {
+      "FOO": [1, 2, 3],
+      "BAR": [10, 11]
+    },
+    "matrix_allow_failure": [
+      {"env_FOO": 2, "env_BAR": 11}
+    ]
+  },
   "droneci": {
     "pmbp": true,
     "build": {

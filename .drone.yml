@@ -9,7 +9,7 @@
             "mkdir -p `cat /drone/src/local/ciconfig/dockershareddir`",
             "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
             "perl -e 'print \u0022ciconfig-\u0022 . rand' > /drone/src/local/ciconfig/dockername",
-            "docker run --name `cat /drone/src/local/ciconfig/dockername` -v `cat /drone/src/local/ciconfig/dockershareddir`:`cat /drone/src/local/ciconfig/dockershareddir` -v /var/run/docker.sock:/var/run/docker.sock -d -t quay.io/wakaba/docker-perl-app-base bash",
+            "docker run --name `cat /drone/src/local/ciconfig/dockername` -v `cat /drone/src/local/ciconfig/dockershareddir`:`cat /drone/src/local/ciconfig/dockershareddir` -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/tmp -d -t quay.io/wakaba/droneci-step-base bash",
             "pwd",
             "cat local/ciconfig/dockershareddir",
             "ls `cat local/ciconfig/dockershareddir`",
@@ -22,14 +22,86 @@
             "docker exec -t `cat /drone/src/local/ciconfig/dockername` bash -c cd\u005C `cat /drone/src/local/ciconfig/dockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C cat\u005C ipaddr",
             "docker exec -t -e CI=$CI -e DRONE_COMMIT_SHA=$DRONE_COMMIT_SHA `cat /drone/src/local/ciconfig/dockername` bash -c cd\u005C `cat /drone/src/local/ciconfig/dockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C make\u005C deps",
             "echo foo > bar",
-            "make test-deps",
-            "make test",
+            "make test-deps"
+         ],
+         "image" : "quay.io/wakaba/droneci-step-base",
+         "name" : "build",
+         "volumes" : [
+            {
+               "name" : "dockersock",
+               "path" : "/var/run/docker.sock"
+            },
+            {
+               "name" : "dockershareddir",
+               "path" : "/var/lib/docker/shareddir"
+            }
+         ]
+      },
+      {
+         "commands" : [
+            "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
             "cat bar",
-            "ls",
+            "ls"
+         ],
+         "depends_on" : [
+            "build"
+         ],
+         "environment" : {
+            "CIRCLE_NODE_INDEX" : "0",
+            "CIRCLE_NODE_TOTAL" : "1"
+         },
+         "image" : "quay.io/wakaba/droneci-step-base",
+         "name" : "test--test1",
+         "volumes" : [
+            {
+               "name" : "dockersock",
+               "path" : "/var/run/docker.sock"
+            },
+            {
+               "name" : "dockershareddir",
+               "path" : "/var/lib/docker/shareddir"
+            }
+         ]
+      },
+      {
+         "commands" : [
+            "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
             "docker version"
          ],
-         "image" : "quay.io/wakaba/docker-perl-app-base",
-         "name" : "build",
+         "depends_on" : [
+            "build"
+         ],
+         "environment" : {
+            "CIRCLE_NODE_INDEX" : "0",
+            "CIRCLE_NODE_TOTAL" : "1"
+         },
+         "image" : "quay.io/wakaba/droneci-step-base",
+         "name" : "test--test2",
+         "volumes" : [
+            {
+               "name" : "dockersock",
+               "path" : "/var/run/docker.sock"
+            },
+            {
+               "name" : "dockershareddir",
+               "path" : "/var/lib/docker/shareddir"
+            }
+         ]
+      },
+      {
+         "commands" : [
+            "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
+            "make test"
+         ],
+         "depends_on" : [
+            "build"
+         ],
+         "environment" : {
+            "CIRCLE_NODE_INDEX" : "0",
+            "CIRCLE_NODE_TOTAL" : "1"
+         },
+         "image" : "quay.io/wakaba/droneci-step-base",
+         "name" : "test-pmbp",
          "volumes" : [
             {
                "name" : "dockersock",
@@ -47,7 +119,14 @@
             "docker stop `cat /drone/src/local/ciconfig/dockername`",
             "rm -fr `cat /drone/src/local/ciconfig/dockershareddir`"
          ],
-         "image" : "quay.io/wakaba/docker-perl-app-base",
+         "depends_on" : [
+            "build",
+            "test--test1",
+            "test--test2",
+            "test-pmbp"
+         ],
+         "failure" : "ignore",
+         "image" : "quay.io/wakaba/droneci-step-base",
          "name" : "cleanup-nested",
          "volumes" : [
             {
