@@ -38,12 +38,12 @@
 
         {
           "command": "while [ true ]; do perl -e warn && echo 123; sleep 1; done",
-          "run_timeout": 30
+          "run_timeout": 30,
+          "nested": true
         },
         {
           "command": "while [ true ]; do perl -e warn && echo 123; sleep 1; done",
-          "run_timeout": 30,
-          "nested": true
+          "run_timeout": 30
         },
         
         
