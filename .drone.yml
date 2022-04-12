@@ -4,30 +4,8 @@
    "steps" : [
       {
          "commands" : [
-            "mkdir -p /drone/src/local/ciconfig",
-            "perl -e 'print \u0022/var/lib/docker/shareddir/\u0022 . rand' > /drone/src/local/ciconfig/dockershareddir",
-            "mkdir -p `cat /drone/src/local/ciconfig/dockershareddir`",
-            "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
-            "perl -e 'print \u0022ciconfig-\u0022 . rand' > /drone/src/local/ciconfig/dockername",
-            "docker run --name `cat /drone/src/local/ciconfig/dockername` -v `cat /drone/src/local/ciconfig/dockershareddir`:`cat /drone/src/local/ciconfig/dockershareddir` -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/tmp -d -t quay.io/wakaba/droneci-step-base bash",
-            "perl pmbp.pl --install-awscli",
-            "aws --version",
-            "pwd",
-            "cat local/ciconfig/dockershareddir",
-            "ls `cat local/ciconfig/dockershareddir`",
-            "sudo apt-get install -y pip",
-            "sudo pip install awscli --upgrade",
-            "aws --version",
-            "cp -R . `cat local/ciconfig/dockershareddir`/app",
-            "docker exec -t `cat /drone/src/local/ciconfig/dockername` bash -c cd\u005C `cat /drone/src/local/ciconfig/dockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C ls\u005C \u005C&\u005C&\u005C pwd",
-            "docker exec -t -e CI=$CI -e DRONE_COMMIT_SHA=$DRONE_COMMIT_SHA `cat /drone/src/local/ciconfig/dockername` bash -c echo\u005C \u005C$DRONE_COMMIT_SHA",
-            "docker exec -t -e CI=$CI -e DRONE_COMMIT_SHA=$DRONE_COMMIT_SHA `cat /drone/src/local/ciconfig/dockername` bash -c cd\u005C `cat /drone/src/local/ciconfig/dockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C make\u005C pmbp\u005C-install",
-            "docker exec -t `cat /drone/src/local/ciconfig/dockername` bash -c cd\u005C `cat /drone/src/local/ciconfig/dockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C \u005C.\u005C/perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-module\u005C IO\u005C:\u005C:Interface\u005C:\u005C:Simple",
-            "docker exec -t `cat /drone/src/local/ciconfig/dockername` bash -c cd\u005C `cat /drone/src/local/ciconfig/dockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C \u005C.\u005C/perl\u005C \u005C-MIO\u005C:\u005C:Interface\u005C:\u005C:Simple\u005C \u005C-e\u005C \u005C'print\u005C IO\u005C:\u005C:Interface\u005C:\u005C:Simple\u005C-\u005C>new\u005C \u005C(q\u005C{eth0\u005C}\u005C)\u005C-\u005C>address\u005C'\u005C \u005C>\u005C ipaddr",
-            "docker exec -t `cat /drone/src/local/ciconfig/dockername` bash -c cd\u005C `cat /drone/src/local/ciconfig/dockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C cat\u005C ipaddr",
-            "docker exec -t -e CI=$CI -e DRONE_COMMIT_SHA=$DRONE_COMMIT_SHA `cat /drone/src/local/ciconfig/dockername` bash -c cd\u005C `cat /drone/src/local/ciconfig/dockershareddir`\u005C \u005C&\u005C&\u005C cd\u005C app\u005C \u005C&\u005C&\u005C make\u005C deps",
-            "echo foo > bar",
-            "make test-deps"
+           "while [ true ]; do perl -e 'print time'; sleep 1; done",
+           "sleep 10"
          ],
          "image" : "quay.io/wakaba/droneci-step-base",
          "name" : "build",
