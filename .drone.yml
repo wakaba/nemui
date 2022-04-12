@@ -4,7 +4,7 @@
    "steps" : [
       {
          "commands" : [
-           "bash -c 'while [ true ]; do perl -e warn; sleep 1; done' &",
+           "while [ true ]; do perl -e warn; sleep 1; done &",
            "sleep 30",
            "echo done"
          ],
