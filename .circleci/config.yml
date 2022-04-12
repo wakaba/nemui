@@ -16,12 +16,12 @@
             },
             {
                "run" : {
-                  "command" : "python --version"
+                  "command" : "python3 --version"
                }
             },
             {
                "run" : {
-                  "command" : "curl https://bootstrap.pypa.io/get-pip.py | python"
+                  "command" : "curl https://bootstrap.pypa.io/get-pip.py | python3"
                }
             },
             {

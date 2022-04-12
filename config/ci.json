@@ -3,8 +3,8 @@
   "circleci": {
     "heroku": 1,
     "build": [
-      "python --version",
-      "curl https://bootstrap.pypa.io/get-pip.py | python",
+      "python3 --version",
+      "curl https://bootstrap.pypa.io/get-pip.py | python3",
         "sudo apt-get install -y pip",
         "sudo pip install awscli --upgrade",
         "aws --version"
