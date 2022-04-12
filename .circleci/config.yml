@@ -16,6 +16,16 @@
             },
             {
                "run" : {
+                  "command" : "python --version"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "curl https://bootstrap.pypa.io/get-pip.py | python"
+               }
+            },
+            {
+               "run" : {
                   "command" : "sudo apt-get install -y pip"
                }
             },
