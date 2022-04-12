@@ -3,6 +3,8 @@
   "circleci": {
     "heroku": 1,
     "build": [
+      "perl pmbp.pl --install-awscli",
+        "aws --version",
       "python3 --version",
       "curl https://bootstrap.pypa.io/get-pip.py | python3",
         "sudo apt-get install -y pip",
@@ -20,6 +22,8 @@
       {"env_FOO": 2, "env_BAR": 11}
     ],
     "build": [
+      "perl pmbp.pl --install-awscli",
+        "aws --version",
         "sudo apt-get install -y pip",
         "sudo pip install awscli --upgrade",
         "aws --version"
@@ -30,6 +34,8 @@
     "pmbp": true,
     "build": {
       "": [
+        "perl pmbp.pl --install-awscli",
+        "aws --version",
         "pwd",
         "cat local/ciconfig/dockershareddir",
         "ls `cat local/ciconfig/dockershareddir`",

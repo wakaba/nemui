@@ -17,6 +17,12 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
+               "run" : "perl pmbp.pl --install-awscli"
+            },
+            {
+               "run" : "aws --version"
+            },
+            {
                "run" : "sudo apt-get install -y pip"
             },
             {

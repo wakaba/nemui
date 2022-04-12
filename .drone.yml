@@ -10,6 +10,8 @@
             "bash -c cd\u005C \u005C\u005C\u005C/app\u005C \u005C&\u005C&\u005C perl\u005C local\u005C/bin\u005C/pmbp\u005C.pl\u005C \u005C-\u005C-install\u005C-commands\u005C docker",
             "perl -e 'print \u0022ciconfig-\u0022 . rand' > /drone/src/local/ciconfig/dockername",
             "docker run --name `cat /drone/src/local/ciconfig/dockername` -v `cat /drone/src/local/ciconfig/dockershareddir`:`cat /drone/src/local/ciconfig/dockershareddir` -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/tmp -d -t quay.io/wakaba/droneci-step-base bash",
+            "perl pmbp.pl --install-awscli",
+            "aws --version",
             "pwd",
             "cat local/ciconfig/dockershareddir",
             "ls `cat local/ciconfig/dockershareddir`",

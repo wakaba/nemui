@@ -16,6 +16,16 @@
             },
             {
                "run" : {
+                  "command" : "perl pmbp.pl --install-awscli"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "aws --version"
+               }
+            },
+            {
+               "run" : {
                   "command" : "python3 --version"
                }
             },
