@@ -8,13 +8,22 @@
             "FOO" : "${{ matrix.env_FOO }}",
             "PMBP_PERL_VERSION" : "${{ matrix.perl_version }}"
          },
-         "runs-on" : "ubuntu-latest",
+         "runs-on" : "${{ matrix.os }}",
          "steps" : [
             {
                "uses" : "actions/checkout@v2"
             },
             {
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
+            },
+            {
+               "run" : "sudo apt-get install -y pip"
+            },
+            {
+               "run" : "sudo pip install awscli --upgrade"
+            },
+            {
+               "run" : "aws --version"
             },
             {
                "run" : "make test-deps"
@@ -37,36 +46,84 @@
                      "env_BAR" : 10,
                      "env_FOO" : 1,
                      "experimental" : false,
+                     "os" : "ubuntu-latest",
                      "perl_version" : "latest"
                   },
                   {
                      "env_BAR" : 10,
                      "env_FOO" : 2,
                      "experimental" : false,
+                     "os" : "ubuntu-latest",
                      "perl_version" : "latest"
                   },
                   {
                      "env_BAR" : 10,
                      "env_FOO" : 3,
                      "experimental" : false,
+                     "os" : "ubuntu-latest",
                      "perl_version" : "latest"
                   },
                   {
                      "env_BAR" : 11,
                      "env_FOO" : 1,
                      "experimental" : false,
+                     "os" : "ubuntu-latest",
                      "perl_version" : "latest"
                   },
                   {
                      "env_BAR" : 11,
                      "env_FOO" : 2,
                      "experimental" : true,
+                     "os" : "ubuntu-latest",
                      "perl_version" : "latest"
                   },
                   {
                      "env_BAR" : 11,
                      "env_FOO" : 3,
                      "experimental" : false,
+                     "os" : "ubuntu-latest",
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 10,
+                     "env_FOO" : 1,
+                     "experimental" : false,
+                     "os" : "macos-latest",
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 10,
+                     "env_FOO" : 2,
+                     "experimental" : false,
+                     "os" : "macos-latest",
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 10,
+                     "env_FOO" : 3,
+                     "experimental" : false,
+                     "os" : "macos-latest",
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 11,
+                     "env_FOO" : 1,
+                     "experimental" : false,
+                     "os" : "macos-latest",
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 11,
+                     "env_FOO" : 2,
+                     "experimental" : true,
+                     "os" : "macos-latest",
+                     "perl_version" : "latest"
+                  },
+                  {
+                     "env_BAR" : 11,
+                     "env_FOO" : 3,
+                     "experimental" : false,
+                     "os" : "macos-latest",
                      "perl_version" : "latest"
                   }
                ]

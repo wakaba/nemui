@@ -67,7 +67,10 @@ test: test-deps
 	echo "make test executed!"
 #test-1 test-main test-https
 
-test-deps: deps
+test-deps: test-deps-0 deps
+
+test-deps-0:
+	echo "FOO=$$FOO BAR=$$BAR"
 
 test-1:
 	./perl test1.pl

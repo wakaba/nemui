@@ -1,7 +1,12 @@
 
 {
   "circleci": {
-    "heroku": 1
+    "heroku": 1,
+    "build": [
+        "sudo apt-get install -y pip",
+        "sudo pip install awscli --upgrade",
+        "aws --version"
+    ]
   },
   "github": {
     "pmbp": "latest",
@@ -11,7 +16,13 @@
     },
     "matrix_allow_failure": [
       {"env_FOO": 2, "env_BAR": 11}
-    ]
+    ],
+    "build": [
+        "sudo apt-get install -y pip",
+        "sudo pip install awscli --upgrade",
+        "aws --version"
+    ],
+    "macos": true
   },
   "droneci": {
     "pmbp": true,
@@ -19,7 +30,10 @@
       "": [
         "pwd",
         "cat local/ciconfig/dockershareddir",
-        "ls `cat local/ciconfig/dockershareddir`"
+        "ls `cat local/ciconfig/dockershareddir`",
+        "sudo apt-get install -y pip",
+        "sudo pip install awscli --upgrade",
+        "aws --version"
       ],
       "_": [
         "cp -R . `cat local/ciconfig/dockershareddir`/app",
