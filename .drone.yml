@@ -4,8 +4,9 @@
    "steps" : [
       {
          "commands" : [
-           "bash -c 'while [ true ]; do perl -e print\\ time; sleep 1; done' &",
-           "sleep 10"
+           "bash -c 'while [ true ]; do perl -e warn; sleep 1; done' &",
+           "sleep 30",
+           "echo done"
          ],
          "image" : "quay.io/wakaba/droneci-step-base",
          "name" : "build",
