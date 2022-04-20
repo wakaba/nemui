@@ -65,6 +65,7 @@ PROVE = ./prove
 test: test-deps
 	echo "FOO=$$FOO BAR=$$BAR"
 	echo "make test executed!"
+	perl aaa.pl
 #test-1 test-main test-https
 
 test-deps: test-deps-0 deps
