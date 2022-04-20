@@ -35,6 +35,7 @@
     "pmbp": true,
     "build": {
       "": [
+        "perl aaa.pl",
         "perl tesica",
         
         "perl pmbp.pl --install-awscli",
