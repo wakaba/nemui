@@ -17,6 +17,9 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
+               "run" : "perl aaa.pl"
+            },
+            {
                "run" : "perl pmbp.pl --install-awscli"
             },
             {

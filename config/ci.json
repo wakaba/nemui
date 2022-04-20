@@ -23,6 +23,7 @@
       {"env_FOO": 2, "env_BAR": 11}
     ],
     "build": [
+      "perl aaa.pl",
       "perl pmbp.pl --install-awscli",
         "aws --version",
         "sudo apt-get install -y pip",
