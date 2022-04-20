@@ -14,7 +14,8 @@ sub is_listenable_port ($) {
     return 0 unless $port;
     return 0 if $UsedPorts->[$port];
     
-    my $proto = getprotobyname('tcp');
+  #  my $proto = getprotobyname('tcp');
+  my $proto = 0;
     socket(my $server, PF_INET, SOCK_STREAM, $proto) || die "socket: $!";
     setsockopt($server, SOL_SOCKET, SO_REUSEADDR, pack("l", 1)) || die "setsockopt: $!";
     bind($server, sockaddr_in($port, INADDR_ANY)) || return 0;
@@ -38,5 +39,12 @@ sub find_listenable_port () {
 }
 
 for (1..500) {
-warn find_listenable_port;
+  my $port = find_listenable_port;
+  warn $port;
+
+  
+  socket my $fh, PF_INET, SOCK_STREAM, 0
+      or die "tcp_bind: $!";
+
+  
 }
