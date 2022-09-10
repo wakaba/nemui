@@ -1,3 +1,3 @@
 FROM quay.io/wakaba/swchars
 
-RUN PORT=80 /server
+CMD ["bash", "PORT=80 /server"]
