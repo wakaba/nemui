@@ -3,6 +3,13 @@
   "circleci": {
     "heroku": 1,
     "build": [
+      "ip route",
+      "docker run -d -it quay.io/wakaba/base:stable bash",
+      "ip route",
+      "ip route | awk '/docker0/ { print $NF }' > docker0-ip.txt",
+      "cat docker0-ip.txt",
+      "sleep 60",
+      "ip route",
       
       "perl pmbp.pl --install-awscli",
         "aws --version",

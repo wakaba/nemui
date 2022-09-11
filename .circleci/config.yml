@@ -16,6 +16,41 @@
             },
             {
                "run" : {
+                  "command" : "ip route"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "docker run -d -it quay.io/wakaba/base:stable bash"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "ip route"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "ip route | awk '/docker0/ { print $NF }' > docker0-ip.txt"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "cat docker0-ip.txt"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "sleep 60"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "ip route"
+               }
+            },
+            {
+               "run" : {
                   "command" : "perl pmbp.pl --install-awscli"
                }
             },
