@@ -16,7 +16,7 @@
                "run" : "make deps build-for-docker"
             },
             {
-               "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/nemui \u005C."
+               "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox \u005C."
             },
             {
                "env" : {
@@ -28,14 +28,14 @@
             },
             {
                "if" : "${{ github.ref == 'refs/heads/heroku' }}",
-               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/nemui"
+               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox"
             },
             {
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
                },
                "if" : "${{ github.ref == 'refs/heads/heroku' }}",
-               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/nemui bash"
+               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox bash"
             },
             {
                "uses" : "actions/upload-artifact@v3",
