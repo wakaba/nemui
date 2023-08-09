@@ -28,14 +28,14 @@
             },
             {
                "if" : "${{ github.ref == 'refs/heads/heroku' }}",
-               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox"
+               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/XXXsandbox"
             },
             {
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
                },
                "if" : "${{ github.ref == 'refs/heads/heroku' }}",
-               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox bash"
+               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/XXXsandbox bash"
             },
             {
                "uses" : "actions/upload-artifact@v3",
