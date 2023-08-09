@@ -30,6 +30,7 @@ build-for-docker:
 
 build-github-pages:
 	echo xyz > xyz.txt
+	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox cp -R /app/data /local/data
 
 xdeps:  local/bin/pmbp.pl
 	echo "make deps executed"
