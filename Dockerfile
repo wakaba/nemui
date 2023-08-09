@@ -1,3 +1,3 @@
-FROM quay.io/wakaba/swchars
+FROM quay.io/wakaba/base:sid
 
-CMD ["bash", "-c", "PORT=80 /server"]
+ADD local/data/ /app/data/

@@ -25,6 +25,8 @@ ciconfig:
 deps:
 
 build-for-docker:
+	mkdir -p local/data
+	echo abc > local/data/abc.txt
 
 xdeps:  local/bin/pmbp.pl
 	echo "make deps executed"
