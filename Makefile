@@ -22,7 +22,11 @@ ciconfig:
 
 ## ------ Setup ------
 
-deps:  local/bin/pmbp.pl
+deps:
+
+build-for-docker:
+
+xdeps:  local/bin/pmbp.pl
 	echo "make deps executed"
 	perl local/bin/pmbp.pl --install-commands "mysqld wget"
 	apt-cache search gnuplot

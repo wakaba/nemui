@@ -1,114 +1,12 @@
-
 {
-  "circleci": {
-    "heroku": 1,
-    "build": [
-      
-      "perl pmbp.pl --install-awscli",
-        "aws --version",
-      "python3 --version",
-      "curl https://bootstrap.pypa.io/get-pip.py | python3",
-        "sudo apt-get install -y pip",
-        "sudo pip install awscli --upgrade",
-        "aws --version"
-    ]
-  },
   "github": {
-    "pmbp": "latest",
-    "env_matrix": {
-      "FOO": [1, 2, 3],
-      "BAR": [10, 11]
-    },
-    "matrix_allow_failure": [
-      {"env_FOO": 2, "env_BAR": 11}
-    ],
     "build": [
-      "perl aaa.pl",
-      "perl pmbp.pl --install-awscli",
-        "aws --version",
-        "sudo apt-get install -y pip",
-        "sudo pip install awscli --upgrade",
-        "aws --version"
+      "make deps build-for-docker",
+      {"docker_build": "quay.io/wakaba/nemui"}
     ],
-    "macos": true
-  },
-  "droneci": {
-    "pmbp": true,
-    "build": {
-      "": [
-        "perl aaa.pl",
-        "perl tesica",
-        
-        "perl pmbp.pl --install-awscli",
-        "aws --version",
-        "pwd",
-        "cat local/ciconfig/dockershareddir",
-        "ls `cat local/ciconfig/dockershareddir`",
-        "sudo apt-get install -y pip",
-        "sudo pip install awscli --upgrade",
-        "aws --version"
-      ],
-      "_": [
-        "cp -R . `cat local/ciconfig/dockershareddir`/app",
-        {
-          "command": "cd app && ls && pwd",
-          "nested": true,
-          "shared_dir": true
-        },
-        {
-          "command": "echo $DRONE_COMMIT_SHA",
-          "nested": {
-            "envs": ["CI", "DRONE_COMMIT_SHA"]
-          }
-        },
-        {
-          "command": "make pmbp-install",
-          "shared_dir": true,
-          "wd": "app",
-          "nested": {
-            "envs": ["CI", "DRONE_COMMIT_SHA"]
-          }
-        },
-        {
-          "command": "./perl local/bin/pmbp.pl --install-module IO::Interface::Simple",
-          "nested": true,
-          "shared_dir": true,
-          "wd": "app"
-        },
-        {
-          "command": "./perl -MIO::Interface::Simple -e 'print IO::Interface::Simple->new (q{eth0})->address' > ipaddr",
-          "nested": true,
-          "shared_dir": true,
-          "wd": "app"
-        },
-        {
-          "command": "cat ipaddr",
-          "nested": true,
-          "shared_dir": true,
-          "wd": "app"
-        },
-        {
-          "command": "make deps",
-          "shared_dir": true,
-          "wd": "app",
-          "nested": {
-            "envs": ["CI", "DRONE_COMMIT_SHA"]
-          }
-        },
-        "echo foo > bar"
-      ]
-    },
-    "tests": {
-      "test1": [
-        "cat bar",
-        "ls"
-      ],
-      "test2": [
-        "docker version"
-      ]
-    },
-    "docker": {
-      "nested": true
-    }
+    "tests": {"deploy": [
+      {"docker_push": "quay.io/wakaba/nemui"}
+    ]},
+    "pages": true
   }
 }
