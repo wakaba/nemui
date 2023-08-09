@@ -41,7 +41,7 @@
    "on" : {
       "push" : {
          "branches" : [
-            "master"
+            "heroku"
          ]
       },
       "workflow_dispatch" : {

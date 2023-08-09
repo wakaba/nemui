@@ -7,6 +7,6 @@
     "tests": {"deploy": [
       {"docker_push": "quay.io/wakaba/nemui", "branch": "heroku"}
     ]},
-    "pages": true
+    "pages": {"branch": "heroku"}
   }
 }

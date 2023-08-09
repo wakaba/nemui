@@ -28,6 +28,9 @@ build-for-docker:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
 
+build-github-pages:
+	echo xyz > xyz.txt
+
 xdeps:  local/bin/pmbp.pl
 	echo "make deps executed"
 	perl local/bin/pmbp.pl --install-commands "mysqld wget"
