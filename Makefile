@@ -27,6 +27,10 @@ deps:
 build-netlify:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
+	#https://clever-sprite-f9ae27.netlify.app/abc.txt
+
+	docker pull quay.io/wakaba/sandbox
+	docker run -v `pwd`/local:/local --user `id --user` quay.io/suikawiki/sandbox cp -R /app/files /local/data/
 
 build-for-docker:
 	mkdir -p local/data
