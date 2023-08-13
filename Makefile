@@ -34,6 +34,7 @@ build-netlify:
 
 test1:
 	echo xyz > $$CIRCLE_ARTIFACTS/abc.txt
+	cd $$CIRCLE_ARTIFACTS && wget -r -l 1 https://fonts.suikawiki.org
 
 build-for-docker:
 	mkdir -p local/data
