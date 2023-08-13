@@ -9,6 +9,7 @@
             "name" : "github-pages",
             "url" : "${{ steps.deployment.outputs.page_url }}"
          },
+         "if" : "${{ github.event.workflow_run.conclusion == 'success' }}",
          "runs-on" : "ubuntu-latest",
          "steps" : [
             {
@@ -20,7 +21,7 @@
             },
             {
                "name" : "Setup pages",
-               "uses" : "actions/configure-pages@v1"
+               "uses" : "actions/configure-pages@v3"
             },
             {
                "name" : "Upload artifact",
@@ -39,12 +40,16 @@
    },
    "name" : "pages",
    "on" : {
-      "push" : {
+      "workflow_run" : {
          "branches" : [
             "heroku"
+         ],
+         "types" : [
+            "completed"
+         ],
+         "workflows" : [
+            "test"
          ]
-      },
-      "workflow_dispatch" : {
       }
    },
    "permissions" : {

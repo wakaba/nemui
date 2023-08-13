@@ -27,6 +27,19 @@ deps:
 build-for-docker:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
+	# https://wakaba.github.io/nemui/local/data/abc.txt
+
+	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
+	mkdir zips
+	cd zips && unzip ../cc-by-sa-full.zip
+	rm cc-by-sa-full.zip
+	mkdir files
+	cd files && unzip ../zips/*.zip
+	rm -fr files/*/images
+
+	du -c -s -h files/*
+
+	mv files local/data/
 
 build-github-pages:
 	echo xyz > xyz.txt

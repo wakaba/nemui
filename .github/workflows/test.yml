@@ -7,7 +7,7 @@
          "runs-on" : "ubuntu-latest",
          "steps" : [
             {
-               "uses" : "actions/checkout@v2"
+               "uses" : "actions/checkout@v3"
             },
             {
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
@@ -28,14 +28,14 @@
             },
             {
                "if" : "${{ github.ref == 'refs/heads/heroku' }}",
-               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/XXXsandbox"
+               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox"
             },
             {
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
                },
                "if" : "${{ github.ref == 'refs/heads/heroku' }}",
-               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/XXXsandbox bash"
+               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox bash"
             },
             {
                "uses" : "actions/upload-artifact@v3",
