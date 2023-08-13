@@ -29,7 +29,7 @@ build-netlify:
 	echo abc > local/data/abc.txt
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
-	cd local/data && wget https://github.com/wakaba/nemui/suites/15055480717/artifacts/859727355
+	cd local/data && wget "https://pipelines.actions.githubusercontent.com/serviceHosts/a2bd1344-e68a-4149-9369-cf1893231de6/_apis/pipelines/1/runs/26/signedartifactscontent?artifactName=tesmp1&urlExpires=2023-08-13T15%3A29%3A49.3206114Z&urlSigningMethod=HMACV2&urlSignature=mRNFB8id1Ct7wYZQaI%2B%2FmIAg6TNC9UDTblDtYKeNRLA%3D"
 
 #	docker pull quay.io/wakaba/sandbox
 #	docker run -v `pwd`/local:/local --user `id --user` quay.io/suikawiki/sandbox cp -R /app/files /local/data/
