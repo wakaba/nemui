@@ -30,12 +30,8 @@ build-for-docker:
 	# https://wakaba.github.io/nemui/local/data/abc.txt
 
 	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
-	mkdir zips
-	cd zips && unzip ../cc-by-sa-full.zip
-	rm cc-by-sa-full.zip
 	mkdir files
-	cd files && unzip ../zips/*.zip
-	rm -fr files/*/images
+	cd files && unzip ../cc-by-sa-full.zip
 
 	du -c -s -h files/*
 
