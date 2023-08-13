@@ -5,7 +5,7 @@
       {"docker_build": "quay.io/wakaba/sandbox"}
     ],
     "tests": {"deploy": [
-      {"docker_push": "quay.io/wakaba/sandbox", "branch": "heroku"}
+      {"docker_push": "quay.io/wakaba/sandbox", "branch": "heroku2"}
     ]},
     "pages": {"branch": "heroku"}
   }

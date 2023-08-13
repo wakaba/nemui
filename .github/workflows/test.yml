@@ -13,6 +13,15 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
+               "run" : "make test1"
+            },
+            {
+               "uses" : "actions/upload-artifact@v3",
+               "with" : {
+                  "path" : "/tmp/circle-artifacts/test"
+               }
+            },
+            {
                "run" : "make deps build-for-docker"
             },
             {
@@ -23,11 +32,11 @@
                   "DOCKER_PASS" : "${{ secrets.DOCKER_PASS }}",
                   "DOCKER_USER" : "${{ secrets.DOCKER_USER }}"
                },
-               "if" : "${{ github.ref == 'refs/heads/heroku' }}",
+               "if" : "${{ github.ref == 'refs/heads/heroku2' }}",
                "run" : "docker login -u $DOCKER_USER -p $DOCKER_PASS quay\u005C.io"
             },
             {
-               "if" : "${{ github.ref == 'refs/heads/heroku' }}",
+               "if" : "${{ github.ref == 'refs/heads/heroku2' }}",
                "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox"
             },
             {
@@ -36,12 +45,6 @@
                },
                "if" : "${{ github.ref == 'refs/heads/heroku' }}",
                "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox bash"
-            },
-            {
-               "uses" : "actions/upload-artifact@v3",
-               "with" : {
-                  "path" : "/tmp/circle-artifacts/test"
-               }
             }
          ]
       }

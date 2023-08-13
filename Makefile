@@ -32,10 +32,10 @@ build-netlify:
 	docker pull quay.io/wakaba/sandbox
 	docker run -v `pwd`/local:/local --user `id --user` quay.io/suikawiki/sandbox cp -R /app/files /local/data/
 
-build-for-docker:
+test1:
 	echo xyz > $$CIRCLE_ARTIFACTS/abc.txt
 
-XXXbuild-for-docker:
+build-for-docker:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
 	# https://wakaba.github.io/nemui/local/data/abc.txt
