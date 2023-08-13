@@ -24,6 +24,10 @@ ciconfig:
 
 deps:
 
+build-netlify:
+	mkdir -p local/data
+	echo abc > local/data/abc.txt
+
 build-for-docker:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
