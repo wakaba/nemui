@@ -36,9 +36,9 @@ build-netlify:
 
 test1:
 	echo xyz > $$CIRCLE_ARTIFACTS/abc.txt
-	touch $$CIRCLE_ARTIFACTS/1
-	touch $$CIRCLE_ARTIFACTS/2
-	touch $$CIRCLE_ARTIFACTS/3
+	mkdir $$CIRCLE_ARTIFACTS/1
+	mkdir $$CIRCLE_ARTIFACTS/2
+	mkdir $$CIRCLE_ARTIFACTS/3
 	cd $$CIRCLE_ARTIFACTS/1 && wget -r -l 2 https://fonts.suikawiki.org || true
 	cd $$CIRCLE_ARTIFACTS/2 && wget -r -l 2 https://fonts.suikawiki.org || true
 	cd $$CIRCLE_ARTIFACTS/3 && wget -r -l 2 https://fonts.suikawiki.org || true
