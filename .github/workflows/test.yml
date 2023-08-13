@@ -18,7 +18,9 @@
             {
                "uses" : "actions/upload-artifact@v3",
                "with" : {
-                  "path" : "/tmp/circle-artifacts/test"
+                  "path" : "/tmp/circle-artifacts/test",
+                  "name": "tesmp1",
+                  "retention-days": 1
                }
             }
          ]
