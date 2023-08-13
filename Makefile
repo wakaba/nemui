@@ -29,8 +29,10 @@ build-netlify:
 	echo abc > local/data/abc.txt
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
-	docker pull quay.io/wakaba/sandbox
-	docker run -v `pwd`/local:/local --user `id --user` quay.io/suikawiki/sandbox cp -R /app/files /local/data/
+	cd local/data && wget https://github.com/wakaba/nemui/suites/15055480717/artifacts/859727355
+
+#	docker pull quay.io/wakaba/sandbox
+#	docker run -v `pwd`/local:/local --user `id --user` quay.io/suikawiki/sandbox cp -R /app/files /local/data/
 
 test1:
 	echo xyz > $$CIRCLE_ARTIFACTS/abc.txt
