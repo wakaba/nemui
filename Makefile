@@ -55,10 +55,9 @@ build-docker-in-circleci-1:
 build-docker-in-circleci-2:
 	mkdir local/data
 
-	#p1
-	cd local/data && unzip -q ../zip/files/*.zip 100249476
+	cd local/data && unzip -q ../zip/files/*.zip
 
-	cd local/data && find . > ../../imagedata/zip-file-list.txt
+	cd local/data && find . | sort > ../../imagedata/zip-file-list.txt
 	wc -l imagedata/zip-file-list.txt
 
 build-docker-in-circleci-3:
