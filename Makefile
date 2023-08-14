@@ -29,8 +29,12 @@ build-netlify:
 	echo abc > local/data/abc.txt
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
-	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
-	cd local/dataa && unzip ../cc-by-sa-full.zip
+	wget https://wakaba.github.io/nemui/data.tar.gz
+	cd local/data && tar zxf ../data.tar.gz
+
+
+#	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
+#	cd local/dataa && unzip ../cc-by-sa-full.zip
 
 #	cd local/data && wget "https://pipelines.actions.githubusercontent.com/serviceHosts/a2bd1344-e68a-4149-9369-cf1893231de6/_apis/pipelines/1/runs/26/signedartifactscontent?artifactName=tesmp1&urlExpires=2023-08-13T15%3A29%3A49.3206114Z&urlSigningMethod=HMACV2&urlSignature=mRNFB8id1Ct7wYZQaI%2B%2FmIAg6TNC9UDTblDtYKeNRLA%3D"
 
@@ -66,7 +70,7 @@ build-for-docker:
 
 	mv files local/data/
 
-build-github-pages:
+Xbuild-github-pages:
 	mkdir -p local
 	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:ten cp -R /app/data /local/data
 	tar -cf data.tar local/data
