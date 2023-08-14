@@ -19,8 +19,8 @@ while (<>) {
   if (m{/images/}) {
     #
   } elsif (/\.jpg$/) {
-    my $in_file = q{local/data/$_};
-    my $out_file = q{imagedata/$_};
+    my $in_file = qq{local/data/$_};
+    my $out_file = qq{imagedata/$_};
     $out_file =~ s{\.jpg$}{.png};
     create_dir $out_file;
 
