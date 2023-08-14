@@ -31,7 +31,7 @@
             },
             {
                "run" : {
-                  "command" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox:kuzu\u005C-png-1 \u005C."
+                  "command" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox:kuzu\u005C-png-2 \u005C."
                }
             },
             {
@@ -41,7 +41,7 @@
             },
             {
                "run" : {
-                  "command" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:kuzu\u005C-png-1"
+                  "command" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:kuzu\u005C-png-2"
                }
             },
             {
