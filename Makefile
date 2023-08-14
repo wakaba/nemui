@@ -53,11 +53,11 @@ build-docker-in-circleci-1:
 
 build-docker-in-circleci-1-2:
 	# first time
-	mkdir -p imagedata
+	#mkdir -p imagedata
 
 	# second+ time
-#	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu-png-1 cp -R /app/data /local/imagedata
-#	mv local/imagedata ./
+	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu-png-1 cp -R /app/data /local/imagedata
+	mv local/imagedata ./
 
 # ~ 1m30s
 build-docker-in-circleci-2:
@@ -66,8 +66,8 @@ build-docker-in-circleci-2:
 	cd local/data && unzip -q ../zip/files/*.zip
 
 	# first time only
-	cd local/data && find . | sort > ../../imagedata/zip-file-list.txt
-	wc -l imagedata/zip-file-list.txt
+	#cd local/data && find . | sort > ../../imagedata/zip-file-list.txt
+	#wc -l imagedata/zip-file-list.txt
 
 build-docker-in-circleci-3:
 	sudo apt-get update && sudo apt-get install -y imagemagick
