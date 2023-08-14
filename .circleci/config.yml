@@ -21,12 +21,22 @@
             },
             {
                "run" : {
+                  "command" : "make build-docker-in-circleci-1-2"
+               }
+            },
+            {
+               "run" : {
                   "command" : "make build-docker-in-circleci-2"
                }
             },
             {
                "run" : {
                   "command" : "make build-docker-in-circleci-3"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "make build-docker-in-circleci-4"
                }
             },
             {
