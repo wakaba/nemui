@@ -32,6 +32,8 @@ build-netlify:
 	wget https://wakaba.github.io/nemui/data.tar.gz
 	cd local/data && tar zxf ../../data.tar.gz
 
+	cp _headers local/data/
+
 
 #	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
 #	cd local/dataa && unzip ../cc-by-sa-full.zip
