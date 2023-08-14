@@ -64,7 +64,7 @@ build-for-docker:
 
 	sudo apt-get update && sudo apt-get install -y imagemagick
 
-	perl convert.pl imagedata/zip-file-list.txt
+	perl convert.pl imagedata/zip-file-list.txt > ../../imagedata/convert.txt 2>&1
 
 build-for-dockerX:
 	mkdir -p local/data
