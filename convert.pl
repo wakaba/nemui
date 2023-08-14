@@ -16,23 +16,32 @@ sub create_dir ($) {
 
 while (<>) {
   s/[\x0D\x0A]+$//g;
-  if (m{/images/}) {
+  if (m{/img/}) {
     #
-  } elsif (/\.jpg$/) {
-    my $in_file = qq{local/data/$_};
-    my $out_file = qq{imagedata/$_};
-    $out_file =~ s{\.jpg$}{.png};
-    create_dir $out_file;
-
-    run 'convert', $in_file, '-colors', 2, $out_file;
-
-    run 'rm', $in_file;
-    
   } elsif (/\S/) {
     my $in_file = qq{local/data/$_};
     if (-f $in_file) {
       my $out_file = qq{imagedata/$_};
       create_dir $out_file;
+
+      if ($in_file =~ /\.xml$/) {
+        open my $xml_file, '<', $in_file or die $in_file;
+        my $img_out_dir;
+        my $img_in_file;
+        while (<$xml_file>) {
+          if (m{<PAGE IMAGENAME="([^"]+)"}) {
+            my $img_file_name = $1;
+            $img_in_file = qq{local/data/mm-ocr-dataset-v1/img/$img_file_name};
+            $img_out_dir = qq{imagedata/images/$img_file_name/};
+            create_dir $img_out_dir;
+          } elsif (m{X="([0-9]+)" Y="([0-9]+)" WIDTH="([0-9]+)" HEIGHT="([0-9]+)"}) {
+            my ($x, $y, $w, $h) = ($1, $2, $3, $4);
+            my $img_out_file = "$img_out_dir/$x-$y-$w-$h.png";
+            
+            run 'convert', $img_in_file, '-crop', $x . 'x' . $y . '+' . $w . '+' . $h, '-colors', 2, $img_out_file;
+          }
+        }
+      }
       
       run 'mv', $in_file, $out_file;
     }
