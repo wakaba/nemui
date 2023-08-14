@@ -25,13 +25,16 @@ while (<>) {
     create_dir $out_file;
 
     run 'convert', $in_file, '-colors', 2, $out_file;
+
+    run 'rm', $in_file;
+    
   } elsif (/\S/) {
     my $in_file = qq{local/data/$_};
     if (-f $in_file) {
       my $out_file = qq{imagedata/$_};
       create_dir $out_file;
       
-      run 'cp', $in_file, $out_file;
+      run 'mv', $in_file, $out_file;
     }
   }
 }
