@@ -53,7 +53,8 @@ build-for-docker:
 
 	wget http://codh.rois.ac.jp/char-shape/dataset/v2/full.zip
 	mkdir files
-	cd files && unzip ../full.zip
+#	cd files && unzip ../full.zip
+	mv full.zip files/
 
 #	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
 #	mkdir files
