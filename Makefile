@@ -54,7 +54,7 @@ build-for-docker:
 	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu cp -R /app/data /local/zip
 
 	mkdir local/data
-	cd local/data && unzip ../zip/*.zip
+	cd local/data && unzip ../zip/files/*.zip
 	rm -fr ./zip
 
 	cd local/data && find . > ../../imagedata/zip-file-list.txt
