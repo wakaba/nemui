@@ -19,7 +19,7 @@
                "run" : "make deps build-for-docker"
             },
             {
-               "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:kuzu \u005C."
+               "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:mmag \u005C."
             },
             {
                "env" : {
@@ -31,14 +31,14 @@
             },
             {
                "if" : "${{ github.ref == 'refs/heads/heroku2' }}",
-               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:kuzu"
+               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:mmag"
             },
             {
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
                },
                "if" : "${{ github.ref == 'refs/heads/heroku2' }}",
-               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox:kuzu bash"
+               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox:mmag bash"
             },
             {
                "uses" : "actions/upload-artifact@v3",
