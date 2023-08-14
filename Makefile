@@ -30,7 +30,7 @@ build-netlify:
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
 	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
-	cd local/data && unzip ../cc-by-sa-full.zip
+	cd local/dataa && unzip ../cc-by-sa-full.zip
 
 #	cd local/data && wget "https://pipelines.actions.githubusercontent.com/serviceHosts/a2bd1344-e68a-4149-9369-cf1893231de6/_apis/pipelines/1/runs/26/signedartifactscontent?artifactName=tesmp1&urlExpires=2023-08-13T15%3A29%3A49.3206114Z&urlSigningMethod=HMACV2&urlSignature=mRNFB8id1Ct7wYZQaI%2B%2FmIAg6TNC9UDTblDtYKeNRLA%3D"
 
@@ -51,9 +51,13 @@ build-for-docker:
 	echo abc > local/data/abc.txt
 	# https://wakaba.github.io/nemui/local/data/abc.txt
 
-	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
+	wget http://codh.rois.ac.jp/char-shape/dataset/v2/full.zip
 	mkdir files
-	cd files && unzip ../cc-by-sa-full.zip
+	cd files && unzip ../full.zip
+
+#	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
+#	mkdir files
+#	cd files && unzip ../cc-by-sa-full.zip
 
 	du -c -s -h files/*
 
