@@ -2,10 +2,10 @@
   "github": {
     "build": [
       "make deps build-for-docker",
-      {"docker_build": "quay.io/wakaba/sandbox:kuzu"}
+      {"docker_build": "quay.io/wakaba/sandbox:ten"}
     ],
     "tests": {"deploy": [
-      {"docker_push": "quay.io/wakaba/sandbox:kuzu"}
+      {"docker_push": "quay.io/wakaba/sandbox:ten"}
     ]},
     "pages": {"branch": "heroku"}
   }

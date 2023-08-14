@@ -14,7 +14,10 @@
          "steps" : [
             {
                "name" : "Checkout",
-               "uses" : "actions/checkout@v2"
+               "uses" : "actions/checkout@v2",
+               "with" : {
+                  "ssh-key" : "${{ secrets.GH_GIT_KEY }}"
+               }
             },
             {
                "run" : "make build-github-pages"

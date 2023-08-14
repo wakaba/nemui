@@ -7,7 +7,10 @@
          "runs-on" : "ubuntu-latest",
          "steps" : [
             {
-               "uses" : "actions/checkout@v2"
+               "uses" : "actions/checkout@v2",
+               "with" : {
+                  "ssh-key" : "${{ secrets.GH_GIT_KEY }}"
+               }
             },
             {
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
@@ -16,7 +19,7 @@
                "run" : "make deps build-for-docker"
             },
             {
-               "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:kuzu \u005C."
+               "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:ten \u005C."
             },
             {
                "env" : {
@@ -28,14 +31,14 @@
             },
             {
                "if" : "${{ github.ref == 'refs/heads/master' }}",
-               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:kuzu"
+               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:ten"
             },
             {
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
                },
                "if" : "${{ github.ref == 'refs/heads/master' }}",
-               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox:kuzu bash"
+               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox:ten bash"
             },
             {
                "uses" : "actions/upload-artifact@v3",

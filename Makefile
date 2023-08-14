@@ -47,6 +47,13 @@ test1:
 	cd $$CIRCLE_ARTIFACTS/3 && wget -r -l 2 https://fonts.suikawiki.org || true
 
 build-for-docker:
+	mkdir -p local
+	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox@sha256:4108d55a9700 cp -R /app/data /local/data
+	find local/data/
+
+	apt-get update && apt-get install -y imagemagick
+
+build-for-dockerX:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
 	# https://wakaba.github.io/nemui/local/data/abc.txt
