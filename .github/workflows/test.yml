@@ -19,26 +19,26 @@
                "run" : "make deps build-for-docker"
             },
             {
-               "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:kuzu\u005C-png \u005C."
+               "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:mmag\u005C-png \u005C."
             },
             {
                "env" : {
                   "DOCKER_PASS" : "${{ secrets.DOCKER_PASS }}",
                   "DOCKER_USER" : "${{ secrets.DOCKER_USER }}"
                },
-               "if" : "${{ github.ref == 'refs/heads/heroku3' }}",
+               "if" : "${{ github.ref == 'refs/heads/heroku4' }}",
                "run" : "docker login -u $DOCKER_USER -p $DOCKER_PASS quay\u005C.io"
             },
             {
-               "if" : "${{ github.ref == 'refs/heads/heroku3' }}",
-               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:kuzu\u005C-png"
+               "if" : "${{ github.ref == 'refs/heads/heroku4' }}",
+               "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:mmag\u005C-png"
             },
             {
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
                },
-               "if" : "${{ github.ref == 'refs/heads/heroku3' }}",
-               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox:kuzu-png bash"
+               "if" : "${{ github.ref == 'refs/heads/heroku4' }}",
+               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox:mmag-png bash"
             },
             {
                "uses" : "actions/upload-artifact@v3",

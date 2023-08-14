@@ -63,6 +63,8 @@ build-for-docker:
 
 	perl convert.pl imagedata/zip-file-list.txt
 
+	rm -fr ./local
+
 build-for-dockerX:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
