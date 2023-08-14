@@ -54,7 +54,7 @@ build-docker-in-circleci-1:
 
 build-docker-in-circleci-2:
 	mkdir local/data
-	cd local/data && unzip -q ../zip/files/*.zip
+	cd local/data && unzip -q ../zip/files/*.zip 1* b* h* u*
 
 	cd local/data && find . > ../../imagedata/zip-file-list.txt
 
