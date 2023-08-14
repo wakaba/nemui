@@ -46,6 +46,23 @@ test1:
 	cd $$CIRCLE_ARTIFACTS/2 && wget -r -l 2 https://fonts.suikawiki.org || true
 	cd $$CIRCLE_ARTIFACTS/3 && wget -r -l 2 https://fonts.suikawiki.org || true
 
+build-docker-in-circleci-1:
+	mkdir -p imagedata
+
+	mkdir -p local
+	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu cp -R /app/data /local/zip
+
+build-docker-in-circleci-2:
+	mkdir local/data
+	cd local/data && unzip -q ../zip/files/*.zip
+
+	cd local/data && find . > ../../imagedata/zip-file-list.txt
+
+build-docker-in-circleci-3:
+	sudo apt-get update && sudo apt-get install -y imagemagick
+
+	perl convert.pl imagedata/zip-file-list.txt
+
 build-for-docker:
 	mkdir -p imagedata
 
