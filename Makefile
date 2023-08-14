@@ -30,7 +30,7 @@ build-netlify:
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
 	wget https://wakaba.github.io/nemui/data.tar.gz
-	cd local/data && tar zxf ../data.tar.gz
+	cd local/data && tar zxf ../../data.tar.gz
 
 
 #	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
