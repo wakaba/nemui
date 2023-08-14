@@ -57,7 +57,7 @@ build-for-docker:
 	(docker volume ls -qf dangling=true | xargs docker volume rm) || true
 
 	mkdir local/data
-	cd local/data && unzip -q ../zip/files/*.zip
+	cd local/data && unzip -q ../zip/files/*.zip 100241706
 	rm -fr ./zip
 
 	cd local/data && find . > ../../imagedata/zip-file-list.txt
