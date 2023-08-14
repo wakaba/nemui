@@ -11,7 +11,7 @@ sub create_dir ($) {
   my $s = shift;
   $s =~ s{/[^/]+$}{};
   return if $Created->{$s}++;
-  run 'mkdir', $s;
+  run 'mkdir', '-p', $s;
 }
 
 while (<>) {
