@@ -33,7 +33,7 @@ while (<>) {
     }
 
     my $elapsed = time - $start_time;
-    if ($elapsed > 5*60) {
+    if ($elapsed > 45*60) {
       warn "Elapsed: $elapsed s, terminated\n";
       warn "Converted: $converted, Skipped: $skipped\n";
       exit;
@@ -43,7 +43,7 @@ while (<>) {
 
     run 'convert', $in_file, '-colors', 2, $out_file;
     $converted++;
-    warn "$converted files converted\n" if ($converted % 100) == 0;
+    warn "$converted files converted (skipped: $skipped)\n" if ($converted % 100) == 0;
 
     run 'rm', $in_file;
     
