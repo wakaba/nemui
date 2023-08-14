@@ -26,18 +26,18 @@
                   "DOCKER_PASS" : "${{ secrets.DOCKER_PASS }}",
                   "DOCKER_USER" : "${{ secrets.DOCKER_USER }}"
                },
-               "if" : "${{ github.ref == 'refs/heads/master' }}",
+               "if" : "${{ github.ref == 'refs/heads/heroku3' }}",
                "run" : "docker login -u $DOCKER_USER -p $DOCKER_PASS quay\u005C.io"
             },
             {
-               "if" : "${{ github.ref == 'refs/heads/master' }}",
+               "if" : "${{ github.ref == 'refs/heads/heroku3' }}",
                "run" : "docker push quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:ten"
             },
             {
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
                },
-               "if" : "${{ github.ref == 'refs/heads/master' }}",
+               "if" : "${{ github.ref == 'refs/heads/heroku3' }}",
                "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=quay.io/wakaba/sandbox:ten bash"
             },
             {
