@@ -9,7 +9,6 @@
             "name" : "github-pages",
             "url" : "${{ steps.deployment.outputs.page_url }}"
          },
-         "if" : "${{ github.event.workflow_run.conclusion == 'success' }}",
          "runs-on" : "ubuntu-latest",
          "steps" : [
             {
@@ -43,15 +42,9 @@
    },
    "name" : "pages",
    "on" : {
-      "workflow_run" : {
+      "push" : {
          "branches" : [
-            "heroku"
-         ],
-         "types" : [
-            "completed"
-         ],
-         "workflows" : [
-            "test"
+            "heroku2"
          ]
       }
    },

@@ -1,12 +1,5 @@
 {
   "github": {
-    "build": [
-      "make deps build-for-docker",
-      {"docker_build": "quay.io/wakaba/sandbox:mmag"}
-    ],
-    "tests": {"deploy": [
-      {"docker_push": "quay.io/wakaba/sandbox:mmag", "branch": "heroku2"}
-    ]},
-    "pages": {"branch": "heroku"}
+    "pages": {"branch": "heroku2"}
   }
 }
