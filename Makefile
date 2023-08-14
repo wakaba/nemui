@@ -48,7 +48,7 @@ test1:
 
 build-for-docker:
 	mkdir -p local
-	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox@sha256:4108d55a9700 cp -R /app/data /local/data
+	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox@sha256:4108d55a9700ebd779fecfa397821e4753f8dd56d82b00ee56d51d69c2cc40f5 cp -R /app/data /local/data
 	find local/data/
 
 	apt-get update && apt-get install -y imagemagick
