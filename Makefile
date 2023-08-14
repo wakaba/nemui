@@ -56,11 +56,10 @@ build-docker-in-circleci-2:
 	mkdir local/data
 
 	#p1
-	#cd local/data && unzip -q ../zip/files/*.zip 1* b* h* u*
-	#p2
-	cd local/data && unzip -q ../zip/files/*.zip 20002*
+	cd local/data && unzip -q ../zip/files/*.zip 100249476
 
 	cd local/data && find . > ../../imagedata/zip-file-list.txt
+	wc -l imagedata/zip-file-list.txt
 
 build-docker-in-circleci-3:
 	sudo apt-get update && sudo apt-get install -y imagemagick
