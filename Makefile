@@ -51,6 +51,7 @@ build-docker-in-circleci-1:
 	mkdir -p local
 	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu cp -R /app/data /local/zip
 
+# ~ 4s
 build-docker-in-circleci-1-2:
 	# first time
 	#mkdir -p imagedata
