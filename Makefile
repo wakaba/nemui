@@ -39,10 +39,12 @@ build-netlify:
 	wget https://manakai.github.io/data-chars/generated.tar.gz
 	mkdir -p local/chars
 	cd local/chars && tar zxf ../../generated.tar.gz
-	ls local/data/
-	mv local/chars/local/generated local/data/
+	mv local/chars/local/generated local/data/chars
 
 	cp _headers local/data/
+
+	ls local/data/
+	ls local/data/generated
 
 
 #	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
