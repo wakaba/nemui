@@ -31,6 +31,7 @@ build-netlify:
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
 	wget https://wakaba.github.io/nemui/data.tar.gz
+	mkdir -p local/tensho
 	cd local/tensho && tar zxf ../../data.tar.gz
 	find local/tensho > tensho-list.txt
 	perl move-tensho.pl tensho-list.txt
