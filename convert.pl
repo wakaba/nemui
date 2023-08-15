@@ -39,7 +39,8 @@ while (<>) {
     my $in_file = qq{local/data/$_};
     my $out_file = qq{imagedata/$_};
     $out_file =~ s{\.jpg$}{.png};
-    if (-f $out_file) {
+    my $current_out_file = "local/" . $out_file;
+    if (-f $current_out_file) {
       $skipped++;
       warn "$skipped files skipped\n" if ($skipped % 1000) == 0;
       next;
@@ -47,7 +48,7 @@ while (<>) {
     my $d_file = qq{/app/data/$_};
 
     my $elapsed = time - $start_time;
-    if ($elapsed > 4*60) {
+    if ($elapsed > 2*60) {
       warn "Elapsed: $elapsed s, terminated\n";
       warn "Converted: $converted, Skipped: $skipped\n";
       exit;
@@ -66,7 +67,8 @@ while (<>) {
     my $in_file = qq{local/data/$_};
     if (-f $in_file) {
       my $out_file = qq{imagedata/$_};
-      next if -f $out_file;
+      my $current_out_file = 'local/' . $out_file;
+      next if -f $current_out_file;
       my $d_file = qq{/app/data/$_};
       
       create_dir $out_file;

@@ -58,7 +58,6 @@ build-docker-in-circleci-1-2:
 
 	# second+ time
 	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu-png-1 cp -R /app/data /local/imagedata
-	mv local/imagedata ./
 
 	docker inspect --format='{{index .RepoDigests 0}}' quay.io/wakaba/sandbox:kuzu-png-1 > docker-current
 
@@ -75,7 +74,7 @@ build-docker-in-circleci-2:
 build-docker-in-circleci-3:
 	sudo apt-get update && sudo apt-get install -y imagemagick
 
-	perl convert.pl imagedata/zip-file-list.txt
+	perl convert.pl local/imagedata/zip-file-list.txt
 
 build-docker-in-circleci-4:
 	rm -fr ./local
