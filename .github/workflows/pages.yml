@@ -44,7 +44,7 @@
    "on" : {
       "push" : {
          "branches" : [
-            "heroku2"
+            "ispages"
          ]
       }
    },

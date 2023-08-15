@@ -84,7 +84,7 @@ build-for-docker:
 
 	mv files local/data/
 
-Xbuild-github-pages:
+build-github-pages:
 	mkdir -p local
 	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:ten cp -R /app/data /local/data
 	tar -cf data.tar local/data
