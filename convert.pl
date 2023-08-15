@@ -17,6 +17,7 @@ sub create_dir ($) {
 my $start_time = time;
 my $skipped = 0;
 my $converted = 0;
+my $all = 1130869;
 
 my $docker_current;
 {
@@ -52,6 +53,9 @@ while (<>) {
     if ($elapsed > 45*60) {
       warn "Elapsed: $elapsed s, terminated\n";
       warn "Converted: $converted, Skipped: $skipped\n";
+      warn sprintf "%d/%d, %d %% done\n",
+          $converted + $skipped, $all,
+          ($converted + $skipped) / $all * 100;
       exit;
     }
     
@@ -59,7 +63,12 @@ while (<>) {
 
     run 'convert', $in_file, '-colors', 2, $out_file;
     $converted++;
-    warn "$converted files converted (skipped: $skipped)\n" if ($converted % 100) == 0;
+    if (($converted % 100) == 0) {
+      warn "$converted files converted (skipped: $skipped)\n";
+      warn sprintf "%d/%d, %d %% done\n",
+          $converted + $skipped, $all,
+          ($converted + $skipped) / $all * 100;
+    }
     #print $df_file "ADD $out_file $d_file\n";
 
     run 'rm', $in_file;
