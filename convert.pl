@@ -28,7 +28,8 @@ my $docker_current;
 my $df_name = q{Dockerfile};
 open my $df_file, '>', $df_name or die "$df_name: $!";
 printf $df_file q{
-  FROM %s
+FROM %s
+ADD imagedata/ /app/data/
 }, $docker_current;
 
 while (<>) {
@@ -59,7 +60,7 @@ while (<>) {
     run 'convert', $in_file, '-colors', 2, $out_file;
     $converted++;
     warn "$converted files converted (skipped: $skipped)\n" if ($converted % 100) == 0;
-    print $df_file "ADD $out_file $d_file\n";
+    #print $df_file "ADD $out_file $d_file\n";
 
     run 'rm', $in_file;
     
@@ -74,7 +75,7 @@ while (<>) {
       create_dir $out_file;
       
       run 'mv', $in_file, $out_file;
-      print $df_file "ADD $out_file $d_file\n";
+      #print $df_file "ADD $out_file $d_file\n";
     }
   }
 }
