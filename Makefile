@@ -25,10 +25,16 @@ ciconfig:
 deps:
 
 build-netlify:
-	mkdir -p local/data/tensho
+	mkdir -p local/data/tensho local/data/modmag
 
 	echo abc > local/data/abc.txt
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
+
+	curl http://$(TEMP_HOST)/mm.tar.gz --header host:temp.asmi.internal > modmag.tar.gz
+	mkdir -p local/modmag
+	cd local/modmag && tar zxf ../../modmag.tar.gz
+	find local/modmag > modmag-list.txt
+	perl move-modmag.pl modmag-list.txt
 
 	wget https://wakaba.github.io/nemui/data.tar.gz
 	mkdir -p local/tensho
