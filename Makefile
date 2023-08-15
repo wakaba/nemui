@@ -80,6 +80,8 @@ build-docker-in-circleci-4:
 	rm -fr ./local
 
 build-for-docker:
+
+build-for-docker2:
 	mkdir -p imagedata
 
 	mkdir -p local
