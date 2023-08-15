@@ -60,6 +60,8 @@ build-docker-in-circleci-1-2:
 	docker run -i -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu-png-1 cp -R /app/data /local/imagedata
 	mv local/imagedata ./
 
+	docker inspect --format='{{index .RepoDigests 0}}' quay.io/wakaba/sandbox:kuzu-png-1 > docker-current
+
 # ~ 1m30s
 build-docker-in-circleci-2:
 	mkdir local/data
