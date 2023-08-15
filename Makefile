@@ -25,12 +25,15 @@ ciconfig:
 deps:
 
 build-netlify:
-	mkdir -p local/data
+	mkdir -p local/data/tensho
+
 	echo abc > local/data/abc.txt
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
 	wget https://wakaba.github.io/nemui/data.tar.gz
-	cd local/data && tar zxf ../../data.tar.gz
+	cd local/tensho && tar zxf ../../data.tar.gz
+	find local/tensho > tensho-list.txt
+	perl move-tensho.pl tensho-list.txt
 
 	wget https://manakai.github.io/data-chars/generated.tar.gz
 	tar zxf generated.tar.gz
