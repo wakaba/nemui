@@ -86,9 +86,14 @@ build-for-docker:
 
 build-github-pages:
 	mkdir -p local
-	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:ten cp -R /app/data /local/data
-	tar -cf data.tar local/data
-	gzip data.tar
+	#400MB
+	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:ten cp -R /app/data /local/tensho
+	tar -cf tensho.tar local/tensho
+	gzip tensho.tar
+	#300MB
+	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:mmag-png cp -R /app/data /local/modmag
+	tar -cf modmag.tar local/modmag
+	gzip modmag.tar
 	rm -fr ./local
 
 xxbuild-github-pages:
