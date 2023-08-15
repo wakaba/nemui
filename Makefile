@@ -32,6 +32,10 @@ build-netlify:
 	wget https://wakaba.github.io/nemui/data.tar.gz
 	cd local/data && tar zxf ../../data.tar.gz
 
+	wget https://manakai.github.io/data-chars/generated.tar.gz
+	tar zxf generated.tar.gz
+	mv local/generated local/data/
+
 	cp _headers local/data/
 
 
