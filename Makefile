@@ -37,8 +37,10 @@ build-netlify:
 	perl move-tensho.pl tensho-list.txt
 
 	wget https://manakai.github.io/data-chars/generated.tar.gz
-	tar zxf generated.tar.gz
-	mv local/generated local/data/
+	mkdir -p local/chars
+	cd local/chars && tar zxf ../../generated.tar.gz
+	ls local/data/
+	mv local/chars/local/generated local/data/
 
 	cp _headers local/data/
 
