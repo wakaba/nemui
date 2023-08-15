@@ -1,7 +1,11 @@
 {
   "github": {
     "build": [
-      "make deps build-for-docker",
+      "make deps build-for-docker-1",
+      "make deps build-for-docker-2",
+      "make deps build-for-docker-3",
+      "make deps build-for-docker-4",
+      "make deps build-for-docker-5",
       {"docker_build": "quay.io/wakaba/sandbox:mmag-png"}
     ],
     "tests": {"deploy": [

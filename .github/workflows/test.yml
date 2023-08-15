@@ -16,7 +16,19 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
-               "run" : "make deps build-for-docker"
+               "run" : "make deps build-for-docker-1"
+            },
+            {
+               "run" : "make deps build-for-docker-2"
+            },
+            {
+               "run" : "make deps build-for-docker-3"
+            },
+            {
+               "run" : "make deps build-for-docker-4"
+            },
+            {
+               "run" : "make deps build-for-docker-5"
             },
             {
                "run" : "docker build -t quay\u005C.io\u005C/wakaba\u005C/sandbox\u005C:mmag\u005C-png \u005C."
