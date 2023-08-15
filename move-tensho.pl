@@ -1,8 +1,9 @@
 use strict;
 use warnings;
 
+my $i = 0;
 sub run (@) {
-  print STDERR "Command: |@_|\n";
+  print STDERR "Command: |@_|\n" if ($i++ % 1000) == 0;
   (system @_) == 0 or die "Failed: $?";
 }
 
