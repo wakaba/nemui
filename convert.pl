@@ -38,7 +38,7 @@ while (<>) {
             my ($x, $y, $w, $h) = ($1, $2, $3, $4);
             my $img_out_file = "$img_out_dir/$x-$y-$w-$h.png";
             
-            run 'convert', $img_in_file, '-crop', $x . 'x' . $y . '+' . $w . '+' . $h, '-colors', 2, $img_out_file;
+            run 'convert', $img_in_file, '-crop', $w . 'x' . $h . '+' . $x . '+' . $y, '-colors', 2, $img_out_file;
           }
         }
       }
