@@ -30,13 +30,13 @@ build-netlify:
 	echo abc > local/data/abc.txt
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
-	wget https://wakaba.github.io/nemui/modmag.tar.gz
+	wget https://bitbucket.org/wakabatan/swdata-items-1/raw/master/modmag.tar.gz
 	mkdir -p local/modmag
 	cd local/modmag && tar zxf ../../modmag.tar.gz
 	find local/modmag > modmag-list.txt
 	perl move-modmag.pl modmag-list.txt
 
-	wget https://wakaba.github.io/nemui/tensho.tar.gz
+	wget https://bitbucket.org/wakabatan/swdata-items-1/raw/master/tensho.tar.gz
 	mkdir -p local/tensho
 	cd local/tensho && tar zxf ../../tensho.tar.gz
 	find local/tensho > tensho-list.txt
