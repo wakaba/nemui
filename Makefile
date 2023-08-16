@@ -51,6 +51,8 @@ build-netlify:
 	find local/tensho > tensho-list.txt
 	perl move-tensho.pl tensho-list.txt
 
+	rm -fr local/data/tensho local/data/modmag
+
 	ls local/data/
 	ls local/data/generated || true
 	ls local/data/chars || true
