@@ -30,6 +30,7 @@ build-netlify:
 	echo abc > local/data/abc.txt
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
+	mkdir -p local/data/kuzushiji
 	wget --quiet https://wakaba.github.io/nemui/kuzushiji.tar.gz
 	mkdir -p local/kuzushiji
 	cd local/kuzushiji && tar zxf ../../kuzushiji.tar.gz
