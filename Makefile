@@ -87,6 +87,13 @@ build-for-docker:
 build-github-pages:
 	mkdir -p local
 
+	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu-png-1 cp -R /app/data /local/kuzushiji
+	tar -cf kuzushiji.tar local/kuzushiji
+	gzip kuzushiji.tar
+
+	rm -fr ./local
+
+build-github-pages2:
 	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox cp -R /app/data /local/dsanddata
 	mv local/dsanddata/modmag-image.tar.gz ./
 
