@@ -50,7 +50,7 @@ while (<>) {
     my $d_file = qq{/app/data/$_};
 
     my $elapsed = time - $start_time;
-    if ($elapsed > 45*60) {
+    if ($elapsed > 30*60) {
       warn "Elapsed: $elapsed s, terminated\n";
       warn "Converted: $converted, Skipped: $skipped\n";
       warn sprintf "%d/%d, %d %% done\n",
