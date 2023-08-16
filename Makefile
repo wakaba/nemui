@@ -72,6 +72,7 @@ build-netlify:
 	cp _headers local/data/
 
 	rm -fr local/data/tensho local/data/modmag local/chars
+	rm -fr local/data/kuzushiji/[^0-9]*
 
 
 #	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
