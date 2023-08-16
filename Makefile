@@ -59,15 +59,7 @@ build-netlify:
 #	wget --quiet https://manakai.github.io/data-chars/generated.tar.gz
 #	mkdir -p local/chars
 #	cd local/chars && tar zxf ../../generated.tar.gz
-
-	ls local/data/
-	ls local/data/generated || true
-	ls local/data/chars || true
-	ls local/data/chars/generated || true
-	ls local/chars || true
-	ls local/chars/local || true
-
-	mv local/chars/local/generated local/data/chars
+#	mv local/chars/local/generated local/data/chars
 
 	cp _headers local/data/
 
