@@ -25,7 +25,7 @@ ciconfig:
 deps:
 
 build-netlify:
-	rm -fr ./local
+#	rm -fr ./local
 
 	mkdir -p local/data/tensho local/data/modmag
 
@@ -56,9 +56,9 @@ build-netlify:
 	ls local/data/chars || true
 	ls local/data/chars/generated || true
 
-	wget --quiet https://manakai.github.io/data-chars/generated.tar.gz
-	mkdir -p local/chars
-	cd local/chars && tar zxf ../../generated.tar.gz
+#	wget --quiet https://manakai.github.io/data-chars/generated.tar.gz
+#	mkdir -p local/chars
+#	cd local/chars && tar zxf ../../generated.tar.gz
 
 	ls local/data/
 	ls local/data/generated || true
@@ -72,7 +72,8 @@ build-netlify:
 	cp _headers local/data/
 
 	rm -fr local/data/tensho local/data/modmag local/chars
-	rm -fr local/data/kuzushiji/[0-9]*
+#	rm -fr local/data/kuzushiji/[0-9]*
+	rm -fr local/data/kuzushiji/[02-9]*
 
 
 #	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
