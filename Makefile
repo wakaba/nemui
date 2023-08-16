@@ -25,6 +25,8 @@ ciconfig:
 deps:
 
 build-netlify:
+	rm -fr ./local
+
 	mkdir -p local/data/tensho local/data/modmag
 
 	echo abc > local/data/abc.txt
