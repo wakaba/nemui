@@ -30,27 +30,43 @@ build-netlify:
 	echo abc > local/data/abc.txt
 	#https://clever-sprite-f9ae27.netlify.app/abc.txt
 
-	wget https://bitbucket.org/wakabatan/swdata-items-1/raw/master/modmag.tar.gz
+	wget --quiet https://wakaba.github.io/nemui/kuzushiji.tar.gz
+	mkdir -p local/kuzushiji
+	cd local/kuzushiji && tar zxf ../../kuzushiji.tar.gz
+	find local/kuzushiji > kuzushiji-list.txt
+	perl move-kuzushiji.pl kuzushiji-list.txt
+
+	wget --quiet https://bitbucket.org/wakabatan/swdata-items-1/raw/master/modmag.tar.gz
 	mkdir -p local/modmag
 	cd local/modmag && tar zxf ../../modmag.tar.gz
 	find local/modmag > modmag-list.txt
 	perl move-modmag.pl modmag-list.txt
 
-	wget https://bitbucket.org/wakabatan/swdata-items-1/raw/master/tensho.tar.gz
+	wget --quiet https://bitbucket.org/wakabatan/swdata-items-1/raw/master/tensho.tar.gz
 	mkdir -p local/tensho
 	cd local/tensho && tar zxf ../../tensho.tar.gz
 	find local/tensho > tensho-list.txt
 	perl move-tensho.pl tensho-list.txt
 
-	wget https://manakai.github.io/data-chars/generated.tar.gz
+	ls local/data/
+	ls local/data/generated || true
+	ls local/data/chars || true
+	ls local/data/chars/generated || true
+
+	wget --quiet https://manakai.github.io/data-chars/generated.tar.gz
 	mkdir -p local/chars
 	cd local/chars && tar zxf ../../generated.tar.gz
+
+	ls local/data/
+	ls local/data/generated || true
+	ls local/data/chars || true
+	ls local/data/chars/generated || true
+	ls local/chars || true
+	ls local/chars/local || true
+
 	mv local/chars/local/generated local/data/chars
 
 	cp _headers local/data/
-
-	ls local/data/
-	ls local/data/generated
 
 
 #	wget http://codh.rois.ac.jp/tensho/dataset/v2/cc-by-sa-full.zip
