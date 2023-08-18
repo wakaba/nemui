@@ -1,5 +1,19 @@
 {
   "github": {
-    "pages": {"branch": "heroku2"}
+    "build": {
+      "build main": [
+        {
+          "run": "build-main"
+        }
+      ]
+    },
+    "tests": {
+      "deploy main": [
+        {
+          "run": "deploy-main",
+          "secrets": ["SURGE_TOKEN", "SURGE_DOMAIN"]
+        }
+      ]
+    }
   }
 }

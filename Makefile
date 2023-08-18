@@ -24,6 +24,17 @@ ciconfig:
 
 deps:
 
+build-main:
+	mkdir -p local/data/kuzushiji
+	wget --quiet https://wakaba.github.io/nemui/kuzushiji.tar.gz
+	mkdir -p local/kuzushiji
+	cd local/kuzushiji && tar zxf ../../kuzushiji.tar.gz
+	find local/kuzushiji > kuzushiji-list.txt
+	perl move-kuzushiji.pl kuzushiji-list.txt
+deploy-main:
+	docker run -v `pwd`/local:/local --user `id --user` node bash -c 'npm install -g surge; surge data $$SURGE_DOMAIN --token $$SURGE_TOKEN'
+
+
 build-netlify:
 #	rm -fr ./local
 
