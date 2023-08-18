@@ -32,7 +32,7 @@ build-main:
 	find local/kuzushiji > kuzushiji-list.txt
 	perl move-kuzushiji.pl kuzushiji-list.txt
 deploy-main:
-	docker run -v `pwd`/local:/local --user `id --user` node bash -c 'npm install -g surge; surge data $$SURGE_DOMAIN --token $$SURGE_TOKEN'
+	docker run -v `pwd`/local:/local node bash -c 'npm install -g surge; surge data $$SURGE_DOMAIN --token $$SURGE_TOKEN'
 
 
 build-netlify:
