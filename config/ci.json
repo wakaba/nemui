@@ -3,14 +3,14 @@
     "build": {
       "build main": [
         {
-          "run": "build-main"
+          "run": "make build-main"
         }
       ]
     },
     "tests": {
       "deploy main": [
         {
-          "run": "deploy-main",
+          "run": "make deploy-main",
           "secrets": ["SURGE_TOKEN", "SURGE_DOMAIN"]
         }
       ]

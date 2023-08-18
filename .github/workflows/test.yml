@@ -16,14 +16,14 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
-               "run" : "build-main"
+               "run" : "make build-main"
             },
             {
                "env" : {
                   "SURGE_DOMAIN" : "${{ secrets.SURGE_DOMAIN }}",
                   "SURGE_TOKEN" : "${{ secrets.SURGE_TOKEN }}"
                },
-               "run" : "deploy-main"
+               "run" : "make deploy-main"
             },
             {
                "uses" : "actions/upload-artifact@v3",
