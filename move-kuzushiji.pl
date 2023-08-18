@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 my $created = {};
+my $n = 0;
 while (<>) {
   s/[\x0D\x0A]+$//g;
   if (m{/U\+[0-9A-F]+_(([0-9a-z]+)[\w-]+\.png)}) {
@@ -11,5 +12,6 @@ while (<>) {
     $out_dir =~ s{[^/]+$}{};
     mkdir $out_dir unless $created->{$out_dir}++;
     rename $in_file, $out_file;
+    last if $n++ > 500000;
   }
 }

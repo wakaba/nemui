@@ -29,7 +29,7 @@ build-main:
 	wget --quiet https://wakaba.github.io/nemui/kuzushiji.tar.gz
 	mkdir -p local/kuzushiji
 	cd local/kuzushiji && tar zxf ../../kuzushiji.tar.gz
-	find local/kuzushiji > kuzushiji-list.txt
+	find local/kuzushiji | sort > kuzushiji-list.txt
 	perl move-kuzushiji.pl kuzushiji-list.txt
 deploy-main:
 	docker run -e SURGE_DOMAIN=$$SURGE_DOMAIN -e SURGE_TOKEN=$$SURGE_TOKEN -v `pwd`/local:/local node bash -c 'npm install -g surge; surge /local/data $$SURGE_DOMAIN --token $$SURGE_TOKEN'
