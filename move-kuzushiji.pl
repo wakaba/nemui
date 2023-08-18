@@ -12,6 +12,6 @@ while (<>) {
     $out_dir =~ s{[^/]+$}{};
     mkdir $out_dir unless $created->{$out_dir}++;
     rename $in_file, $out_file;
-    last if $n++ > 10_0000;
+    last if $n++ > 1_0000;
   }
 }
