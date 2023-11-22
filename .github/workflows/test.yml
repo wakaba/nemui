@@ -10,6 +10,18 @@
          },
          "runs-on" : "${{ matrix.os }}",
          "steps" : [
+         {
+         "run": "false"
+},
+{
+"run": "echo 1",
+"if": "${{ success () }}"
+},
+{
+"run": "echo 2",
+"if": "${{ failure () }}"
+},
+
             {
                "uses" : "actions/checkout@v2"
             },
