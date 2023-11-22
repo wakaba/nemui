@@ -21,6 +21,10 @@
 "run": "echo 2",
 "if": "${{ failure () }}"
 },
+{
+"run": "echo 3",
+"if": "${{ always () }}"
+},
 
             {
                "uses" : "actions/checkout@v2"
