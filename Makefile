@@ -24,7 +24,7 @@ ciconfig:
 
 deps:
 
-build-netlify:
+x-build-netlify:
 	mkdir -p local/data/tensho
 
 	echo abc > local/data/abc.txt
@@ -64,7 +64,7 @@ test1:
 	cd $$CIRCLE_ARTIFACTS/2 && wget -r -l 2 https://fonts.suikawiki.org || true
 	cd $$CIRCLE_ARTIFACTS/3 && wget -r -l 2 https://fonts.suikawiki.org || true
 
-build-for-docker:
+x-build-for-docker:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
 	# https://wakaba.github.io/nemui/local/data/abc.txt
@@ -84,7 +84,7 @@ build-for-docker:
 
 	mv files local/data/
 
-build-github-pages:
+x-build-github-pages:
 	mkdir -p local
 
 	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox:kuzu-png-1 cp -R /app/data /local/kuzushiji
@@ -93,7 +93,7 @@ build-github-pages:
 
 	rm -fr ./local
 
-build-github-pages2:
+x-build-github-pages2:
 	docker run -v `pwd`/local:/local --user `id --user` quay.io/wakaba/sandbox cp -R /app/data /local/dsanddata
 	mv local/dsanddata/modmag-image.tar.gz ./
 
@@ -157,56 +157,6 @@ test: test-deps
 	echo "make test executed!"
 #test-1 test-main test-https
 
-test-deps: test-deps-0 deps
-
-test-deps-0:
-	perl aaa.pl
-	echo "FOO=$$FOO BAR=$$BAR"
-
-test-1:
-	./perl test1.pl
+test-deps: deps
 
 test-main:
-	#$(PROVE) t/*.t
-	which sed
-	diff --help
-
-test-https:
-	curl https://gist.githubusercontent.com/wakaba/f89aa0ba4042d2a227f1/raw/checkhttps.pl > check.pl
-	perl check.pl > check.html
-	perl -e 'print int rand 10000000' > a.txt
-	cat a.txt
-	wget https://raw.githubusercontent.com/wakaba/perl-setupenv/staging/bin/pmbp.pl
-	perl pmbp.pl --install-openssl-if-mac
-
-external-test-or-rollback:
-	$(MAKE) external-test || $(MAKE) heroku-rollback failed
-
-external-test: test-deps external-test-main
-
-HEROKU_APP_NAME=fuga1
-
-external-test-main:
-	XTEST_ORIGIN=https://$(HEROKU_APP_NAME).herokuapp.com $(PROVE) t_ext/*.t
-
-heroku-save-current-release:
-	mkdir -p local/lib/JSON
-	curl -s -S -L https://raw.githubusercontent.com/wakaba/perl-json-ps/master/lib/JSON/PS.pm > local/lib/JSON/PS.pm
-	perl -Ilocal/lib -MJSON::PS -e '$$json = `curl -f https://api.heroku.com/apps/$(HEROKU_APP_NAME)/dynos -H "Accept: application/vnd.heroku+json; version=3" --user ":$$ENV{HEROKU_API_KEY}"`; print [grep { $$_->{type} eq 'web' } @{json_bytes2perl ($$json)}]->[0]->{release}->{id} || die "Cannot get release.id";' > local/.heroku-current-release
-
-heroku-rollback:
-	perl -e '(system qq(curl -X POST -f https://api.heroku.com/apps/$(HEROKU_APP_NAME)/releases -H "Accept: application/vnd.heroku+json; version=3" --user ":$$ENV{HEROKU_API_KEY}" -H "Content-Type: application/json" -d "{\\\"release\\\":\\\"$$ARGV[0]\\\"}")) == 0 or die $$?' `cat local/.heroku-current-release`
-
-failed:
-	false
-
-create-commit-for-heroku: git-submodules
-	git remote rm origin
-	rm -fr deps/pmtar/.git deps/pmpp/.git modules/*/.git
-	#git add -f deps/pmtar/* #deps/pmpp/*
-	#rm -fr ./t_deps/modules
-	#git rm -r t_deps/modules
-	git rm .gitmodules
-	git rm modules/* --cached
-	git add -f modules/*/*
-	git commit -m "for heroku"
