@@ -84,6 +84,8 @@ x-build-for-docker:
 
 	mv files local/data/
 
+build-github-pages:
+
 x-build-github-pages:
 	mkdir -p local
 
