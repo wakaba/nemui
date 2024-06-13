@@ -55,10 +55,26 @@
       cursor: pointer;
   }
 
+  can-copy {
+    display: block;
+  }
+
   .linked { color: red }
-  .data { color: green }
+  .base { color: black; cursor: pointer }
+  .data { color: green; cursor: pointer }
   .ignored { opacity: 0.5 }
-  
+
+  .team-list {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+  .team-list > li {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+  }
+
 </style>
 
 <c-panel>
@@ -68,8 +84,8 @@
 
 <form action=javascript:>
 <nav>
-  <label><input type=radio name=mode value=0 checked> base</label>
-  <label class=data><input type=radio name=mode value=1> data</label>
+  <label><input type=radio name=mode value=0> base</label>
+  <label class=data><input type=radio name=mode value=1 checked> data</label>
   <button type=button is=select-gpx>GPX</button>
   <input type=url name=url placeholder=https://ibuki.run/ev/{}/ list=urls>
   <button type=button is=fetch-ibuki>IBUKI</button>
@@ -83,6 +99,7 @@
     <option value=https://ibuki.run/c/8963250946391261698/>
     <option value=https://ibuki.run/a/log/8960902124485476562/>
   </datalist>
+  <ul class=team-list></ul>
 </form>
 
 </c-box>
@@ -100,11 +117,16 @@
   function init () {
     let map = document.querySelector ('map-area');
     let phaseView = document.querySelector ('.phase-list');
+    let teamList = document.querySelector ('.team-list');
 
     let pointsList = [];
-    let mode = 0;
+    let mode = 1;
     pointsList[0] = [];
     pointsList[1] = [];
+    pointsList[2] = [];
+
+    let inputParams = {};
+    let teamIds = new Set;
 
     document.querySelectorAll ('input[name=mode]').forEach (input => {
       input.onchange = () => {
@@ -119,6 +141,7 @@
       input.onchange = () => {
         radius = input.valueAsNumber || 100;
         pageURL.searchParams.set ('r', radius);
+        inputParams.radius = radius;
         rerun ();
         history.replaceState (null, null, pageURL);
       };
@@ -130,16 +153,19 @@
         radius = parseFloat (v) || 100;
       }
     }
+    inputParams.radius = radius;
 
     document.querySelectorAll ('nav button').forEach (b => {
       if (b.value === 'bs') {
         b.onclick = () => {
           pointsList[mode].pop ();
+          delete inputParams["url" + mode];
           rerun ();
         };
       } else if (b.value === 'clear') {
         b.onclick = () => {
           pointsList[mode] = [];
+          delete inputParams["url" + mode];
           rerun ();
         };
       } else if (b.value === '') {
@@ -175,6 +201,7 @@
           });
         }).then (parseGPX).then (points => {
           pointsList[mode] = points;
+          delete inputParams["url" + mode];
           window.scrolled = false;
           rerun ();
         });
@@ -184,9 +211,12 @@
     document.querySelectorAll ('button[is=fetch-ibuki]').forEach (b => {
       b.onclick = () => {
         let u = document.forms[0].elements.url.value;
-        fetchIbukiRoute (u).then (pp => {
-          pointsList[mode] = pp;
+        fetchIbuki (u).then (ib => {
+          pointsList[mode] = ib.routePoints;
+          if (mode == 1) pointsList[2] = ib.forcedPoints;
+          if (mode == 1) teamIds = ib.teamIds;
           pageURL.searchParams.set ('url' + mode, u);
+          inputParams["url" + mode] = u.replace (/^https:\/\/ibuki.run\//, '/');
           window.scrolled = false;
           rerun ();
           let opt = document.createElement ('option');
@@ -194,6 +224,7 @@
           document.querySelector ('#urls').appendChild (opt);
           history.replaceState (null, null, pageURL);
         }, e => {
+          console.log (e);
           alert (e);
         });
       };
@@ -201,8 +232,11 @@
     [0, 1].forEach (_ => {
       let u = pageURL.searchParams.get ('url' + _);
       if (u) {
-        fetchIbukiRoute (u).then (pp => {
-          pointsList[_] = pp;
+        fetchIbuki (u).then (ib => {
+          pointsList[_] = ib.routePoints;
+          if (_ == 1) pointsList[2] = ib.forcedPoints;
+          if (_ == 1) teamIds = ib.teamIds;
+          inputParams["url" + _] = u.replace (/^https:\/\/ibuki.run\//, '/');
           window.scrolled = false;
           rerun ();
           let opt = document.createElement ('option');
@@ -213,642 +247,33 @@
         });
       }
     });
+    teamList.onclick = (ev) => {
+      let tid = ev.target.value;
+      if (tid == null) return;
+      document.querySelector ('input[name=mode][value="1"]').click ();
+      let u = new URL ('t/' + tid + '/', new URL (inputParams.url0, 'https://ibuki.run/'));
+      document.forms[0].elements.url.value = u;
+      document.querySelector ('button[is=fetch-ibuki]').click ();
+    };
     
     let rerun = () => {
       let computed = recompute (pointsList, radius);
       console.log (computed);
-      redraw ({map, phaseView, pointsList, computed});
+      redraw ({map, phaseView, pointsList, teamList,
+               computed, inputParams, teamIds});
     };
 
     rerun ();
   }
   setTimeout (() => init (), 1000);
 
-  function distance2 (a, b) {
-    return Math.pow (a.lat-b.lat, 2) + Math.pow (a.lon-b.lon, 2);
-  } // distance2
 
-  function findNears (points, distances, refI, startI, endI, threshold) {
-    let segments = [];
-    let state = 0;
-    let minD;
-    for (let i = startI; i <= endI; i++) {
-      let d = refI >= i ? distances[refI][i] : distances[i][refI];
-      if (state === 2) {
-        if (d < threshold) {
-          segments.unshift ([i, i, i]);
-          minD = d;
-          state = 1;
-        } else {
-          //
-        }
-      } else if (state === 1) {
-        if (d < threshold) {
-          segments[0][2] = i;
-          if (d < minD) {
-            minD = d;
-            minDi = segments[0][1] = i;
-          }
-        } else {
-          state = 2;
-        }
-      } else if (state === 0) {
-        if (d < threshold) {
-          segments.unshift ([i, i, i]);
-          minD = d;
-          state = 1;
-        } else {
-          state = 2;
-        }
-      }
-    }
-
-    return segments.reverse ();
-  } // findNears
-
-  function getNearest (points, p) {
-    let minD = Infinity;
-    let minDi = -1;
-    for (let i = 0; i < points.length; i++) {
-      let d = distance2 (p, points[i]);
-      if (d < minD) {
-        minD = d;
-        minDi = i;
-      }
-    }
-    return {distance2: minD, index: minDi, point: points[minDi]};
-  } // getNearest
-
-  function recompute (pointsList, radius) {
-    let start = performance.now ();
-
-    /*
-    let threshold = Infinity;
-    {
-      let points = pointsList[0];
-      if (points.length === 0) points = pointsList[1];
-      //let minD = Infinity;
-      let dd = [];
-      for (let i = 1; i < points.length; i++) {
-        let d = distance2 (points[i-1], points[i]);
-        //if (d < minD) {
-        //  minD = d;
-        //}
-        dd.push (d);
-      }
-      //threshold = minD / 2;
-      let median = dd.sort ((a, b) => a-b)[Math.floor (dd.length / 2)];
-      threshold = median / 2;
-    }
-    */
-    let threshold = 0.000001;
-    if (pointsList[0].length) {
-      let distancePerLat = distanceH84 (pointsList[0][0],
-                                        {lat: pointsList[0][0].lat + 1,
-                                         lon: pointsList[0][0].lon});
-      let distancePerLon = distanceH84 (pointsList[0][0],
-                                        {lat: pointsList[0][0].lat,
-                                         lon: pointsList[0][0].lon + 1});
-      threshold = radius / distancePerLat;
-      threshold = threshold * threshold;
-    }
-    
-    let augPoints = [];
-    if (pointsList[0].length) augPoints.push (pointsList[0][0]);
-    for (let i = 1; i < pointsList[0].length; i++) {
-      let d = distance2 (pointsList[0][i-1], pointsList[0][i]);
-      if (d > threshold) {
-        let n = Math.floor (Math.pow (d, 0.5) / Math.pow (threshold, 0.5)) + 1;
-        for (let j = 1; j < n; j++) {
-          let p = {lat: (pointsList[0][i].lat*j+(pointsList[0][i-1].lat*(n-j)))/n,
-                   lon: (pointsList[0][i].lon*j+(pointsList[0][i-1].lon*(n-j)))/n,
-                   additional: true};
-          augPoints.push (p);
-        }
-      }
-      augPoints.push (pointsList[0][i]);
-    }
-
-    let distances = [];
-    for (let i = 0; i < augPoints.length; i++) {
-      distances[i] = [];
-      distances[i][i] = 0;
-      for (let j = 0; j < i; j++) {
-        distances[i][j] = /*distances[j][i] =*/ distance2 (augPoints[i], augPoints[j]);
-      }
-    }
-
-    let nears = [];
-    for (let i = 0; i < augPoints.length; i++) {
-      nears[i] = findNears (augPoints, distances, i, 0, augPoints.length-1, threshold);
-      if (nears[i].length === 0) {
-        nears[i].push ([i, i, i]);
-      }
-    }
-
-    let phases = [];
-    let i2p = [];
-    {
-      let size = 0;
-      let seg;
-      for (let i = 0; i < augPoints.length; i++) {
-        let s = nears[i].length;
-        if (s === size) {
-          let matched = true;
-          let change = [];
-          for (let k = 0; k < s; k++) {
-            if (seg[2][k] === +1 && nears[i-1][k][2] >= nears[i][k][0]) {
-              //
-            } else if (seg[2][k] === -1 && nears[i][k][2] >= nears[i-1][k][0]) {
-              //
-            } else if (seg[2][k] === 0) {
-              if (nears[i-1][k][2] >= nears[i][k][0] &&
-                  (nears[i-1][k][0] <= nears[i][k][0] ||
-                   nears[i-1][k][2] <= nears[i][k][2])) {
-                if (nears[i-1][k][0] < nears[i][k][0] ||
-                    nears[i-1][k][2] < nears[i][k][2]) change[k] = +1;
-                //
-              } else if (nears[i][k][2] >= nears[i-1][k][0] &&
-                         (nears[i][k][0] <= nears[i-1][k][0] ||
-                          nears[i][k][2] <= nears[i-1][k][2])) {
-                if (nears[i][k][0] < nears[i-1][k][0] ||
-                    nears[i][k][2] < nears[i-1][k][2]) change[k] = -1;
-                //
-              } else {
-                matched = false;
-                break;
-              }
-            } else {
-              matched = false;
-              break;
-            }
-          } // k
-          if (matched) {
-            seg[1] = i;
-            i2p[i] = seg.index;
-            for (let k in change) {
-              seg[2][k] = change[k];
-            }
-          } else {
-            seg = [i, i, nears[i].map (_ => 0)];
-            seg.index = phases.length;
-            i2p[i] = seg.index;
-            phases.unshift (seg);
-            //size = s;
-          }
-        } else { // size boundary
-          seg = [i, i, nears[i].map (_ => 0)];
-          seg.index = phases.length;
-          i2p[i] = seg.index;
-          phases.unshift (seg);
-          size = s;
-        }
-      }
-    }
-    phases = phases.reverse ();
-
-    let d2b = [];
-    {
-      let currentI = -1;
-      J: for (let j = 0; j < pointsList[1].length; j++) {
-        let dp = pointsList[1][j];
-        let nearest = getNearest (augPoints, dp);
-        if (nearest.distance2 < threshold) {
-          let i = nearest.index;
-          let link = d2b[j] = {dataIndex: j, nearestIndex: i};
-
-          let candI = null;
-          for (let n of nears[i]) {
-            if (n[1] === i) {
-              if (currentI < i) {
-                candI = i;
-                break;
-              } else if (n[0] <= currentI) {
-                continue J;
-              }
-
-              if (i2p[currentI] === i2p[n[1]]) {
-                continue J;
-              }
-
-            } else {
-              if (currentI < n[2]) {
-                let minD = Infinity;
-                let minDi = -1;
-                for (let k = n[0]; k <= n[2]; k++) {
-                  let d = distance2 (augPoints[k], dp);
-                  if (d < minD) {
-                    minD = d;
-                    minDi = k;
-                  }
-                }
-                if (currentI < minDi) {
-                  candI = minDi;
-                  break;
-                } else if (n[0] <= currentI) {
-                  continue J;
-                }
-              }
-
-              if (i2p[currentI] === i2p[n[0]]) {
-                continue J;
-              }
-            }
-          } // n
-          if (candI !== null) {
-            if (i2p[currentI] < i2p[candI]) {
-              for (let n of nears[currentI]) {
-                if (i2p[currentI] < i2p[n[1]] && i2p[n[1]] < i2p[candI]) {
-                  continue J;
-                } else if (i2p[currentI] <= i2p[n[2]] &&
-                           i2p[n[1]] < i2p[candI] && candI <= n[2]) {
-                  continue J;
-                }
-              }
-            }
-            link.effectiveIndex = candI;
-            currentI = candI;
-            link.phase = i2p[candI];
-            continue J;
-          } // candI
-        }
-      } // J
-    }
-
-    return {
-      elapsed: {start, recompute: performance.now () - start},
-      thresholdMInput: radius,
-      threshold,
-      basePoints: augPoints,
-      baseNears: nears,
-      basePhases: phases,
-      dataPoints: pointsList[1],
-      dataToBase: d2b,
-    };
-  } // recompute
-
-  function redraw ({map, phaseView, computed}) {
-    let start = performance.now ();
-
-    let overlay = window.overlay = window.overlay || new MapOverlay ({
-      map,
-      redraw: () => overlay.redraw (),
-    });
-
-    overlay.redraw = () => {
-      overlay.bgContainer.textContent = '';
-      var dc = overlay.mapInitCanvas (overlay.bgContainer);
-      var ctx = dc.ctx;
-
-        let drawPolyline = (ctx, pts, color, width) => {
-          ctx.beginPath ();
-          ctx.moveTo (pts[0][1].x, pts[0][1].y);
-          pts.forEach ((_) => ctx.lineTo (_[1].x, _[1].y));
-          ctx.strokeStyle = color;
-          ctx.lineWidth = width;
-          ctx.stroke ();
-        };
-        let drawCircle = (ctx, pt, color1, color2) => {
-          ctx.beginPath ();
-          ctx.arc (pt[1].x, pt[1].y, computed.thresholdPx, 0, 2 * Math.PI);
-          if (pt[0].additional) {
-            ctx.strokeStyle = color2;
-          } else {
-            ctx.strokeStyle = color1;
-          }
-          ctx.lineWidth = 1;
-          ctx.stroke ();
-        };
-        let drawEnclose = (ctx, point, color) => {
-          ctx.beginPath ();
-          ctx.arc (point.x, point.y, 8, 0, 2 * Math.PI);
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 1;
-          ctx.stroke ();
-        };
-        let drawPoint = (ctx, pt, color) => {
-          ctx.beginPath ();
-          ctx.arc (pt[1].x, pt[1].y, 5, 0, 2 * Math.PI);
-          ctx.fillStyle = color;
-          ctx.fill ();
-        };
-        let drawLine = (ctx, pc, qc, color) => {
-          ctx.beginPath ();
-          ctx.moveTo (qc.x, qc.y);
-          ctx.lineTo (pc.x, pc.y);
-          ctx.strokeStyle = color;
-          ctx.stroke ();
-        };
-      let drawText = (ctx, pt, color, text) => {
-        ctx.beginPath ();
-        ctx.fillStyle = color;
-        ctx.fillText (text, pt[1].x + 16, pt[1].y);
-      };
-
-        {
-          let delta = Math.pow (computed.threshold, 0.5);
-          let s = (computed.basePoints.length ? distanceH84 (
-            {lat: computed.basePoints[0].lat,
-             lon: computed.basePoints[0].lon},
-            {lat: computed.basePoints[0].lat + delta,
-             lon: computed.basePoints[0].lon},
-          ) : 0);
-          let r = s * overlay.pxPerDistance;
-          computed.thresholdM = s;
-          computed.thresholdPx = r;
-        }
-        
-        if (computed.basePoints.length) {
-          let segs = dc.extract
-              (computed.basePoints, 0, computed.basePoints.length-1);
-          segs.forEach ((segment) => {
-            drawPolyline (ctx, segment, 'orange', 5);
-          });
-          segs.forEach ((segment) => {
-            segment.forEach (point => {
-              drawCircle (ctx, point, '#888', '#ccc');
-              drawPoint (ctx, point, 'gray');
-              drawText (ctx, point, 'black', point[0].index);
-            });
-          });
-        } // basePoints
-        
-        if (computed.dataPoints.length) {
-          let segs = dc.extract
-              (computed.dataPoints, 0, computed.dataPoints.length-1);
-          segs.forEach ((segment) => {
-            drawPolyline (ctx, segment, 'rgba(0, 255, 0, 0.6)', 5);
-          });
-          segs.forEach ((segment) => {
-            segment.forEach (point => {
-              drawCircle (ctx, point, 'rgba(0, 255, 0, 0.3)', '#eee');
-              drawPoint (ctx, point, 'green');
-              drawText (ctx, point, 'green', point[0].index);
-            });
-          });
-        } // dataPoints
-
-        for (let i in computed.dataToBase) {
-          let link = computed.dataToBase[i];
-          if (link) {
-            let p = computed.basePoints[link.nearestIndex];
-            let q = computed.dataPoints[i];
-            let pc = dc.getCanvasPoint (p);
-            let qc = dc.getCanvasPoint (q);
-            if (dc.inRange (pc) || dc.inRange (qc)) {
-              drawLine (ctx, pc, qc, 'rgba(255, 0, 0, 0.3)');
-            }
-            if (link.effectiveIndex != null) {
-              let r = computed.basePoints[link.effectiveIndex];
-              let rc = dc.getCanvasPoint (r);
-              if (dc.inRange (pc) || dc.inRange (qc) || dc.inRange (rc)) {
-                drawLine (ctx, qc, rc, 'red');
-                drawEnclose (ctx, qc, 'red');
-                drawEnclose (ctx, rc, 'red');
-              }
-            }
-          }
-        }
-        
-
-    }; // redraw
-
-
-    if (!window.scrolled) {
-      window.scrolled = true;
-      let bb = bounds (computed.basePoints);
-      map.pcScroll ({bounds: bb});
-    }
-    
-    let showPhase = ph => {
-      let pp = [];
-      for (let i = ph[0]; i <= ph[1]; i++) {
-        pp.push (computed.basePoints[i]);
-      }
-      let bb = bounds (pp);
-      map.pcScroll ({bounds: bb});
-    };
-
-    let pp = null;
-    let index = 0;
-    computed.basePoints.forEach (p => {
-      if (pp) {
-        p.prevDistance = distanceH84 (pp, p);
-      }
-      p.index = index++;
-      pp = p;
-    });
-    pp = null;
-    index = 0;
-    computed.dataPoints.forEach (p => {
-      if (pp) {
-        p.prevDistance = distanceH84 (pp, p);
-      }
-      p.index = index++;
-      pp = p;
-    });
-
-    overlay.redraw ();
-    
-    phaseView.textContent = '';
-    let phs = [];
-    computed.basePhases.forEach (ph => {
-      let item = document.createElement ('c-phase');
-      phaseView.appendChild (item);
-
-      let el = document.createElement ('p');
-      let nears = computed.baseNears[ph[0]];
-      nears.forEach (near => {
-        if (near[1] === ph[0]) {
-          let x = document.createElement ('strong');
-          x.textContent = ph[0] + '-' + ph[1];
-          el.appendChild (x);
-          x.onclick = () => {
-            showPhase (ph);
-          };
-
-          el.appendChild (document.createTextNode (' ['+ph.index+']'));
-        } else {
-          let x = document.createElement ('span');
-          x.textContent = near[0] + '-...';
-          el.appendChild (x);
-        }
-        el.appendChild (document.createTextNode (' '));
-      });
-      item.appendChild (el);
-
-      let list = document.createElement ('ul');
-      item.appendChild (list);
-      phs.push ([ph, list]);
-    });
-    {
-      let j = 0;
-      for (let [ph, list] of phs) {
-        let pp = [];
-        while (j < computed.dataPoints.length && 
-               (!computed.dataToBase[j] ||
-                computed.dataToBase[j].effectiveIndex == null ||
-                (ph[0] <= computed.dataToBase[j].effectiveIndex &&
-                 computed.dataToBase[j].effectiveIndex <= ph[1]))) {
-          let link = computed.dataToBase[j];
-          let li = document.createElement ('li');
-          list.appendChild (li);
-          
-          if (!link) {
-            li.innerHTML = '<span class=data>' + j + '</span> <span class=linked>~</span> ()';
-            li.className = 'ignored';
-          } else if (link.effectiveIndex != null) {
-            let point = computed.dataPoints[j];
-            pp.push (point);
-
-            if (link.effectiveIndex === link.nearestIndex) {
-              li.innerHTML = '<span class=data>' + j + '</span> <span class=linked>~</span> ' + link.effectiveIndex + ' ['+link.phase+']';
-            } else {
-              li.innerHTML = '<span class=data>' + j + '</span> <span class=linked>~</span> ' + link.effectiveIndex + ' ['+link.phase+'] <- ' + link.nearestIndex;
-            }
-          } else {
-            li.innerHTML = '<span class=data>' + j + '</span> <span class=linked>~</span> (' + link.nearestIndex + ')';
-            li.className = 'ignored';
-          }
-
-          j++;
-        }
-
-        
-      }
-    }
-
-    computed.elapsed.redraw = performance.now () - start;
-  } // redraw
-
-  function parseGPX (text) {
-    var parser = new GPXParser;
-    parser.baseURL = 'about:blank';
-    var json = parser.parseText (text);
-    json = json || {tracks: []};
-    let points = [];
-    json.tracks.forEach ((track) => {
-      track.segments.forEach (function (seg) {
-        seg.points.forEach (function (p) {
-          points.push (p);
-        });
-      });
-    });
-    return points;
-  } // parseGPX
-
-  function fetchIbukiRoute (u) {
-    let url = new URL (u);
-    if (url.pathname.match (/^\/a\/log\//)) {
-      url = new URL ('t/1/locationhistory.json', url);
-    } else if (url.pathname.match (/\/t\//)) {
-      url = new URL ('locationhistory.json', url);
-    } else {
-      url = new URL ('info.json', url);
-    }
-    return fetch (url).then (res => {
-      if (res.status !== 200) throw res;
-      return res.json ();
-    }).then (json => {
-      return parseEncodedRoutes (json.encoded_routes);
-    }).then (routes => {
-      let pp = [];
-      routes.forEach (_ => {
-        pp = pp.concat (_.points);
-      });
-      return pp;
-    });
-  } // fetchIbukiRoute
-
-  function parseEncodedRoutes (encodedRoutes) {
-    let routes = [];
-    encodedRoutes.forEach (function (_) {
-      var latlon = EncodedPolyline.decode (_.latlon, 2, 1e5);
-      var elevation = EncodedPolyline.decode (_.elevation, 1, 1e3);
-      var distance = _.distance != null ? EncodedPolyline.decode (_.distance, 1, 1e3) : [];
-      var timestamp = _.timestamp != null ? EncodedPolyline.decode (_.timestamp, 1, 1e0) : [];
-      var roadtype = _.roadtype != null ? EncodedPolyline.decode (_.roadtype, 1, 1e0) : [];
-      var points = [];
-      for (var i = 0; i < latlon.length; i++) {
-        points.push ({lat: latlon[i][0], lon: latlon[i][1],
-                      elevation: elevation[i][0],
-                      to_distance: (distance[i] ? distance[i][0] : null),
-                      timestamp: (timestamp[i] ? timestamp[i][0] : null),
-                      roadtype: (roadtype[i] ? roadtype[i][0] : null)});
-      }
-      if (points.length) routes.push ({points: points});
-    });
-    return routes;
-  } // parseEncodedRoutes
-  
 </script>
-<script src=https://raw.githack.com/wakaba/js-gpx-parser/master/gpx-parser.js async></script>
 <script src=https://raw.githack.com/pawjy/html-page-components/master/src/page-components.js async></script>
 <script src=https://raw.githack.com/pawjy/html-page-components/master/src/maps.js async></script>
+<script src=https://raw.githack.com/wakaba/js-gpx-parser/master/gpx-parser.js async></script>
 <script src=https://raw.githack.com/wakaba/js-geo-encodedpolyline/master/encodedpolyline.js async></script>
 <script>
-
-  // Hubeny's distance with WGS84
-  function distanceH84(p1, p2) {
-    var d2r = (deg) => deg * Math.PI / 180;
-
-    var lat1 = d2r (p1.lat);
-    var lat2 = d2r (p2.lat);
-
-    var latDelta = lat1 - lat2;
-    var lonDelta = Math.abs (d2r (p1.lon) - d2r (p2.lon));
-    if (lonDelta > Math.PI) lonDelta = 2 * Math.PI - lonDelta;
-    var latAvg = (lat1 + lat2) / 2;
-
-    // WGS84
-    var a = 6378137.000;
-    var e2 = 0.00669437999019758; // e^2 = (a^2 - b^2) / a^2
-    var a1e2 = 6335439.32729246; // a * (1 - e^2)
-
-    var W2 = 1 - e2 * Math.pow (Math.sin (latAvg), 2);
-    var W = Math.pow (W2, 0.5);
-    var M = a1e2 / (W2 * W);
-    var N = a / W;
-
-    return Math.sqrt (Math.pow (latDelta * M, 2) +
-                      Math.pow (lonDelta * N * Math.cos (latAvg), 2));
-  } // distanceH84
-
-
-
-  function bounds (points) {
-    var data = {distanceSum: 0, routeCount: 0, west:0,east:0,north:0,south:0};
-    if (!points.length) return data;
-
-    data.maxLat = data.minLat = points[0].lat;
-    data.maxLon = data.minLon = points[0].lon;
-    data.minElevation = data.maxElevation = points[0].elevation;
-
-    points.forEach (function (pt) {
-      // XXX +180/-180
-      if (pt.lat < data.minLat) data.minLat = pt.lat;
-      if (data.maxLat < pt.lat) data.maxLat = pt.lat;
-      if (pt.lon < data.minLon) data.minLon = pt.lon;
-      if (data.maxLon < pt.lon) data.maxLon = pt.lon;
-      if (pt.elevation != null) {
-        if (pt.elevation < data.minElevation || !Number.isFinite (data.minElevation)) {
-          data.minElevation = pt.elevation;
-        }
-        if (data.maxElevation < pt.elevation || !Number.isFinite (data.maxElevation)) {
-          data.maxElevation = pt.elevation;
-        }
-      }
-      if (!Number.isFinite (pt.prevDistance)) {
-        data.routeCount++;
-      } else {
-        data.distanceSum += pt.prevDistance;
-      }
-    });
-
-    let bounds = data;
-    return {east: bounds.maxLon, west: bounds.minLon,
-            north: bounds.maxLat, south: bounds.minLat};
-  } // bounds
   
 function MapOverlay (opts) {
   var bgContainer = this.bgContainer = document.createElement ('map-overlay');
@@ -968,7 +393,7 @@ MapOverlay.prototype.mapInitCanvas = function (container) {
 
   var segment = [];
   var prevPoint = points[minIndex];
-  var currentRT = null;
+    var currentRT = null;
   for (var i = minIndex+1; i <= maxIndex; i++) {
     var pt = points[i];
 
@@ -983,8 +408,12 @@ MapOverlay.prototype.mapInitCanvas = function (container) {
 
     if (currentRT === null) {
       if (!inRange (p)) {
-        prevPoint = pt;
-        continue;
+        if (i === 1 && inRange (cc (prevPoint))) {
+          //
+        } else {
+          prevPoint = pt;
+          continue;
+        }
       }
 
       segment = [[prevPoint, cc (prevPoint)]];
@@ -1069,7 +498,390 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
   return this.pxPerDistance * distance;
 }; // mapGetPixelDistance
 
+
+  function redraw ({map, phaseView, pointsList, teamList,
+                    inputParams, computed, teamIds}) {
+    let start = performance.now ();
+
+    let overlay = window.overlay = window.overlay || new MapOverlay ({
+      map,
+      redraw: () => overlay.redraw (),
+    });
+
+    overlay.redraw = () => {
+      overlay.bgContainer.textContent = '';
+      var dc = overlay.mapInitCanvas (overlay.bgContainer);
+      var ctx = dc.ctx;
+
+        let drawPolyline = (ctx, pts, color, width) => {
+          ctx.beginPath ();
+          ctx.moveTo (pts[0][1].x, pts[0][1].y);
+          pts.forEach ((_) => ctx.lineTo (_[1].x, _[1].y));
+          ctx.strokeStyle = color;
+          ctx.lineWidth = width;
+          ctx.stroke ();
+        };
+        let drawCircle = (ctx, pt, rPx, color1, color2) => {
+          ctx.beginPath ();
+          ctx.arc (pt[1].x, pt[1].y, rPx, 0, 2 * Math.PI);
+          if (pt[0].additional) {
+            ctx.strokeStyle = color2;
+          } else {
+            ctx.strokeStyle = color1;
+          }
+          ctx.lineWidth = 1;
+          ctx.stroke ();
+        };
+        let drawEnclose = (ctx, point, color) => {
+          ctx.beginPath ();
+          ctx.arc (point.x, point.y, 8, 0, 2 * Math.PI);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1;
+          ctx.stroke ();
+        };
+        let drawPoint = (ctx, pt, color) => {
+          ctx.beginPath ();
+          ctx.arc (pt[1].x, pt[1].y, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = color;
+          ctx.fill ();
+        };
+        let drawLine = (ctx, pc, qc, color) => {
+          ctx.beginPath ();
+          ctx.moveTo (qc.x, qc.y);
+          ctx.lineTo (pc.x, pc.y);
+          ctx.strokeStyle = color;
+          ctx.stroke ();
+        };
+      let drawText = (ctx, pt, color, text) => {
+        ctx.beginPath ();
+        ctx.fillStyle = color;
+        ctx.fillText (text, pt[1].x + 16, pt[1].y);
+      };
+
+        {
+          let delta = Math.pow (computed.threshold, 0.5);
+          let s = (computed.basePoints.length ? distanceH84 (
+            {lat: computed.basePoints[0].lat,
+             lon: computed.basePoints[0].lon},
+            {lat: computed.basePoints[0].lat + delta,
+             lon: computed.basePoints[0].lon},
+          ) : 0);
+          let r = s * overlay.pxPerDistance;
+          computed.thresholdM = s;
+          computed.thresholdPx = r;
+        }
+        {
+          let delta = Math.pow (computed.thresholdC, 0.5);
+          let s = (computed.basePoints.length ? distanceH84 (
+            {lat: computed.basePoints[0].lat,
+             lon: computed.basePoints[0].lon},
+            {lat: computed.basePoints[0].lat + delta,
+             lon: computed.basePoints[0].lon},
+          ) : 0);
+          let r = s * overlay.pxPerDistance;
+          computed.thresholdCPx = r;
+        }
+        
+        if (computed.basePoints.length) {
+          let segs = dc.extract
+              (computed.basePoints, 0, computed.basePoints.length-1);
+          segs.forEach ((segment) => {
+            drawPolyline (ctx, segment, 'orange', 5);
+          });
+          segs.forEach ((segment) => {
+            segment.forEach (point => {
+              if (computed.useThresholdC[point[0].index]) {
+                drawCircle (ctx, point, computed.thresholdCPx, 'blue');
+              }
+              drawCircle (ctx, point, computed.thresholdPx, '#888', '#ccc');
+              drawPoint (ctx, point, 'gray');
+              drawText (ctx, point, 'black', point[0].index + (point[0].origIndex != null ? ' {'+point[0].origIndex+'}' : ''));
+            });
+          });
+        } // basePoints
+        
+        if (computed.dataPoints.length) {
+          let segs = dc.extract
+              (computed.dataPoints, 0, computed.dataPoints.length-1);
+          segs.forEach ((segment) => {
+            drawPolyline (ctx, segment, 'rgba(0, 255, 0, 0.6)', 5);
+          });
+          segs.forEach ((segment) => {
+            segment.forEach (point => {
+              drawCircle (ctx, point, computed.thresholdPx,
+                          'rgba(0, 255, 0, 0.3)', '#eee');
+              drawPoint (ctx, point, 'green');
+              drawText (ctx, point, 'green', point[0].index + (point[0].origIndex != null ? ' {'+point[0].origIndex+'}' : ''));
+            });
+          });
+        } // dataPoints
+
+        for (let i in computed.dataToBase) {
+          let link = computed.dataToBase[i];
+          if (link) {
+            let p = computed.basePoints[link.nearestIndex];
+            let q = computed.dataPoints[i];
+            let pc = dc.getCanvasPoint (p);
+            let qc = dc.getCanvasPoint (q);
+            if (dc.inRange (pc) || dc.inRange (qc)) {
+              drawLine (ctx, pc, qc, 'rgba(255, 0, 0, 0.3)');
+            }
+            if (link.effectiveIndex != null) {
+              let r = computed.basePoints[link.effectiveIndex];
+              let rc = dc.getCanvasPoint (r);
+              if (dc.inRange (pc) || dc.inRange (qc) || dc.inRange (rc)) {
+                drawLine (ctx, qc, rc, 'red');
+                drawEnclose (ctx, qc, 'red');
+                drawEnclose (ctx, rc, 'red');
+              }
+            }
+          }
+        }
+        
+
+    }; // redraw
+
+
+    if (!window.scrolled) {
+      window.scrolled = true;
+      let bb = bounds (computed.basePoints);
+      map.pcScroll ({bounds: bb});
+    }
+    
+    let showPhase = ph => {
+      let pp = [];
+      for (let i = ph[0]; i <= ph[1]; i++) {
+        pp.push (computed.basePoints[i]);
+      }
+      let bb = bounds (pp);
+      map.pcScroll ({bounds: bb});
+    };
+
+    let showBasePoint = i => {
+      let p = computed.basePoints[i];
+      map.pcScroll ({center: p});
+    };
+
+    let showDataPoint = j => {
+      let p = computed.dataPoints[j];
+      map.pcScroll ({center: p});
+    };
+
+    let pp = null;
+    computed.basePoints.forEach (p => {
+      if (pp) {
+        p.prevDistance = distanceH84 (pp, p);
+      }
+      pp = p;
+    });
+    pp = null;
+    computed.dataPoints.forEach (p => {
+      if (pp) {
+        p.prevDistance = distanceH84 (pp, p);
+      }
+      pp = p;
+    });
+
+    overlay.redraw ();
+    
+    phaseView.textContent = '';
+    let phs = [];
+    computed.basePhases.forEach (ph => {
+      let item = document.createElement ('c-phase');
+      phaseView.appendChild (item);
+
+      let el = document.createElement ('p');
+      let nears = computed.baseNears[ph[0]];
+      nears.forEach (near => {
+        if (near[1] === ph[0]) {
+          let x = document.createElement ('strong');
+          x.textContent = ph[0] + '-' + ph[1];
+          el.appendChild (x);
+          x.onclick = () => {
+            showPhase (ph);
+          };
+
+          el.appendChild (document.createTextNode (' ['+ph.index+']'));
+        } else {
+          let x = document.createElement ('span');
+          x.textContent = near[0] + '-...';
+          el.appendChild (x);
+        }
+        el.appendChild (document.createTextNode (' '));
+      });
+      item.appendChild (el);
+
+      let list = document.createElement ('ul');
+      item.appendChild (list);
+      phs.push ([ph, list]);
+    });
+    {
+      let j = 0;
+      for (let [ph, list] of phs) {
+        let pp = [];
+        while (j < computed.dataPoints.length && 
+               (!computed.dataToBase[j] ||
+                computed.dataToBase[j].effectiveIndex == null ||
+                (ph[0] <= computed.dataToBase[j].effectiveIndex &&
+                 computed.dataToBase[j].effectiveIndex <= ph[1]))) {
+          let link = computed.dataToBase[j];
+          let li = document.createElement ('li');
+          list.appendChild (li);
+
+          (j => {
+            li.ondblclick = () => {
+              let expected = {};
+              if (link && link.effectiveIndex != null) {
+                let i1 = link.effectiveIndex;
+                while (i1 >= 0 && computed.basePoints[i1].additional) i1--;
+                let i2 = link.effectiveIndex;
+                while (i2 < computed.basePoints.length && computed.basePoints[i2].additional) i2++;
+                expected.basePoint = [computed.basePoints[i1].origIndex,
+                                      computed.basePoints[i2].origIndex];
+              }
+              expected.dataPoint = computed.dataPoints[j].origIndex;
+              if (expected.dataPoint == null) {
+                expected.dataPointSource = computed.dataPoints[j].source;
+              }
+              expected.in = inputParams;
+              if (expected.in.url0 && expected.in.url1 &&
+                  expected.in.url1.startsWith (expected.in.url0)) {
+                expected.in.url1 = expected.in.url1.substring (expected.in.url0.length);
+              }
+              let cc = document.createElement ('can-copy');
+              let code = document.createElement ('code');
+              code.textContent = JSON.stringify (expected) + ",";
+              cc.appendChild (code);
+              li.appendChild (cc);
+            };
+
+            let s = document.createElement ('span');
+            s.className = 'data';
+            s.textContent = j;
+            s.onclick = () => {
+              showDataPoint (j);
+            };
+            li.appendChild (s);
+            li.appendChild (document.createTextNode (' '));
+            let t = document.createElement ('span');
+            t.className = 'linked';
+            t.textContent = '~';
+            li.appendChild (t);
+            li.appendChild (document.createTextNode (' '));
+          }) (j);
+          if (!link) {
+            let s = document.createElement ('span');
+            s.innerHTML = '()';
+            li.appendChild (s);
+            li.className = 'ignored';
+          } else if (link.effectiveIndex != null) {
+            let point = computed.dataPoints[j];
+            pp.push (point);
+
+            {
+              let s = document.createElement ('span');
+              s.className = 'base';
+              s.onclick = () => {
+                showBasePoint (link.effectiveIndex);
+              };
+              s.textContent = link.effectiveIndex;
+              li.appendChild (s);
+            }
+
+            {
+              let s = document.createElement ('span');
+              s.innerHTML = ' ['+link.phase+']';
+              li.appendChild (s);
+            }
+            if (link.effectiveIndex === link.nearestIndex) {
+              //
+            } else {
+              li.appendChild (document.createTextNode (' <- '));
+              {
+                let s = document.createElement ('span');
+                s.className = 'base';
+                s.textContent = link.nearestIndex;
+                s.onclick = () => {
+                  showBasePoint (link.nearestIndex);
+                };
+                li.appendChild (s);
+              }
+            }
+          } else {
+            li.appendChild (document.createTextNode ('('));
+            let s = document.createElement ('span');
+            s.className = 'base';
+            s.textContent = link.nearestIndex;
+            s.onclick = () => {
+              showBasePoint (link.nearestIndex);
+            };
+            li.appendChild (s);
+            li.appendChild (document.createTextNode (')'));
+            li.className = 'ignored';
+          }
+
+          j++;
+        }
+
+        
+      }
+    }
+    {
+      let item = document.createElement ('c-phase');
+      phaseView.appendChild (item);
+
+      let ul = document.createElement ('ul');
+      item.appendChild (ul);
+      pointsList[2].forEach (p => {
+        let li = document.createElement ('li');
+        ul.appendChild (li);
+
+        let code = document.createElement ('code');
+        code.textContent = p.source;
+        li.appendChild (code);
+        li.appendChild (document.createTextNode (' '));
+
+        {
+          let span = document.createElement ('span');
+          span.textContent = p.index;
+          span.className = 'data';
+          span.onclick = () => {
+            showDataPoint (p.index);
+          };
+          li.appendChild (span);
+        }
+        li.appendChild (document.createTextNode (' = '));
+        {
+          let bp = pointsList[0][p.baseOrigIndex];
+          let span = document.createElement ('span');
+          span.textContent = bp ? bp.index : '-';
+          span.className = 'base';
+          if (bp) span.onclick = () => {
+            showBasePoint (bp.index);
+          };
+          li.appendChild (span);
+        }
+
+      });
+    }
+
+    teamList.textContent = '';
+    Array.from (teamIds).sort ((a, b) => a - b).forEach (tid => {
+      let li = document.createElement ('li');
+      let button = document.createElement ('button');
+      button.type = 'button';
+      button.value = button.textContent = tid;
+      li.appendChild (button);
+      teamList.appendChild (li);
+    });
+    
+
+    computed.elapsed.redraw = performance.now () - start;
+  } // redraw
+
+
 </script>
+<script src=routes.js async></script>
 
 <!--
 
