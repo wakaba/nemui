@@ -75,6 +75,11 @@
     padding: 0;
   }
 
+  unit-number {
+    color: gray;
+    font-size: 80%;
+  }
+
 </style>
 
 <c-panel>
@@ -85,7 +90,9 @@
 <form action=javascript:>
 <nav>
   <label><input type=radio name=mode value=0> base</label>
+  <unit-number type=duration class=base-elapsed></unit-number>
   <label class=data><input type=radio name=mode value=1 checked> data</label>
+  <unit-number type=duration class=data-elapsed></unit-number>
   <button type=button is=select-gpx>GPX</button>
   <input type=url name=url placeholder=https://ibuki.run/ev/{}/ list=urls>
   <button type=button is=fetch-ibuki>IBUKI</button>
@@ -142,7 +149,7 @@
         radius = input.valueAsNumber || 100;
         pageURL.searchParams.set ('r', radius);
         inputParams.radius = radius;
-        rerun ();
+        rerun ({});
         history.replaceState (null, null, pageURL);
       };
     });
@@ -160,13 +167,13 @@
         b.onclick = () => {
           pointsList[mode].pop ();
           delete inputParams["url" + mode];
-          rerun ();
+          rerun ({});
         };
       } else if (b.value === 'clear') {
         b.onclick = () => {
           pointsList[mode] = [];
           delete inputParams["url" + mode];
-          rerun ();
+          rerun ({});
         };
       } else if (b.value === '') {
         //
@@ -203,7 +210,7 @@
           pointsList[mode] = points;
           delete inputParams["url" + mode];
           window.scrolled = false;
-          rerun ();
+          rerun ({});
         });
       };
     });
@@ -218,7 +225,7 @@
           pageURL.searchParams.set ('url' + mode, u);
           inputParams["url" + mode] = u.replace (/^https:\/\/ibuki.run\//, '/');
           window.scrolled = false;
-          rerun ();
+          rerun ({fetchElapsed: ib.elapsed});
           let opt = document.createElement ('option');
           opt.value = u;
           document.querySelector ('#urls').appendChild (opt);
@@ -238,7 +245,7 @@
           if (_ == 1) teamIds = ib.teamIds;
           inputParams["url" + _] = u.replace (/^https:\/\/ibuki.run\//, '/');
           window.scrolled = false;
-          rerun ();
+          rerun ({fetchElapsed: ib.elapsed});
           let opt = document.createElement ('option');
           opt.value = u;
           document.querySelector ('#urls').appendChild (opt);
@@ -256,14 +263,17 @@
       document.querySelector ('button[is=fetch-ibuki]').click ();
     };
     
-    let rerun = () => {
+    let rerun = (opts) => {
       let computed = recompute (pointsList, radius);
-      console.log (computed);
+      if (opts.fetchElapsed) computed.elapsed.fetch = opts.fetchElapsed;
       redraw ({map, phaseView, pointsList, teamList,
-               computed, inputParams, teamIds});
+               computed, inputParams, teamIds,
+               baseElapsedView: document.querySelector ('.base-elapsed'),
+               dataElapsedView: document.querySelector ('.data-elapsed')});
+      console.log (computed);
     };
 
-    rerun ();
+    rerun ({});
   }
   setTimeout (() => init (), 1000);
 
@@ -273,6 +283,7 @@
 <script src=https://raw.githack.com/pawjy/html-page-components/master/src/maps.js async></script>
 <script src=https://raw.githack.com/wakaba/js-gpx-parser/master/gpx-parser.js async></script>
 <script src=https://raw.githack.com/wakaba/js-geo-encodedpolyline/master/encodedpolyline.js async></script>
+<script src=https://raw.githack.com/wakaba/html-unit-number/master/src/unit-number.js async></script>
 <script>
   
 function MapOverlay (opts) {
@@ -498,9 +509,9 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
   return this.pxPerDistance * distance;
 }; // mapGetPixelDistance
 
-
-  function redraw ({map, phaseView, pointsList, teamList,
-                    inputParams, computed, teamIds}) {
+function redraw ({map, phaseView, pointsList, teamList,
+                  inputParams, computed, teamIds,
+                  baseElapsedView, dataElapsedView}) {
     let start = performance.now ();
 
     let overlay = window.overlay = window.overlay || new MapOverlay ({
@@ -544,6 +555,12 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
           ctx.arc (pt[1].x, pt[1].y, 5, 0, 2 * Math.PI);
           ctx.fillStyle = color;
           ctx.fill ();
+        };
+        let drawWhitePoint = (ctx, pt, color) => {
+          ctx.beginPath ();
+          ctx.arc (pt[1].x, pt[1].y, 5, 0, 2 * Math.PI);
+          ctx.strokeStyle = color;
+          ctx.stroke ();
         };
         let drawLine = (ctx, pc, qc, color) => {
           ctx.beginPath ();
@@ -599,6 +616,14 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
             });
           });
         } // basePoints
+
+        computed.omittedPoints.forEach (p => {
+          let cp = dc.getCanvasPoint (p);
+          if (dc.inRange (cp)) {
+            drawWhitePoint (ctx, [p, cp], 'gray');
+            drawText (ctx, [p, cp], 'gray', '{'+p.origIndex+'}');
+          }
+        }); // omittedPoints
         
         if (computed.dataPoints.length) {
           let segs = dc.extract
@@ -640,13 +665,6 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
         
 
     }; // redraw
-
-
-    if (!window.scrolled) {
-      window.scrolled = true;
-      let bb = bounds (computed.basePoints);
-      map.pcScroll ({bounds: bb});
-    }
     
     let showPhase = ph => {
       let pp = [];
@@ -667,6 +685,14 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
       map.pcScroll ({center: p});
     };
 
+    computed.omittedPoints = [];
+    pointsList[0].forEach (p => {
+      if (p.index == null) {
+        computed.omittedPoints.push (p);
+      }
+    });
+    console.log ("orig", pointsList, "omitted", computed.omittedPoints);
+
     let pp = null;
     computed.basePoints.forEach (p => {
       if (pp) {
@@ -682,6 +708,11 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
       pp = p;
     });
 
+    if (!window.scrolled) {
+      window.scrolled = true;
+      let bb = bounds (computed.basePoints);
+      map.pcScroll ({bounds: bb});
+    }
     overlay.redraw ();
     
     phaseView.textContent = '';
@@ -809,6 +840,17 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
             }
           } else {
             li.appendChild (document.createTextNode ('('));
+            if (link.unusedIndex != null &&
+                link.unusedIndex !== link.nearestIndex) {
+              let s = document.createElement ('span');
+              s.className = 'base';
+              s.textContent = link.unusedIndex;
+              s.onclick = () => {
+                showBasePoint (link.unusedIndex);
+              };
+              li.appendChild (s);
+              li.appendChild (document.createTextNode (' <- '));
+            }
             let s = document.createElement ('span');
             s.className = 'base';
             s.textContent = link.nearestIndex;
@@ -875,8 +917,9 @@ MapOverlay.prototype.mapGetPixelDistance = function (p1, p2) {
       teamList.appendChild (li);
     });
     
-
     computed.elapsed.redraw = performance.now () - start;
+    baseElapsedView.setAttribute ('value', computed.elapsed.computeBase/1000);
+    dataElapsedView.setAttribute ('value', computed.elapsed.computeData/1000);
   } // redraw
 
 
