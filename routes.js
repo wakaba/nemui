@@ -74,30 +74,10 @@
     }
   } // lineDistance
 
+function computeBase (pointsList, radius, computed) {
+  let start = performance.now ();
 
-  function recompute (pointsList, radius) {
-    let start = performance.now ();
-
-    /*
-    let threshold = Infinity;
-    {
-      let points = pointsList[0];
-      if (points.length === 0) points = pointsList[1];
-      //let minD = Infinity;
-      let dd = [];
-      for (let i = 1; i < points.length; i++) {
-        let d = distance2 (points[i-1], points[i]);
-        //if (d < minD) {
-        //  minD = d;
-        //}
-        dd.push (d);
-      }
-      //threshold = minD / 2;
-      let median = dd.sort ((a, b) => a-b)[Math.floor (dd.length / 2)];
-      threshold = median / 2;
-    }
-    */
-    let threshold = 0.000001;
+  let threshold = 0.000001;
     if (pointsList[0].length) {
       let distancePerLat = distanceH84 (pointsList[0][0],
                                         {lat: pointsList[0][0].lat + 1,
@@ -110,6 +90,9 @@
     }
     let thresholdC = threshold * 3*3;
     let thresholdCP = thresholdC;
+  computed.thresholdMInput = radius;
+  computed.threshold = threshold;
+  computed.thresholdC = thresholdC;
 
     {
       let rdp = (points, start, end, list, depth) => {
@@ -318,8 +301,27 @@
       }
     }
     phases = phases.reverse ();
-    let computeBase = performance.now () - start;
 
+  computed.elapsed.base = performance.now () - start;
+  computed._distances = distances;
+  computed.confluentialPoints = confluentialPoints;
+  computed.useThresholdC = useThC;
+  computed.basePoints = augPoints;
+  computed.baseNears = nears;
+  computed.basePhases = phases;
+  computed._i2p = i2p;
+} // computeBase
+
+function computeData (pointsList, computed) {
+  let start = performance.now ();
+
+  let threshold = computed.threshold;
+  let distances = computed._distances;
+  let augPoints = computed.basePoints;
+  let nears = computed.baseNears;
+  let phases = computed.basePhases;
+  let i2p = computed._i2p;
+  
     let dataPoints = [];
     let maxBaseIndex = Infinity;
     {
@@ -553,23 +555,70 @@
       }
     }
 
-    let done = performance.now ();
-    return {
-      elapsed: {start, computeBase, recompute: done - start,
-                computeData: done - start - computeBase},
-      thresholdMInput: radius,
-      threshold,
-      thresholdC,
-      confluentialPoints,
-      useThresholdC: useThC,
-      basePoints: augPoints,
-      baseNears: nears,
-      basePhases: phases,
-      dataPoints,
-      dataToBase: d2b,
-      reverted,
-    };
-  } // recompute
+  computed.elapsed.data = performance.now () - start;
+  computed.dataPoints = dataPoints;
+  computed.dataToBase = d2b;
+  computed.reverted = reverted;
+} // computeData
+
+function computeDataPointTimes (pointsList, points, computed) {
+  let b2d = [];
+  (computed.dataToBase || []).forEach (link => {
+    if (link.effectiveIndex != null) {
+      b2d[link.effectiveIndex] = link;
+    }
+  });
+
+  computed.pointTimes = [];
+  points.forEach (mp => {
+    let bp = pointsList[0][mp.index];
+    let link = b2d[bp.index];
+    if (link) {
+      let dp = computed.dataPoints[link.dataIndex];
+      let tt = computed.pointTimes[mp.id] = {
+        baseIndex: bp.index,
+        dataIndex: [link.dataIndex, link.dataIndex],
+        timestamp: dp.timestamp,
+      };
+    } else {
+      let tt = computed.pointTimes[mp.id] = {baseIndex: bp.index};
+      let distance0 = 0;
+      let pp = bp;
+      for (let i = bp.index - 1; i >= 0; i--) {
+        let link = b2d[i];
+        if (link) {
+          tt.dataIndex = [link.dataIndex, null];
+          distance0 += distanceH84 (pp, computed.basePoints[i]);
+          pp = computed.basePoints[i];
+          break;
+        }
+      }
+      let distance1 = 0;
+      if (tt.dataIndex) {
+        let pp = bp;
+        for (let i = bp.index + 1; i < computed.basePoints.length; i++) {
+          let link = b2d[i];
+          if (link) {
+            tt.dataIndex[1] = link.dataIndex;
+            distance1 += distanceH84 (pp, computed.basePoints[i]);
+            pp = computed.basePoints[i];
+            break;
+          }
+        }
+      }
+      if (tt.dataIndex) {
+        if (tt.dataIndex[1] === null) {
+          delete tt.dataIndex;
+        } else {
+          let t1 = computed.dataPoints[tt.dataIndex[0]].timestamp;
+          let t2 = computed.dataPoints[tt.dataIndex[1]].timestamp;
+          tt.timestamp = t1 + (t2 - t1) * distance0 / ((distance0 + distance1) || 1);
+          //console.log ("X XX", tt.dataIndex, t1, t2, t2-t1, distance0, distance1);
+        }
+      }
+    }
+  });
+} // computeDataPointTimes
 
   function parseGPX (text) {
     var parser = new GPXParser;
@@ -631,7 +680,8 @@
         teamIds.add (_.t);
       });
       let forced = [];
-      ((jsonInfo || jsonRoutes || {}).marked_points || []).forEach (mp => {
+      let mps = ((jsonInfo || jsonRoutes || {}).marked_points || []);
+      mps.forEach (mp => {
         if (teamId != null) {
           if (mp.type === 'globalStart' || mp.type === 'partialStart') {
             let tr = teamResultItems[mp.id];
@@ -651,8 +701,11 @@
       
       return {
         routePoints: pp,
+        markedPoints: mps,
         forcedPoints: forced,
+        teamListURL: urls.results + '',
         teamIds,
+        teamResultItems,
         elapsed: performance.now () - fetchStart,
       };
     });
@@ -754,7 +807,7 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   ]).then (() => {
     return {
       fetchIbuki,
-      recompute,
+      computeBase, computeData, computeDataPointTimes,
     };
   });
 }

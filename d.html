@@ -1,4 +1,5 @@
 <!DOCTYPE HTML>
+<meta charset=utf-8>
 <title></title>
 <link rel=stylesheet href=https://raw.githack.com/pawjy/html-page-components/master/css/default.css>
 
@@ -80,6 +81,13 @@
     font-size: 80%;
   }
 
+  status-box.ok { color: green }
+  status-box.ng { background: red; color: white }
+
+  .error {
+    border: red 1px solid;
+  }
+
 </style>
 
 <c-panel>
@@ -90,13 +98,14 @@
 <form action=javascript:>
 <nav>
   <label><input type=radio name=mode value=0> base</label>
-  <unit-number type=duration class=base-elapsed></unit-number>
+  <a href target=_blank class=base-link><unit-number type=duration class=base-elapsed></unit-number></a>
   <label class=data><input type=radio name=mode value=1 checked> data</label>
-  <unit-number type=duration class=data-elapsed></unit-number>
+  <a href target=_blank class=data-link><unit-number type=duration class=data-elapsed></unit-number></a>
   <button type=button is=select-gpx>GPX</button>
   <input type=url name=url placeholder=https://ibuki.run/ev/{}/ list=urls>
   <button type=button is=fetch-ibuki>IBUKI</button>
   <label><var>r</var> = <input type=number name=radius value=300></label>
+  <button type=button class=all-button>All</button>
 </nav>
   <datalist id=urls>
     <option value=https://ibuki.run/ev/8963707529176734833/>
@@ -162,26 +171,6 @@
     }
     inputParams.radius = radius;
 
-    document.querySelectorAll ('nav button').forEach (b => {
-      if (b.value === 'bs') {
-        b.onclick = () => {
-          pointsList[mode].pop ();
-          delete inputParams["url" + mode];
-          rerun ({});
-        };
-      } else if (b.value === 'clear') {
-        b.onclick = () => {
-          pointsList[mode] = [];
-          delete inputParams["url" + mode];
-          rerun ({});
-        };
-      } else if (b.value === '') {
-        //
-      } else {
-        throw b.value;
-      }
-    });
-
     document.querySelectorAll ('button[is=select-gpx]').forEach (b => {
       b.onclick = () => {
         new Promise ((resolve, reject) => {
@@ -209,28 +198,44 @@
         }).then (parseGPX).then (points => {
           pointsList[mode] = points;
           delete inputParams["url" + mode];
+          inputParams["key" + mode] = Math.random ();
           window.scrolled = false;
           rerun ({});
         });
       };
     });
 
-    document.querySelectorAll ('button[is=fetch-ibuki]').forEach (b => {
-      b.onclick = () => {
-        let u = document.forms[0].elements.url.value;
-        fetchIbuki (u).then (ib => {
+    let openURL = (mode, u) => {
+      return fetchIbuki (u).then (ib => {
           pointsList[mode] = ib.routePoints;
+          if (mode == 0) inputParams.markedPoints = ib.markedPoints;
           if (mode == 1) pointsList[2] = ib.forcedPoints;
-          if (mode == 1) teamIds = ib.teamIds;
+          if (mode == 1) {
+            teamIds = ib.teamIds;
+            inputParams.teamListURL = ib.teamListURL;
+          }
+          if (mode == 1) inputParams.teamResultItems = ib.teamResultItems;
           pageURL.searchParams.set ('url' + mode, u);
           inputParams["url" + mode] = u.replace (/^https:\/\/ibuki.run\//, '/');
+          inputParams["key" + mode] = Math.random ();
           window.scrolled = false;
           rerun ({fetchElapsed: ib.elapsed});
           let opt = document.createElement ('option');
           opt.value = u;
           document.querySelector ('#urls').appendChild (opt);
-          history.replaceState (null, null, pageURL);
-        }, e => {
+        if (mode == 0) {
+          document.querySelector ('.base-link').href = new URL (inputParams.url0, 'https://ibuki.run/');
+        } else if (mode == 1) {
+          document.querySelector ('.data-link').href = new URL (inputParams.url1, new URL (inputParams.url0, 'https://ibuki.run/'));
+        }
+        history.replaceState (null, null, pageURL);
+      });
+    }; // openURL
+
+    document.querySelectorAll ('button[is=fetch-ibuki]').forEach (b => {
+      b.onclick = () => {
+        let u = document.forms[0].elements.url.value;
+        openURL (mode, u).catch (e => {
           console.log (e);
           alert (e);
         });
@@ -239,38 +244,62 @@
     [0, 1].forEach (_ => {
       let u = pageURL.searchParams.get ('url' + _);
       if (u) {
-        fetchIbuki (u).then (ib => {
-          pointsList[_] = ib.routePoints;
-          if (_ == 1) pointsList[2] = ib.forcedPoints;
-          if (_ == 1) teamIds = ib.teamIds;
-          inputParams["url" + _] = u.replace (/^https:\/\/ibuki.run\//, '/');
-          window.scrolled = false;
-          rerun ({fetchElapsed: ib.elapsed});
-          let opt = document.createElement ('option');
-          opt.value = u;
-          document.querySelector ('#urls').appendChild (opt);
-        }, e => {
+        openURL (_, u).catch (e => {
+          console.log (e);
           alert (e);
         });
       }
     });
-    teamList.onclick = (ev) => {
-      let tid = ev.target.value;
+    let clickTeamButton = button => {
+      let tid = button.value;
       if (tid == null) return;
-      document.querySelector ('input[name=mode][value="1"]').click ();
       let u = new URL ('t/' + tid + '/', new URL (inputParams.url0, 'https://ibuki.run/'));
-      document.forms[0].elements.url.value = u;
-      document.querySelector ('button[is=fetch-ibuki]').click ();
-    };
-    
+      let statusBox = button.nextElementSibling;
+      if (!statusBox || statusBox.localName !== 'status-box') {
+        statusBox = document.createElement ('status-box');
+        button.parentNode.insertBefore (statusBox, button.nextSibling);
+      }
+      inputParams.statusBox = statusBox;
+      button.classList.add ('clicked');
+      return openURL (1, u + '');
+    }; // clickTeamButton
+    teamList.onclick = (ev) => clickTeamButton (ev.target).catch (e => {
+      console.log (e);
+      alert (e);
+    });
+
+    let lastComputed;
+    let lastComputedKey = Math.random ();
     let rerun = (opts) => {
-      let computed = recompute (pointsList, radius);
+      let computed = {elapsed: {}};
+      if (lastComputedKey === inputParams.key0) {
+        computed = lastComputed;
+      } else {
+        computeBase (pointsList, radius, computed);
+        lastComputed = computed;
+        lastComputedKey = inputParams.key0;
+      }
+      computeData (pointsList, computed);
+      computeDataPointTimes (pointsList, inputParams.markedPoints || [], computed);
+
+      computed._mps = inputParams.markedPoints;
       if (opts.fetchElapsed) computed.elapsed.fetch = opts.fetchElapsed;
       redraw ({map, phaseView, pointsList, teamList,
                computed, inputParams, teamIds,
                baseElapsedView: document.querySelector ('.base-elapsed'),
                dataElapsedView: document.querySelector ('.data-elapsed')});
       console.log (computed);
+    }; // rerun
+
+    document.querySelector ('.all-button').onclick = async () => {
+      while (true) {
+        let button = teamList.querySelector ('button:not(.clicked)');
+        if (button) {
+          await clickTeamButton (button);
+        } else {
+          break;
+        }
+      }
     };
 
     rerun ({});
@@ -774,7 +803,10 @@ function redraw ({map, phaseView, pointsList, teamList,
               if (expected.dataPoint == null) {
                 expected.dataPointSource = computed.dataPoints[j].source;
               }
-              expected.in = inputParams;
+              expected.in = {};
+              expected.in.url0 = inputParams.url0;
+              expected.in.url1 = inputParams.url1;
+              expected.in.radius = inputParams.radius;
               if (expected.in.url0 && expected.in.url1 &&
                   expected.in.url1.startsWith (expected.in.url0)) {
                 expected.in.url1 = expected.in.url1.substring (expected.in.url0.length);
@@ -906,20 +938,109 @@ function redraw ({map, phaseView, pointsList, teamList,
 
       });
     }
+    {
+      let item = document.createElement ('c-phase');
+      phaseView.appendChild (item);
 
-    teamList.textContent = '';
-    Array.from (teamIds).sort ((a, b) => a - b).forEach (tid => {
-      let li = document.createElement ('li');
-      let button = document.createElement ('button');
-      button.type = 'button';
-      button.value = button.textContent = tid;
-      li.appendChild (button);
-      teamList.appendChild (li);
-    });
-    
+      let count = 0;
+      let okCount = 0;
+      let ul = document.createElement ('ul');
+      item.appendChild (ul);
+      let rItems = inputParams.teamResultItems || [];
+      (inputParams.markedPoints || []).forEach (mp => {
+        let li = document.createElement ('li');
+        ul.appendChild (li);
+
+        let code = document.createElement ('code');
+        code.textContent = '#' + mp.id;
+        li.appendChild (code);
+        li.appendChild (document.createTextNode (' '));
+
+        let dp = computed.pointTimes[mp.id] || {};
+        if (dp.baseIndex != null) {
+          if (dp.dataIndex) {
+            {
+              let span = document.createElement ('span');
+              span.textContent = dp.dataIndex[0];
+              span.className = 'data';
+              span.onclick = () => {
+                showDataPoint (dp.dataIndex[0]);
+              };
+              li.appendChild (span);
+            }
+            if (dp.dataIndex[0] !== dp.dataIndex[1]) {
+              li.appendChild (document.createTextNode (','));
+              let span = document.createElement ('span');
+              span.textContent = dp.dataIndex[1];
+              span.className = 'data';
+              span.onclick = () => {
+                showDataPoint (dp.dataIndex[1]);
+              };
+              li.appendChild (span);
+            }
+          } else {
+            li.appendChild (document.createTextNode ('- '));
+          }
+          {
+            li.appendChild (document.createTextNode (' '));
+            let t = document.createElement ('span');
+            t.className = 'linked';
+            t.textContent = '~';
+            li.appendChild (t);
+            li.appendChild (document.createTextNode (' '));
+          }
+          let span = document.createElement ('span');
+          span.textContent = dp.baseIndex;
+          span.className = 'base';
+          span.onclick = () => {
+            showBasePoint (dp.baseIndex);
+          };
+          li.appendChild (span);
+
+          {
+            let rItem = rItems.filter (_ => _.p == mp.id)[0] || {};
+            let delta = Math.abs (dp.timestamp - rItem.c);
+
+            li.appendChild (document.createTextNode ('; Δ = '));
+            let span = document.createElement ('unit-number');
+            span.setAttribute ('type', 'duration');
+            span.setAttribute ('value', delta);
+            span.setAttribute ('data-debug', [dp.timestamp, rItem.c].join (' '));
+            li.appendChild (span);
+
+            if (Number.isFinite (delta) && rItem.n &&
+                Math.abs (delta) < 60*10) {
+              okCount++;
+            } else if (!Number.isFinite (delta) && !rItem.n) {
+              okCount++;
+            } else {
+              li.classList.add ('error');
+            }
+          }
+        }
+        count++;
+      });
+      let statusBox = inputParams.statusBox || {};
+      statusBox.textContent = Math.floor (okCount / (count || 1) * 100);
+      statusBox.className = statusBox.textContent === "100" ? 'ok' : 'ng';
+    }
+
+    if (teamList.url !== inputParams.teamListURL) {
+      teamList.url = inputParams.teamListURL;
+      teamList.textContent = '';
+      Array.from (teamIds).sort ((a, b) => a - b).forEach (tid => {
+        let li = document.createElement ('li');
+        let button = document.createElement ('button');
+        button.type = 'button';
+        button.value = button.textContent = tid;
+        li.appendChild (button);
+        teamList.appendChild (li);
+      });
+    }
+
     computed.elapsed.redraw = performance.now () - start;
-    baseElapsedView.setAttribute ('value', computed.elapsed.computeBase/1000);
-    dataElapsedView.setAttribute ('value', computed.elapsed.computeData/1000);
+    baseElapsedView.setAttribute ('value', computed.elapsed.base/1000);
+    dataElapsedView.setAttribute ('value', computed.elapsed.data/1000);
   } // redraw
 
 
