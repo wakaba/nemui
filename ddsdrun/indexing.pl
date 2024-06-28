@@ -38,8 +38,8 @@ sub ddsd ($@) {
     return $cmd->wait;
   })->then (sub {
     my $result = $_[0];
-    die $result if $result->exit_code != 0 and $result->exit_code != 2;
-    $ret->{incomplete} = 1 if $result->exit_code == 2;
+    die $result if $result->exit_code != 0 and $result->exit_code != 12;
+    $ret->{incomplete} = 1 if $result->exit_code == 12;
     if ($args->{jsonl}) {
       $ret->{jsonl} = [map { json_bytes2perl $_ } split /\x0A/, $stdout];
     } elsif ($args->{json}) {

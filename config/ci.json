@@ -1,7 +1,8 @@
 {
   "github": {
     "build": [
-      {"run": "make build-for-docker", "secrets": ["DDSDDATA_GIT"]},
+      {"run": "make build-for-docker",
+       "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE"]},
       {"docker_build": "$DDSDRUN_DOCKER_IMAGE"}
     ],
     "tests": [
