@@ -31,7 +31,7 @@ build-for-docker:
 
 build-for-docker-from-old:
 	mkdir -p local
-#XXX	docker run -v `pwd`/local:/local --user `id --user` $$DDSDRUN_DOCKER_IMAGE cp -R /app/data /local/ddsddata-data
+	docker run -v `pwd`/local:/local --user `id --user` $$DDSDRUN_DOCKER_IMAGE cp -R /app/data /local/ddsddata-data
 	mkdir -p local/ddsddata-data
 
 build-ddsd:
