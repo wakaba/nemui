@@ -4,7 +4,9 @@ all:
 
 CURL = curl
 
-build: build-for-docker-from-old build-ddsd
+build: build-for-docker-from-old build-ddsd build-main
+
+build-main:
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data
 	mv local/ddsddata-data ddsddata/data
@@ -31,6 +33,6 @@ build-for-docker-from-old:
 	mkdir -p local/ddsddata-data
 
 build-ddsd:
-        $(CURL) -f https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
+	$(CURL) -f https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
 
 test:
