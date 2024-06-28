@@ -18,6 +18,8 @@ build-main:
 	mv ddsddata/data/mirror/nonfree/index ddsddata/data/mirror-nonfree-index
 	mv ddsddata/data/mirror mirror
 	#
+	git config --global user.email "ci@test"
+	git config --global user.name "Auto"
 	cd ddsddata && git add data && git commit -m current && git push
 	#
 	mv mirror ddsddata/data/mirror
