@@ -64,6 +64,9 @@ test1:
 	cd $$CIRCLE_ARTIFACTS/2 && wget -r -l 2 https://fonts.suikawiki.org || true
 	cd $$CIRCLE_ARTIFACTS/3 && wget -r -l 2 https://fonts.suikawiki.org || true
 
+build-for-docker:
+	cd ddsdrun && make build-for-docker
+
 x-build-for-docker:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt
