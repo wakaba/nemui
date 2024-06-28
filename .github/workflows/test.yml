@@ -19,7 +19,10 @@
                "run" : "make build-for-docker"
             },
             {
-               "run" : "docker build -t $DDSDRUN_DOCKER_IMAGE \u005C."
+               "run" : "docker build -t $DDSDRUN_DOCKER_IMAGE \u005C.",
+               "with" : {
+                  "ssh-key" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}"
+               }
             },
             {
                "env" : {
@@ -31,11 +34,15 @@
             },
             {
                "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
-               "run" : "docker push $DDSDRUN_DOCKER_IMAGE"
+               "run" : "docker push $DDSDRUN_DOCKER_IMAGE",
+               "with" : {
+                  "ssh-key" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}"
+               }
             },
             {
                "env" : {
-                  "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
+                  "BWALLER_URL" : "${{ secrets.BWALLER_URL }}",
+                  "ssh-key" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}"
                },
                "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
                "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$DDSDRUN_DOCKER_IMAGE bash"
