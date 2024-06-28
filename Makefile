@@ -65,7 +65,7 @@ test1:
 	cd $$CIRCLE_ARTIFACTS/3 && wget -r -l 2 https://fonts.suikawiki.org || true
 
 build-for-docker:
-	cd ddsdrun && make build-for-docker
+	cd ddsdrun && make build build-for-docker
 
 x-build-for-docker:
 	mkdir -p local/data
