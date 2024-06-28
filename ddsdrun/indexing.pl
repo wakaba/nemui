@@ -246,7 +246,7 @@ sub add_to_local_index ($$$$$$$$) {
       })->then (sub {
         my $file = Promised::File->new_from_path ($out_mirrorzip_path);
         return $file->remove_tree->then (sub {
-          return Promised::File->new_from_path ($out_mirrorzip_path)->hardlink_from ($mirrorzip_path));
+          return Promised::File->new_from_path ($out_mirrorzip_path)->hardlink_from ($mirrorzip_path);
         });
       })->then (sub {
         my $index_file = $index_path->opena;
