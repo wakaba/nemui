@@ -19,7 +19,7 @@
                "run" : "make build-for-docker"
             },
             {
-               "run" : "docker build -t \u005C$DDSDRUN_DOCKER_IMAGE \u005C."
+               "run" : "docker build -t $DDSDRUN_DOCKER_IMAGE \u005C."
             },
             {
                "env" : {
@@ -31,7 +31,7 @@
             },
             {
                "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
-               "run" : "docker push \u005C$DDSDRUN_DOCKER_IMAGE"
+               "run" : "docker push $DDSDRUN_DOCKER_IMAGE"
             },
             {
                "env" : {
