@@ -1,5 +1,11 @@
 {
   "github": {
-    "pages": {"branch": "ispages"}
+    "build": [
+      "make build build-for-docker",
+      {"docker_build": "$DDSDRUN_DOCKER_IMAGE"}
+    ],
+    "tests": [
+      {"docker_push": "$DDSDRUN_DOCKER_IMAGE", "branch": "ddsdrun"}
+    ]
   }
 }

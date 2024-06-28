@@ -1,0 +1,58 @@
+{
+   "jobs" : {
+      "test" : {
+         "env" : {
+            "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts/test"
+         },
+         "runs-on" : "ubuntu-latest",
+         "steps" : [
+            {
+               "uses" : "actions/checkout@v2",
+               "with" : {
+                  "ssh-key" : "${{ secrets.GH_GIT_KEY }}"
+               }
+            },
+            {
+               "run" : "mkdir -p $CIRCLE_ARTIFACTS"
+            },
+            {
+               "run" : "make build build-for-docker"
+            },
+            {
+               "run" : "docker build -t \u005C$DDSDRUN_DOCKER_IMAGE \u005C."
+            },
+            {
+               "env" : {
+                  "DOCKER_PASS" : "${{ secrets.DOCKER_PASS }}",
+                  "DOCKER_USER" : "${{ secrets.DOCKER_USER }}"
+               },
+               "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
+               "run" : "docker login -u $DOCKER_USER -p $DOCKER_PASS"
+            },
+            {
+               "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
+               "run" : "docker push \u005C$DDSDRUN_DOCKER_IMAGE"
+            },
+            {
+               "env" : {
+                  "BWALLER_URL" : "${{ secrets.BWALLER_URL }}"
+               },
+               "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
+               "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$DDSDRUN_DOCKER_IMAGE bash"
+            },
+            {
+               "if" : "${{ always () }}",
+               "uses" : "actions/upload-artifact@v3",
+               "with" : {
+                  "path" : "/tmp/circle-artifacts/test"
+               }
+            }
+         ]
+      }
+   },
+   "name" : "test",
+   "on" : {
+      "push" : {
+      }
+   }
+}
