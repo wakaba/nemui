@@ -16,7 +16,10 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
-               "run" : "make build-for-docker"
+               "run" : "make build-for-docker",
+               "env" : {
+                  "DDSDDATA_GIT" : "${{ secrets.DDSDDATA_GIT }}"
+               }
             },
             {
                "run" : "docker build -t $DDSDRUN_DOCKER_IMAGE \u005C.",
