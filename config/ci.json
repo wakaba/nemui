@@ -1,7 +1,7 @@
 {
   "github": {
     "build": [
-      "make build build-for-docker",
+      "make build-for-docker",
       {"docker_build": "$DDSDRUN_DOCKER_IMAGE"}
     ],
     "tests": [

@@ -16,7 +16,7 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
-               "run" : "make build build-for-docker"
+               "run" : "make build-for-docker"
             },
             {
                "run" : "docker build -t \u005C$DDSDRUN_DOCKER_IMAGE \u005C."
