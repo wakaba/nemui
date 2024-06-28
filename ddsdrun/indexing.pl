@@ -374,7 +374,7 @@ sub run ($$$) {
 
 sub main () {
   my $sites = [
-#    ["https://gist.githubusercontent.com/wakaba/30f9cce1283f1eceb34a495c78d2b431/raw/list-sparql-packref.json", 'packref', 'sparql'],
+    ["https://gist.githubusercontent.com/wakaba/30f9cce1283f1eceb34a495c78d2b431/raw/list-sparql-packref.json", 'packref', 'sparql'],
     ["https://gist.githubusercontent.com/wakaba/30f9cce1283f1eceb34a495c78d2b431/raw/list-legal-packref.json", 'packref', 'legal'],
   ];
   return promised_for {
