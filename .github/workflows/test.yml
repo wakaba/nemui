@@ -25,7 +25,8 @@
                "run" : "make build-for-docker",
                "env" : {
                   "DDSDDATA_GIT" : "${{ secrets.DDSDDATA_GIT }}",
-                  "GIT_SSH_COMMAND": "ssh -i /tmp/git.key"
+                  "GIT_SSH_COMMAND": "ssh -i /tmp/git.key",
+                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}"
                }
             },
             {
