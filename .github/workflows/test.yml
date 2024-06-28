@@ -40,7 +40,7 @@
                   "DOCKER_USER" : "${{ secrets.DOCKER_USER }}"
                },
                "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
-               "run" : "docker login -u $DOCKER_USER -p $DOCKER_PASS"
+               "run" : "docker login -u $DOCKER_USER -p $DOCKER_PASS quay.io"
             },
             {
                "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
