@@ -13,7 +13,7 @@
                }
             },
             {
-            "run": "echo "${{ secrets.GH_GIT_KEY }}" | tr -d '\r' > /tmp/git.key && chmod 600 /tmp/git.key && eval $(ssh-agent -s) && ssh-add /tmp/git.key",
+            "run": "echo \"${{ secrets.GH_GIT_KEY }}\" | tr -d '\r' > /tmp/git.key && chmod 600 /tmp/git.key && eval $(ssh-agent -s) && ssh-add /tmp/git.key",
                "env" : {
                   "GH_GIT_KEY_B64" : "${{ secrets.GH_GIT_KEY_B64 }}"
                }
