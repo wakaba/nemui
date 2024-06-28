@@ -13,11 +13,12 @@
                }
             },
             {
-            "run": "echo $GH_GIT_KEY > /tmp/git.key; chmod 600 /tmp/git.key",
+            "run": "echo $GH_GIT_KEY > /tmp/git.key && chmod 600 /tmp/git.key",
                "env" : {
                   "GH_GIT_KEY" : "${{ secrets.GH_GIT_KEY }}"
                }
           },
+          {"run": "ls -l /tmp/git.key"},
             {
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
