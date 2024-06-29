@@ -16,7 +16,7 @@ build-main-live:
 	mv local/ddsddata-data ddsddata/data
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/confi gddsddata/data/indexes
-	mv ddsddata/data/mirror mirrors
+	mv ddsddata/data/mirror mirror
 	#
 	git config --global user.email "ci@test"
 	git config --global user.name "Auto"
