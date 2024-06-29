@@ -15,7 +15,7 @@
             {
             "run": "echo \"$GH_GIT_KEY\" | tr -d '\r' > /tmp/git.key && chmod 600 /tmp/git.key && eval $(ssh-agent -s) && ssh-add /tmp/git.key",
                "env" : {
-                  "GH_GIT_KEY" : "${{ secrets.GH_GIT_KEY }}"
+                  "GH_GIT_KEY" : "${{ secrets.GH_GIT_KEY_LIVE }}"
                }
           },
             {
