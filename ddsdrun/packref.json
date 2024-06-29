@@ -1,7 +1,14 @@
 {
   "type": "packref",
   "source": {
-    "type": "packref",
-    "url": "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun/ddsdrun/lists.json?"
-  }
+    "type": "files",
+    "files": {
+      "file:r:list.json": {
+        "url": "lists.json",
+        "name": "list.json"
+      }
+    }
+  },
+  "content_license": "CC0-1.0",
+  "packref_license": "CC0-1.0"
 }
