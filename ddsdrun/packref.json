@@ -2,6 +2,6 @@
   "type": "packref",
   "source": {
     "type": "packref",
-    "url": "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun/ddsdrun/lists.json"
+    "url": "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun/ddsdrun/lists.json?"
   }
 }
