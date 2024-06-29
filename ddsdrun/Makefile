@@ -11,7 +11,7 @@ build: build-for-docker-from-old build-ddsd build-main
 build-main: $(BUILD_MAIN)
 
 build-main-live:
-	git clone $$DDSDDATA_GIT_LIVE -b master ddsddata
+	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data
 	mv local/ddsddata-data ddsddata/data
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
