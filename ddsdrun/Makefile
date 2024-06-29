@@ -11,21 +11,19 @@ build: build-for-docker-from-old build-ddsd build-main
 build-main: $(BUILD_MAIN)
 
 build-main-live:
-	git clone $$DDSDDATA_GIT_LIVE -b master ddsddata
+	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data
 	mv local/ddsddata-data ddsddata/data
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
-	rm -fr ddsddata/data/local ddsddata/data/config
-	#
+	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
 	mv ddsddata/data/mirror mirror
-	mv ddsddata/data/indexes indexes
 	#
 	git config --global user.email "ci@test"
 	git config --global user.name "Auto"
 	cd ddsddata && git add data && git commit -m current && git push
 	#
 	mv mirror ddsddata/data/mirror
-	mv indexes ddsddata/data/indexes
+	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
 build-main-dev:
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data
