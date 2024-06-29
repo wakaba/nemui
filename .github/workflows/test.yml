@@ -22,17 +22,17 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
-               "run" : "make build-for-docker",
+               "run" : "make build-for-docker DDSDRUN_DOCKER_IMAGE=$DDSDRUN_DOCKER_IMAGE BUILD_MAIN=build-main-live",
                "env" : {
-                  "DDSDDATA_GIT" : "${{ secrets.DDSDDATA_GIT }}",
+                  "DDSDDATA_GIT" : "${{ secrets.DDSDDATA_GIT_LIVE }}",
                   "GIT_SSH_COMMAND": "ssh -i /tmp/git.key",
-                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}"
+                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE_LIVE }}"
                }
             },
             {
                "run" : "docker build -t $DDSDRUN_DOCKER_IMAGE \u005C.",
                "env" : {
-                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}"
+                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE_LIVE }}"
                }
             },
             {
@@ -40,22 +40,22 @@
                   "DOCKER_PASS" : "${{ secrets.DOCKER_PASS }}",
                   "DOCKER_USER" : "${{ secrets.DOCKER_USER }}"
                },
-               "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
+               "if" : "${{ github.ref == 'refs/heads/ddsdrun-live' }}",
                "run" : "docker login -u $DOCKER_USER -p $DOCKER_PASS quay.io"
             },
             {
-               "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
+               "if" : "${{ github.ref == 'refs/heads/ddsdrun-live' }}",
                "run" : "docker push $DDSDRUN_DOCKER_IMAGE",
                "env" : {
-                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}"
+                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE_LIVE }}"
                }
             },
             {
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}",
-                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}"
+                  "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE_LIVE }}"
                },
-               "if" : "${{ github.ref == 'refs/heads/ddsdrun' }}",
+               "if" : "${{ github.ref == 'refs/heads/ddsdrun-live' }}",
                "run" : "curl -sSf $BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$DDSDRUN_DOCKER_IMAGE bash"
             },
             {
