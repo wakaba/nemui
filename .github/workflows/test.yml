@@ -22,7 +22,7 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
-               "run" : "make build-for-docker DDSDRUN_DOCKER_IMAGE=$DDSDRUN_DOCKER_IMAGE BUILD_MAIN=build-main-live",
+               "run" : "LIVE=1 make build-for-docker DDSDRUN_DOCKER_IMAGE=$DDSDRUN_DOCKER_IMAGE BUILD_MAIN=build-main-live",
                "env" : {
                   "DDSDDATA_GIT" : "${{ secrets.DDSDDATA_GIT_LIVE }}",
                   "GIT_SSH_COMMAND": "ssh -i /tmp/git.key",

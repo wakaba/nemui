@@ -374,7 +374,11 @@ sub run ($$$) {
 
 sub main () {
   return Promise->resolve->then (sub {
-    return pull_remote_index ("root", "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun/ddsdrun/packref.json");
+    my $root_url = "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun/ddsdrun/packref.json";
+    if ($ENV{LIVE}) {
+      $root_url = "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun-live/ddsdrun/packref.json";
+    }
+    return pull_remote_index ("root", $root_url);
   })->then (sub {
     my $base_path = $DataRootPath;
     my $path = $base_path->child
