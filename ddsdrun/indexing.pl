@@ -373,14 +373,22 @@ sub run ($$$) {
 } # run
 
 sub main () {
-  my $sites = [
-#    ["https://gist.githubusercontent.com/wakaba/30f9cce1283f1eceb34a495c78d2b431/raw/list-sparql-packref.json", 'packref', 'sparql'],
-    ["https://gist.githubusercontent.com/wakaba/30f9cce1283f1eceb34a495c78d2b431/raw/list-legal-packref.json", 'packref', 'legal'],
-  ];
-  return promised_for {
-    my ($root_url, $site_type, $site_name) = @{$_[0]};
-    return run ($root_url, $site_type, $site_name);
-  } $sites;
+  return Promise->resolve->then (sub {
+    return pull_remote_index ("root", "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun/ddsdrun/packref.json");
+  })->then (sub {
+    my $base_path = $DataRootPath;
+    my $path = $base_path->child
+        ('local/data/root/files/list.json');
+    my $file = Promised::File->new_from_path ($path);
+    return $file->read_byte_string->then (sub {
+      my $json = json_bytes2perl $_[0];
+      my $sites = $json->{items};
+      return promised_for {
+        my ($root_url, $site_type, $site_name) = @{$_[0]};
+        return run ($root_url, $site_type, $site_name);
+      } $sites;
+    });
+  });
 } # main
 
 main->to_cv->recv;

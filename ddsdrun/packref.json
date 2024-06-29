@@ -1,0 +1,7 @@
+{
+  "type": "packref",
+  "source": {
+    "type": "packref",
+    "url": "https://raw.githubusercontent.com/geocol/ddsd-data/master/indexing/packref.json"
+  }
+}
