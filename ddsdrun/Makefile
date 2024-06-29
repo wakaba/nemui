@@ -15,7 +15,7 @@ build-main-live:
 	rm -fr ddsddata/data
 	mv local/ddsddata-data ddsddata/data
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
-	rm -fr ddsddata/data/local ddsddata/data/confi gddsddata/data/indexes
+	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
 	mv ddsddata/data/mirror mirror
 	#
 	git config --global user.email "ci@test"
@@ -49,7 +49,7 @@ build-for-docker:
 
 build-for-docker-from-old:
 	mkdir -p local
-#	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE) cp -R /app/data /local/ddsddata-data
+	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE) cp -R /app/data /local/ddsddata-data
 	mkdir -p local/ddsddata-data
 
 build-ddsd:

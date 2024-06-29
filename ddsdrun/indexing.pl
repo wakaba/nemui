@@ -24,6 +24,14 @@ sub escape ($) {
   return $s;
 } # escape
 
+sub rand_limit ($$) {
+  my ($list, $limit) = @_;
+  my %result = map { $_ => $_ } @$list;
+  $list = [values %result];
+  $list = [@$list[0..$limit]] if @$list > $limit;
+  return $list;
+} # rand_limit
+
 sub ddsd ($@) {
   my $args = shift;
   my $ret = {};
@@ -186,7 +194,9 @@ sub add_to_local_index ($$$$$$$$) {
         }
         my $found = {};
         $summary->{package}->{tags} = [grep { not $found->{$_}++ } @{$summary->{package}->{tags}}];
-        $summary->{package}->{time} = $meta_file->{package_item}->{file_time}
+        $summary->{package}->{time} = $pack_file->{package_item}->{file_time}
+            if defined $pack_file->{package_item}->{file_time};
+        $summary->{package}->{time} //= $meta_file->{package_item}->{file_time}
             if defined $meta_file->{package_item}->{file_time};
         for (qw(lang dir writing_mode)) {
           $summary->{package}->{$_} = $meta_file->{package_item}->{$_}
@@ -283,11 +293,7 @@ sub process_remote_index ($$$;%) {
     }
     die "Bad JSON file |$path| (site_type |$site_type|)" unless defined $results;
 
-    {
-      my %result = map { $_ => $_ } @$results;
-      $results = [values %result];
-      $results = [@$results[0..$args{limit}]] if @$results > $args{limit};
-    }
+    $results = rand_limit $results, $args{limit};
     
     return promised_for {
       my ($pack_name, $pack_url) = @{$_[0]};
@@ -387,10 +393,24 @@ sub main () {
     return $file->read_byte_string->then (sub {
       my $json = json_bytes2perl $_[0];
       my $sites = $json->{items};
-      return promised_for {
-        my ($root_url, $site_type, $site_name) = @{$_[0]};
-        return run ($root_url, $site_type, $site_name);
-      } $sites;
+
+      $sites = rand_limit $sites, 30;
+      my $timeout = $ENV{LIVE} ? 60*30 : 60*10;
+
+      my $started = time;
+      return promised_until {
+        my $item = shift @$sites;
+        return 'done' unless defined $item;
+        
+        my ($root_url, $site_type, $site_name) = @$item;
+        return run ($root_url, $site_type, $site_name)->then (sub {
+          my $elapsed = time - $started;
+          if ($elapsed > $timeout) {
+            return 'done';
+          }
+          return not 'done';
+        });
+      };
     });
   });
 } # main
