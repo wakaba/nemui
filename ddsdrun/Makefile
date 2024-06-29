@@ -4,10 +4,14 @@ all:
 
 CURL = curl
 
-build: build-for-docker-from-old build-ddsd build-main-live
+BUILD_MAIN = build-main-dev
+DOCKER_IMAGE = $$DDSDRUN_DOCKER_IMAGE
+
+build: build-for-docker-from-old build-ddsd build-main
+build-main: $(BUILD_MAIN)
 
 build-main-live:
-	git clone $$DDSDDATA_GIT -b master ddsddata
+	git clone $$DDSDDATA_GIT_LIVE -b master ddsddata
 	rm -fr ddsddata/data
 	mv local/ddsddata-data ddsddata/data
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
@@ -47,7 +51,7 @@ build-for-docker:
 
 build-for-docker-from-old:
 	mkdir -p local
-	docker run -v `pwd`/local:/local --user `id --user` $$DDSDRUN_DOCKER_IMAGE cp -R /app/data /local/ddsddata-data
+	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE) cp -R /app/data /local/ddsddata-data
 	mkdir -p local/ddsddata-data
 
 build-ddsd:
