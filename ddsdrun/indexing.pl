@@ -327,7 +327,7 @@ sub process_remote_index ($$$;%) {
             $key,
             '--jsonl',
             '--with-source-meta',
-            '--with-file-meta',
+            '--with-item-meta',
           ),
           ddsd (
             {wd => $base_path, json => 1},

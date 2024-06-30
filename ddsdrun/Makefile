@@ -12,9 +12,8 @@ build-main: $(BUILD_MAIN)
 
 build-main-live:
 	git clone $$DDSDDATA_GIT -b master ddsddata
-	rm -fr ddsddata/data 
+	rm -fr ddsddata/data
 	mv local/ddsddata-data ddsddata/data
-	rm -fr ddsddata/data/config
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
 	mv ddsddata/data/mirror mirror
