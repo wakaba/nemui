@@ -122,8 +122,16 @@ sub regenerate_computed_index ($$$$) {
                   for (
                     ['児童' => '児童・生徒'],
                     ['生徒' => '児童・生徒'],
+                    ['子育て' => '育児'],
+                    ['避難場所' => '避難所'],
+                    ['投票' => '選挙'],
+                    ['病院' => '医療機関'],
+                    ['医院' => '医療機関'],
+                    ['診療所' => '医療機関'],
                     map { [$_] } qw(
                       防災 人口 広報 交通機関 選挙 イベント 介護 障害者
+                      育児 公園 避難所 トイレ 観光 医療機関 AED
+                      通学路 学校
                       新型コロナウイルス
                       API
                     ),
@@ -137,8 +145,13 @@ sub regenerate_computed_index ($$$$) {
                   }
                 }
                 #XXX tag by date
-                # XXX tag by mime type & set_type
                 # XXX tag by site
+                if (defined $summary->{set_type}) {
+                  $tag->{$summary->{set_type}} = 1;
+                }
+                if (defined $summary->{mime}) {
+                  $tag->{$summary->{mime}} = 1;
+                }
                 if ($summary->{length} > 100*1024*1024) {
                   if ($summary->{length} > 1*1024*1024*1024) {
                     $tag->{'1GB+'} = 1;
