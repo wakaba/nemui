@@ -218,6 +218,9 @@ sub add_to_local_index ($$$$$$$$) {
         $out->{type} = $file->{type};
         $out->{set_type} = $file->{set_type} if defined $file->{set_type};
         $out->{set_expanded} = \1 if $file->{set_expanded};
+        if (defined $out->{set_type} and not $out->{set_expanded}) {
+          $summary->{broken} = $index_line->[3]->{broken} = 1;
+        }
         
         $out->{title} = $file->{package_item}->{title} // '';
         $out->{mime} = $file->{package_item}->{mime}
