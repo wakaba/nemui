@@ -141,17 +141,34 @@ sub regenerate_computed_index ($$$$) {
                     if ($summary->{package}->{title} =~ /$pattern/ or
                         $summary->{package}->{desc} =~ /$pattern/) {
                       $tag->{$t} = 1;
+                    } else {
+                      for my $file (values %{$summary->{files} or {}}) {
+                        if ($file->{title} =~ /$pattern/ or
+                            $file->{desc} =~ /$pattern/) {
+                          $tag->{$t} = 1;
+                          last;
+                        }
+                      }
                     }
                   }
                 }
                 #XXX tag by date
-                # XXX tag by mime type & set_type
                 # XXX tag by site
                 if ($summary->{length} > 100*1024*1024) {
                   if ($summary->{length} > 1*1024*1024*1024) {
                     $tag->{'1GB+'} = 1;
                   }
                   $tag->{'100MB+'} = 1;
+                }
+                for my $file (values %{$summary->{files} or {}}) {
+                  if (defined $file->{set_type}) {
+                    $tag->{$file->{set_type}} = 1;
+                  }
+                  if (defined $file->{mime}) {
+                    my $mime = $file->{mime};
+                    $mime =~ s/\s*;.*//;
+                    $tag->{$mime} = 1;
+                  }
                 }
               }
               delete $tag->{''};

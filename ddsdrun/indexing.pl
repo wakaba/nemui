@@ -212,10 +212,13 @@ sub add_to_local_index ($$$$$$$$) {
       $summary->{length} = 0;
       for my $file (@$files) {
         next if $file->{type} eq 'package';
-        next if $file->{type} eq 'dataset';
         
         my $out = {};
 
+        $out->{type} = $file->{type};
+        $out->{set_type} = $file->{set_type} if defined $file->{set_type};
+        $out->{set_expanded} = \1 if $file->{set_expanded};
+        
         $out->{title} = $file->{package_item}->{title} // '';
         $out->{mime} = $file->{package_item}->{mime}
             if defined $file->{package_item}->{mime};
