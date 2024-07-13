@@ -16,7 +16,7 @@ my $ThisPath = path (__FILE__)->parent;
 my $DataRootPath = $ThisPath->child ('ddsddata/data');
 my $DDSDPath = $ThisPath->child ('ddsd')->absolute;
 
-my $ThisRev = 3;
+my $ThisRev = $ENV{LIVE} ? 4 : 5;
 
 sub escape ($) {
   my $s = shift;
@@ -236,6 +236,7 @@ sub add_to_local_index ($$$$$$$$) {
             if defined $file->{rev}->{sha256};
         $out->{insecure} = $file->{rev}->{insecure}
             if $file->{rev}->{insecure};
+        $summary->{broken} = 1 if $file->{rev}->{http_incomplete};
         my $name = $def->{files}->{$file->{key}}->{name};
         $out->{file_name} = $name if defined $name;
         $out->{desc} = $is_free ? $file->{package_item}->{desc} // $file->{ckan_resource}->{description} // '' : '';
