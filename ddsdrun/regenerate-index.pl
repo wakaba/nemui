@@ -165,7 +165,9 @@ sub regenerate_computed_index ($$$$) {
                     $tag->{$file->{set_type}} = 1;
                   }
                   if (defined $file->{mime}) {
-                    $tag->{$file->{mime}} = 1;
+                    my $mime = $file->{mime};
+                    $mime =~ s/\s*;.*//;
+                    $tag->{$mime} = 1;
                   }
                 }
               }
