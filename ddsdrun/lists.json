@@ -12,6 +12,9 @@
     ["https://data.city.yokohama.lg.jp/", "ckan", "data.city.yokohama.lg.jp", {
       "tags": ["横浜市"]
     }],
+    ["https://catalog-data.city.kanazawa.ishikawa.jp/dataset", "ckan", "catalog-data.city.kanazawa.ishikawa.jp", {
+      "tags": ["石川中央都市圏"]
+    }],
     ["https://data.gsj.jp/gkan/", "ckan", "data.gsj.jp", {
       "tags": ["産業技術総合研究所", "地質調査総合センター"]
     }]

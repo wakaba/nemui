@@ -296,7 +296,7 @@ sub process_remote_index ($$$$;%) {
         my $base_url = Web::URL->parse_string ($root_url);
         $results = [map {
           [$_, (Web::URL->parse_string ("dataset/$_", $base_url) // die "Bad URL |dataset/$_| in <$root_url>")->stringify];
-        } @$json];
+        } @$results];
       }
     } elsif ($site_type eq 'packref') {
       if (defined $json and ref $json eq 'ARRAY') {
