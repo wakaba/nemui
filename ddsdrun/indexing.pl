@@ -274,8 +274,8 @@ sub add_to_local_index ($$$$$$$$) {
   });
 } # add_to_local_index
 
-sub process_remote_index ($$$;%) {
-  my ($site_type, $site_name, $root_url, %args) = @_;
+sub process_remote_index ($$$$;%) {
+  my ($site_type, $site_name, $root_url, $opts, %args) = @_;
   my $esite_name = escape $site_name;
   my $base_path = $DataRootPath;
   my $path = $base_path->child
@@ -371,17 +371,18 @@ sub process_remote_index ($$$;%) {
       $json->{$site_type}->{$esite_name}->{site_type} = $site_type;
       $json->{$site_type}->{$esite_name}->{site_name} = $site_name;
       $json->{$site_type}->{$esite_name}->{esite_name} = $esite_name;
+      $json->{$site_type}->{$esite_name}->{site_opts} = $opts;
       return $file->write_byte_string (perl2json_bytes_for_record $json);
     });
   });
 } # process_remote_index
 
-sub run ($$$) {
-  my ($root_url, $site_type, $site_name) = @_;
+sub run ($$$$) {
+  my ($root_url, $site_type, $site_name, $opts) = @_;
   return Promise->resolve->then (sub {
     return pull_remote_index ($site_name, $root_url);
   })->then (sub {
-    return process_remote_index ($site_type, $site_name, $root_url, limit => 10);
+    return process_remote_index ($site_type, $site_name, $root_url, $opts, limit => 10);
   });
 } # run
 
@@ -409,8 +410,9 @@ sub main () {
         my $item = shift @$sites;
         return 'done' unless defined $item;
         
-        my ($root_url, $site_type, $site_name) = @$item;
-        return run ($root_url, $site_type, $site_name)->then (sub {
+        my ($root_url, $site_type, $site_name, $opts) = @$item;
+        $opts //= {};
+        return run ($root_url, $site_type, $site_name, $opts)->then (sub {
           my $elapsed = time - $started;
           if ($elapsed > $timeout) {
             return 'done';
