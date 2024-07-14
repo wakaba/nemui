@@ -232,6 +232,11 @@ sub add_to_local_index ($$$$$$$$) {
           $summary->{length} += $out->{length};
         }
         $out->{url} = $file->{rev}->{url} if defined $file->{rev}->{url};
+        $out->{url} //= $file->{source}->{url} if defined $file->{source}->{url};
+        if (not defined $out->{url} and defined $file->{ckan_resource}->{url}) {
+          my $url = Web::URL->parse_string ($file->{ckan_resource}->{url});
+          $out->{url} = $url if defined $url and $url->is_http_s;
+        }
         $out->{sha256} = $file->{rev}->{sha256}
             if defined $file->{rev}->{sha256};
         $out->{insecure} = $file->{rev}->{insecure}
