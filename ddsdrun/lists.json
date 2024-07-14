@@ -9,6 +9,9 @@
     ["https://data.city.ikoma.lg.jp/data/dataset", "ckan", "data.city.ikoma.lg.jp", {
       "tags": ["生駒市"]
     }],
+    ["https://data.city.yokohama.lg.jp/", "ckan", "data.city.yokohama.lg.jp", {
+      "tags": ["横浜市"]
+    }],
     ["https://data.gsj.jp/gkan/", "ckan", "data.gsj.jp", {
       "tags": ["産業技術総合研究所", "地質調査総合センター"]
     }]
