@@ -3,17 +3,17 @@
     ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/legal/packref.json", "packref", "legal", {
       "tags": ["legal"]
     }],
-    ["https://city.himeji.gkan.jp/gkan/", "ckan", "city.himeji.gkan.jp", {
-      "tags": ["姫路市・播磨圏域連携中枢都市圏"]
-    }],
     ["https://data.city.ikoma.lg.jp/data/dataset", "ckan", "data.city.ikoma.lg.jp", {
       "tags": ["生駒市"]
-    }],
-    ["https://data.city.yokohama.lg.jp/", "ckan", "data.city.yokohama.lg.jp", {
-      "tags": ["横浜市"]
     }]
   ],
   "XXX": [
+    ["https://city.himeji.gkan.jp/gkan/", "ckan", "city.himeji.gkan.jp", {
+      "tags": ["姫路市・播磨圏域連携中枢都市圏"]
+    }],
+    ["https://data.city.yokohama.lg.jp/", "ckan", "data.city.yokohama.lg.jp", {
+      "tags": ["横浜市"]
+    }],
     ["https://opendata-api-kakogawa.jp/ckan/", "ckan", "opendata-api-kakogawa.jp"],
     ["https://data.city.tendo.yamagata.jp/", "ckan", "data.city.tendo.yamagata.jp"],
     ["https://opendata.town.aichi-higashiura.lg.jp/", "ckan", "opendata.town.aichi-higashiura.lg.jp"],
