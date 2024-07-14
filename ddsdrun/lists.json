@@ -6,6 +6,9 @@
     ["https://city.himeji.gkan.jp/gkan/", "ckan", "city.himeji.gkan.jp", {
       "tags": ["姫路市・播磨圏域連携中枢都市圏"]
     }],
+    ["https://data.city.ikoma.lg.jp/data/dataset", "ckan", "data.city.ikoma.lg.jp", {
+      "tags": ["生駒市"]
+    }],
     ["https://data.gsj.jp/gkan/", "ckan", "data.gsj.jp", {
       "tags": ["産業技術総合研究所", "地質調査総合センター"]
     }]
