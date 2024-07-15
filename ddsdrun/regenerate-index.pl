@@ -31,8 +31,8 @@ sub open_tag_index ($$$) {
   };
 } # open_tag_index
 
-sub regenerate_computed_index ($$$$) {
-  my ($states, $base_path, $site_type, $site_name) = @_;
+sub regenerate_computed_index ($$$$$) {
+  my ($states, $base_path, $site_type, $site_name, $site_opts) = @_;
   my $esite_name = escape $site_name;
   my $index_parent_path = $base_path->child
       ("snapshots/$site_type/$esite_name");
@@ -153,7 +153,9 @@ sub regenerate_computed_index ($$$$) {
                   }
                 }
                 #XXX tag by date
-                # XXX tag by site
+                for (@{$site_opts->{tags} or []}) {
+                  $tag->{$_} = 1;
+                }
                 if ($summary->{length} > 100*1024*1024) {
                   if ($summary->{length} > 1*1024*1024*1024) {
                     $tag->{'1GB+'} = 1;
@@ -226,7 +228,8 @@ sub regenerate_computed () {
       return promised_for {
         my $data = shift;
         return regenerate_computed_index
-            ($states, $base_path, $data->{site_type}, $data->{site_name});
+            ($states, $base_path, $data->{site_type}, $data->{site_name},
+             $data->{site_opts});
       } [values %{$_[0]}];
     } [values %$json];
   });

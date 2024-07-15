@@ -232,6 +232,11 @@ sub add_to_local_index ($$$$$$$$) {
           $summary->{length} += $out->{length};
         }
         $out->{url} = $file->{rev}->{url} if defined $file->{rev}->{url};
+        $out->{url} //= $file->{source}->{url} if defined $file->{source}->{url};
+        if (not defined $out->{url} and defined $file->{ckan_resource}->{url}) {
+          my $url = Web::URL->parse_string ($file->{ckan_resource}->{url});
+          $out->{url} = $url if defined $url and $url->is_http_s;
+        }
         $out->{sha256} = $file->{rev}->{sha256}
             if defined $file->{rev}->{sha256};
         $out->{insecure} = $file->{rev}->{insecure}
@@ -274,8 +279,8 @@ sub add_to_local_index ($$$$$$$$) {
   });
 } # add_to_local_index
 
-sub process_remote_index ($$$;%) {
-  my ($site_type, $site_name, $root_url, %args) = @_;
+sub process_remote_index ($$$$;%) {
+  my ($site_type, $site_name, $root_url, $opts, %args) = @_;
   my $esite_name = escape $site_name;
   my $base_path = $DataRootPath;
   my $path = $base_path->child
@@ -288,7 +293,10 @@ sub process_remote_index ($$$;%) {
       if (defined $json and ref $json eq 'HASH' and
           defined $json->{result} and ref $json->{result} eq 'ARRAY') {
         $results = $json->{result};
-        $results = [map { [$_, $root_url."dataset/$_"] } @$results];
+        my $base_url = Web::URL->parse_string ($root_url);
+        $results = [map {
+          [$_, (Web::URL->parse_string ("dataset/$_", $base_url) // die "Bad URL |dataset/$_| in <$root_url>")->stringify];
+        } @$results];
       }
     } elsif ($site_type eq 'packref') {
       if (defined $json and ref $json eq 'ARRAY') {
@@ -371,17 +379,18 @@ sub process_remote_index ($$$;%) {
       $json->{$site_type}->{$esite_name}->{site_type} = $site_type;
       $json->{$site_type}->{$esite_name}->{site_name} = $site_name;
       $json->{$site_type}->{$esite_name}->{esite_name} = $esite_name;
+      $json->{$site_type}->{$esite_name}->{site_opts} = $opts;
       return $file->write_byte_string (perl2json_bytes_for_record $json);
     });
   });
 } # process_remote_index
 
-sub run ($$$) {
-  my ($root_url, $site_type, $site_name) = @_;
+sub run ($$$$) {
+  my ($root_url, $site_type, $site_name, $opts) = @_;
   return Promise->resolve->then (sub {
     return pull_remote_index ($site_name, $root_url);
   })->then (sub {
-    return process_remote_index ($site_type, $site_name, $root_url, limit => 10);
+    return process_remote_index ($site_type, $site_name, $root_url, $opts, limit => 10);
   });
 } # run
 
@@ -409,8 +418,9 @@ sub main () {
         my $item = shift @$sites;
         return 'done' unless defined $item;
         
-        my ($root_url, $site_type, $site_name) = @$item;
-        return run ($root_url, $site_type, $site_name)->then (sub {
+        my ($root_url, $site_type, $site_name, $opts) = @$item;
+        $opts //= {};
+        return run ($root_url, $site_type, $site_name, $opts)->then (sub {
           my $elapsed = time - $started;
           if ($elapsed > $timeout) {
             return 'done';
