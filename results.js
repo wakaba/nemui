@@ -541,7 +541,7 @@ defineElement ({
           axisY: {
             onlyInteger: true,
             high: maxRank - (1 - 2),
-            low: maxRank - (filteredTeams.length + 2),
+            low: maxRank - (maxRank + 2),
         labelInterpolationFnc: function (value) {
           let v = maxRank - value;
           return v >= 1 ? v : '';
