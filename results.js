@@ -116,6 +116,7 @@ defineElement ({
           let option = document.createElement ('option');
           option.label = '[' + mp.short_label + '] ' + mp.label;
           option.value = mp.id;
+          option.checked = true;
           select.appendChild (option);
         });
       });
