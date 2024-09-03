@@ -1,0 +1,6 @@
+{
+  "github": {
+    "build":[ "make build" ],
+    "tests": ["ls"]
+  }
+}

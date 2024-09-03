@@ -16,6 +16,11 @@ updatenightlywp:
 	echo $(WP_DATA_DIR) >> wp
 	$(GIT) add wp
 
+build:
+	curl -sSLf https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
+	WEBUA_DEBUG=2 ./ddsd add --name foo https://data.city.ikoma.lg.jp/data/dataset
+	./ddsd ls foo
+
 ## ------ Setup ------
 
 deps: 

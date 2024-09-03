@@ -1,0 +1,39 @@
+{
+   "jobs" : {
+      "test" : {
+         "env" : {
+            "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts/test"
+         },
+         "runs-on" : "ubuntu-latest",
+         "steps" : [
+            {
+               "uses" : "actions/checkout@v2",
+               "with" : {
+                  "ssh-key" : "${{ secrets.GH_GIT_KEY }}"
+               }
+            },
+            {
+               "run" : "mkdir -p $CIRCLE_ARTIFACTS"
+            },
+            {
+               "run" : "make build"
+            },
+            {
+               "run" : "ls"
+            },
+            {
+               "if" : "${{ always () }}",
+               "uses" : "actions/upload-artifact@v3",
+               "with" : {
+                  "path" : "/tmp/circle-artifacts/test"
+               }
+            }
+         ]
+      }
+   },
+   "name" : "test",
+   "on" : {
+      "push" : {
+      }
+   }
+}
