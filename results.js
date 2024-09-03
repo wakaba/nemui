@@ -334,13 +334,16 @@ defineElement ({
       });
       let rts = ev.rbrRankingTypes || {};
       let results = ev.rbrResults || [];
+      let tz = (ev.rbrInfo || {}).tzoffset || 0;
 
-      // XXX tz
       let slotSize = 1800;
       let slots = {'-': true};
       let minSlot = Infinity;
       let maxSlot = -Infinity;
       let slotted = [];
+      let passedCounts = [];
+      let teamSeen = {};
+      let teamFound = {};
       results.forEach (_ => {
         if (_.p == mpid) {
           let slot = _.n ? Math.floor (_.c / slotSize) * slotSize : '-';
@@ -350,12 +353,28 @@ defineElement ({
           slots[slot] = true;
           if (slot < minSlot) minSlot = slot;
           if (maxSlot < slot) maxSlot = slot;
-
+          if (typeof (slot) === 'number') {
+            passedCounts[_.r] = (passedCounts[_.r] || 0) + 1;
+          }
+          
           if (!slotted[_.p]) slotted[_.p] = [];
           if (!slotted[_.p][_.r]) slotted[_.p][_.r] = {};
           slotted[_.p][_.r][slot] = (slotted[_.p][_.r][slot] || 0) + 1;
+
+          if (!teamSeen[_.r]) teamSeen[_.r] = {};
+          teamSeen[_.r][_.t] = true;
+        } else if (_.p == 0) {
+          if (!teamFound[_.r]) teamFound[_.r] = {};
+          teamFound[_.r][_.t] = true;
         }
       });
+      for (let rtid in teamFound) {
+        for (let tid in teamFound[rtid]) {
+          if (!teamSeen[rtid][tid]) {
+            slotted[mpid][rtid]["-"] = (slotted[mpid][rtid]["-"] || 0) + 1;
+          }
+        }
+      }
 
       {
         {
@@ -373,26 +392,9 @@ defineElement ({
               return '';
             } else {
               // XXX lang
-              let digits = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-              let d = new Date(_ * 1000);
-              let h = '' + d.getHours ();
-              let hh = h.split ('').map (_ => digits[parseInt (_)]).join ('')
-                  .replace (/^一〇$/, '十')
-                  .replace (/^一(.)$/, '十$1')
-                  .replace (/^二(.)$/, '二十$1')
-                  .replace (/十〇$/, '十');
-              let v = hh + '時';
-              if (!hasDay++ || h === "0") {
-                let day = '' + d.getDate ();
-                let dd = day.split ('').map (_ => digits[parseInt (_)]).join ('')
-                    .replace (/^一〇$/, '十')
-                    .replace (/^一(.)$/, '十$1')
-                    .replace (/^二(.)$/, '二十$1')
-                    .replace (/^三(.)$/, '三十$1')
-                    .replace (/十〇$/, '十');
-                v += ' ' + dd + '日';
-              }
-              return v;
+              let d = new Date((_ + tz) * 1000);
+              let h = '' + d.getUTCHours ();
+              return h;
             }
           } else if (_ === '-') {
             return '未通過';
@@ -400,11 +402,12 @@ defineElement ({
             return _;
           }
         });
+        let rtList = Object.values (rts);
         // XXX lang
-        let labels = Object.values (rts).map (_ => _.short_label || _.label || _.id);
+        let labels = rtList.map (_ => _.short_label || _.label || _.id);
         
         let div = document.createElement ('rbr-barsets-chart');
-        div.style.minWidth = rts.length * (slotNames.length + 1) * 20 + "px";
+        div.style.minWidth = Object.keys (rts).length * (slotNames.length + 1) * 22 + "px";
         div.style.height = "30em";
         this.querySelectorAll ('rbr-graph-main').forEach (c => {
           c.textContent = '';
@@ -442,18 +445,23 @@ defineElement ({
               y: data.y2 - 10,
             }, 'ct-label rbr-bar-value').text (data.value.y);
 
-            let delta = (typeof (slotNames[data.seriesIndex]) === 'number') ? -10 : 0;
+            let isHour = typeof (slotNames[data.seriesIndex]) === 'number';
             data.group.elem ('text', {
-              x: data.x1 + delta,
-              y: data.y1 + 10,
-            }, 'ct-label rbr-bar-desc').text (slotLabels[data.seriesIndex]);
+              x: data.x1 + (isHour ? -10 : 0),
+              y: data.y1 + 10 + (isHour ? 10 : 0),
+            }, 'ct-label rbr-bar-desc ' + (isHour ? 'rbr-bar-desc-hour' : '')).text (slotLabels[data.seriesIndex]);
           } else if (data.type === 'label' && data.axis.units.pos === 'x') {
             chart.svg.elem ('text', {
               x: data.x,
               y: data.axis.chartRect.y2 - 20,
-            }, 'ct-label rbr-barset-label').text(data.text);
+            }, 'ct-label rbr-barset-label').text (data.text);
 
             data.element._node.classList.add ("rbr-redundant-label");
+
+            chart.svg.elem ('text', {
+              x: data.x + 10,
+              y: data.axis.chartRect.y2 + 20,
+            }, 'ct-label rbr-barset-passed').text ("通過 " + (passedCounts[rtList[data.index].id] || 0));
           }
         });
       }
@@ -525,7 +533,7 @@ defineElement ({
 
         let div = document.createElement ('rbr-rank-chart');
         let yDelta = 20;
-        div.style.height = "calc(max(30em, "+yDelta*filteredTeams.length+"px))";
+        div.style.height = "calc(max(30em, "+yDelta*filteredTeams.length*1.1+"px))";
         let chart = new Chartist.Line (div, {
           // XXX lang
           labels: mps.map(_ => _.short_label || _.label || _.id),
@@ -541,7 +549,7 @@ defineElement ({
           },
           axisY: {
             onlyInteger: true,
-            high: maxRank - (1 - 2),
+            high: maxRank - (1),
             low: maxRank - (maxRank + 2),
         labelInterpolationFnc: function (value) {
           let v = maxRank - value;
@@ -569,7 +577,7 @@ defineElement ({
           teamItems.sort ((a, b) => a[4] === 0 ? +1 : b[4] === 0 ? -1 : a[2]-b[2]).forEach (([g, pX, pY, team]) => {
             
             let x = data.axisX.chartRect.x2 + 40;
-            if (nextY < pY) nextY = pY;
+            //if (nextY < pY) nextY = pY;
             let y = nextY;
             nextY += yDelta;
 
@@ -577,7 +585,7 @@ defineElement ({
               x1: pX + 10,
               y1: pY,
               x2: x,
-              y2: y,
+              y2: y - yDelta/2,
             }, 'ct-line rbr-team-desc-pointer');
             
             g.elem ('text', {
