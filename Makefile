@@ -18,7 +18,7 @@ updatenightlywp:
 
 build:
 	curl -sSLf https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
-	WEBUA_DEBUG=2 ./ddsd add --name foo https://data.city.ikoma.lg.jp/data/dataset
+	WEBUA_DEBUG=2 ./ddsd add --name foo https://data.city.ikoma.lg.jp/data/dataset --log-file -
 	./ddsd ls foo
 
 ## ------ Setup ------
