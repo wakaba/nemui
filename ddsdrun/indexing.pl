@@ -411,7 +411,7 @@ sub main () {
       my $sites = $json->{items};
 
       $sites = rand_limit $sites, 30;
-      my $timeout = $ENV{LIVE} ? 60*30 : 60*10;
+      my $timeout = $ENV{LIVE} ? 60*20 : 60*10;
 
       my $started = time;
       return promised_until {
