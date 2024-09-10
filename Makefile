@@ -66,6 +66,7 @@ test1:
 
 build-for-docker:
 	cd ddsdrun && make build build-for-docker
+	echo $?
 
 x-build-for-docker:
 	mkdir -p local/data
