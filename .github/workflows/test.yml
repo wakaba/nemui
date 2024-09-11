@@ -22,12 +22,15 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
-               "run" : "LIVE=1 make build-for-docker DDSDRUN_DOCKER_IMAGE=$DDSDRUN_DOCKER_IMAGE BUILD_MAIN=build-main-live",
+               "run" : "LIVE=1 make build-for-docker DDSDRUN_DOCKER_IMAGE=$DDSDRUN_DOCKER_IMAGE BUILD_MAIN=build-main-live && echo hoge",
                "env" : {
                   "DDSDDATA_GIT" : "${{ secrets.DDSDDATA_GIT_LIVE }}",
                   "GIT_SSH_COMMAND": "ssh -i /tmp/git.key",
                   "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE_LIVE }}"
                }
+            },
+            {
+               "run" : "echo hello"
             },
             {
                "run" : "docker build -t $DDSDRUN_DOCKER_IMAGE \u005C.",
