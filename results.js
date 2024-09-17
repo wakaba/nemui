@@ -47,6 +47,8 @@ defineElement ({
       });
     }, // _getJSON
     rbrInit: function () {
+      this._cached = {};
+      
       let url = new window.URL (location.href);
       let eid = url.searchParams.get ('event_id');
       
@@ -87,7 +89,19 @@ defineElement ({
           _.dispatchEvent (ev);
         });
       });
-    },
+    }, // rbrInit
+    rbrGetEventTeamLocationHistory: function (tid) {
+      return this._cached["tlh:" + tid] = this._cached["tlh:" + tid] || Promise.resolve ().then (() => {
+        let url = new window.URL (location.href);
+        let eid = url.searchParams.get ('event_id');
+        let topURL = "https://ibuki.run/ev/"+eid+"/";
+        return Promise.all ([
+          this._getJSON (topURL, "t/" + tid + '/locationhistory.json'),
+        ]).then (([lh]) => {
+          return lh;
+        });
+      });
+    }, // rbrGetEventTeamLocationHistory
   },
 }); // <rbr-event>
 
@@ -605,6 +619,286 @@ defineElement ({
   },
 }); // <rbr-rank-graph>
 
+
+defineElement ({
+  name: 'rbr-time-distance-graph',
+  props: {
+    pcInit: function () {
+      this.rbr_Histories = {};
+      this.addEventListener ('change', () => {
+        this.rbrInit ();
+      });
+      return this.rbrInit ();
+    },
+    rbrEvent: function () {
+      let p = this.parentNode;
+      while (p && p.localName !== 'rbr-event') p = p.parentNode;
+      return p;
+    },
+    rbrInit: function () {
+      let ev = this.rbrEvent ();
+      if (!ev) return;
+      
+      let selectedTeamIds = [];
+      this.querySelectorAll ('[name=team]:checked').forEach (_ => {
+        selectedTeamIds[_.value] = true;
+      });
+
+      let tids = Object.keys (selectedTeamIds);
+      tids = tids.slice (0, 10);
+
+      let newHistories = [];
+      tids.forEach (tid => {
+        newHistories[tid] = this.rbr_Histories[tid]; // or undefined
+      });
+      this.rbr_Histories = newHistories;
+      tids.forEach ((tid) => {
+        ev.rbrGetEventTeamLocationHistory (tid).then ((_) => {
+          this.rbr_Histories[tid] = _;
+          this.rbrRedraw ();
+        });
+      });
+    }, // rbrInit
+    rbrRedraw: function () {
+      clearTimeout (this.rbr_RedrawTimer);
+      this.rbr_RedrawTimer = setTimeout (() => {
+        this.rbr_Redraw ();
+      }, 500);
+    }, // rbrRedraw
+    rbr_Redraw: function () {
+      let ev = this.rbrEvent ();
+      if (!ev) return;
+
+      let info = ev.rbrInfo || {};
+      let results = ev.rbrResults || [];
+      let teams = (ev.rbrTeams || []);
+      let teamsById = (ev.rbrTeamsById || []);
+      
+      let pp0 = [];
+      let routes0 = parseEncodedRoutes (info.encoded_routes || []);
+      let startDistance = 0;
+      routes0.forEach (_ => {
+        _.points[0].start_distance = startDistance;
+        for (let i = 1; i < _.points.length; i++) {
+          let p = _.points[i];
+          let d = p.to_distance;
+          if (d === -1) {
+            d = distanceH84 (p, _.points[i-1]);
+          }
+          startDistance += d;
+          p.start_distance = startDistance;
+        }
+        pp0 = pp0.concat (_.points);
+      }); // XXX boundary
+
+      let mps = info.marked_points || [];
+      let base = {
+        routePoints: pp0,
+        markedPoints: mps,
+        //forcedPoints: forced,
+        //teamListURL: urls.results + '',
+        //teamIds,
+        //teamResultItems,
+        //elapsed: performance.now () - fetchStart,
+      };
+
+      let radius = 300;
+      let computed = {elapsed: {}};
+      computeBase ([base.routePoints], radius, computed);
+
+      let chartDatas = [];
+      let histories = this.rbr_Histories;
+      let tids = Object.keys (histories);
+      tids.forEach (tid => {
+        let history = histories[tid] || {};
+        
+        let pp1 = [];
+        let routes1 = parseEncodedRoutes (history.encoded_routes || []);
+        routes1.forEach (_ => {
+          pp1 = pp1.concat (_.points);
+        }); // XXX boundary
+
+        let teamResultItems = [];
+        let teamIds = new Set;
+        results.forEach (_ => {
+          if (_.t == tid) {
+            teamResultItems[_.p] = _;
+          }
+          teamIds.add (_.t);
+        });
+        let forced = [];
+        base.markedPoints.forEach (mp => {
+        if (tid != null) {
+          if (mp.type === 'globalStart' || mp.type === 'partialStart') {
+            let tr = teamResultItems[mp.id];
+            if (tr && tr.n) {
+              forced.push ({timestamp: tr.c, lat: mp.lat, lon: mp.lon,
+                            baseOrigIndex: mp.index,
+                            source: 'resultStart'});
+            }
+          }
+        } else {
+          pp[mp.index].confluential = true;
+        }
+        }); // base.markedPoints
+      (((teamResultItems[0] || {}).d || {}).m || []).forEach (_ => {
+        forced.push ({timestamp: _.t, lat: 0, lon: 0, source: 'marker'});
+      });
+
+      let data = {
+        routePoints: pp1,
+        //markedPoints: mps,
+        forcedPoints: forced,
+        //teamListURL: urls.results + '',
+        //teamIds,
+        teamResultItems,
+        //elapsed: performance.now () - fetchStart,
+      };
+
+      let pointsList = [base.routePoints, data.routePoints, data.forcedPoints];
+      computeData (pointsList, computed);
+        //computeDataPointTimes (pointsList, base.markedPoints, computed);
+        
+        let chartData = computed.dataToBase.filter (_ => _.effectiveIndex != null).map (_ => {
+          let bp = computed.basePoints[_.effectiveIndex];
+          let dp = computed.dataPoints[_.dataIndex];
+          return {y: bp.start_distance / 1000, x: dp.timestamp /60/60};
+        });
+        chartDatas.push (chartData);
+      }); // tids
+      let tz = (ev.rbrInfo || {}).tzoffset || 0;
+      let minTime = (info.start_date || 0);
+      let maxTime = (info.end_date || 0);
+      minTime = Math.floor ((minTime + tz) / 3600) - tz / 3600;
+      maxTime = Math.ceil ((maxTime + tz) / 3600) - tz / 3600;
+      let maxDistance = (base.markedPoints.at (-1) || base.routePoints.at (-1) || {}).start_distance / 1000 || undefined;
+      
+      let div = document.createElement ('rbr-rank-chart');
+      div.style.height = "calc(max(30em, 80vh))";
+      let chart = new Chartist.Line (div, {
+        // XXX lang
+        //labels: mps.map(_ => _.short_label || _.label || _.id),
+        series: chartDatas,
+      }, {
+        axisX: {
+          showGrid: false,
+          showLabel: false,
+          type: Chartist.FixedScaleAxis,
+          low: minTime,
+          high: maxTime,
+        },
+        axisY: {
+          low: 0,
+          high: maxDistance,
+        },
+      lineSmooth: Chartist.Interpolation.cardinal({
+        tension: 0,
+      }),
+        showPoint: false,
+          fullWidth: true,
+          chartPadding: {
+            //right: 200,
+          },
+      });
+
+      let tid2class = {};
+      chart.on ('draw', function (data) {
+        if (data.type === 'line') {
+          let tid = tids[data.seriesIndex];
+          tid2class[tid] = data.group._node.getAttribute ('class');
+        }
+      });
+
+      chart.on ('created', function (ctx) {
+        let f = (ctx.axisX.chartRect.x2 - ctx.axisX.chartRect.x1) / (ctx.axisX.options.high - ctx.axisX.options.low);
+        for (let x = minTime; x <= maxTime; x += 1) {
+          let xPixel = (x - ctx.axisX.options.low) * f;
+
+          let date = new Date ((x * 3600 + tz) * 1000);
+          let hour = date.getUTCHours ();
+          let zero = hour === 0;
+          
+          ctx.svg.elem ('line', {
+            x1: ctx.chartRect.x1 + xPixel,
+            x2: ctx.chartRect.x1 + xPixel,
+            y1: ctx.chartRect.y1,
+            y2: ctx.chartRect.y2,
+          }, 'ct-grid ct-vertical ' + (zero ? 'rbr-grid-day' : ''));
+
+          if (f > 10 || zero) {
+            let label = hour;
+            if (! (f > 10)) label = date.getUTCDate ();
+            ctx.svg.elem ('text', {
+              x: ctx.chartRect.x1 + xPixel - 8,
+              y: ctx.chartRect.y1 + 20,
+            }, 'ct-label ct-horizontal ct-end').text (label);
+          }
+        }
+
+        let g = (ctx.axisY.chartRect.y2 - ctx.axisY.chartRect.y1) / (ctx.bounds.high - ctx.bounds.low);
+        base.markedPoints.forEach (mp => {
+          let yPixel = (mp.start_distance / 1000 - ctx.bounds.low) * g;
+          
+          ctx.svg.elem ('line', {
+            x1: ctx.chartRect.x1,
+            x2: ctx.chartRect.x2,
+            y1: ctx.chartRect.y1 + yPixel,
+            y2: ctx.chartRect.y1 + yPixel,
+          }, 'ct-grid ct-horizontal rbr-grid-markedpoint');
+
+          let label = '[' + mp.short_label + '] ' + mp.label; // XXX
+          ctx.svg.elem ('text', {
+            x: ctx.chartRect.x1 + 5,
+            y: ctx.chartRect.y1 + yPixel,
+          }, 'ct-label ct-vertical ct-end rbr-label-markedpoint').text (label);
+        }); // mp
+
+        let minElevation = Math.min.apply (null, base.routePoints.map (_ => _.elevation));
+        if (minElevation > 0) minElevation = 0;
+        let maxElevation = Math.max.apply (null, base.routePoints.map (_ => _.elevation)) || 1;
+        let h = 300 / (maxElevation - minElevation);
+        let pts = [];
+        pts.push ([0, 0]);
+        base.routePoints.forEach (pt => {
+          let yPixel = (pt.start_distance / 1000 - ctx.bounds.low) * g;
+          let xPixel = (pt.elevation - minElevation) * h;
+          pts.push ([xPixel, yPixel]);
+        });
+        pts.push ([0, ctx.chartRect.y2 - ctx.chartRect.y1]);
+        let pl = ctx.svg.elem ('polyline', {
+          points: pts.map (_ => [_[0] + ctx.chartRect.x1,
+                                 _[1] + ctx.chartRect.y1].join (',')).join (' '),
+        }, 'paco-elevation');
+        ctx.svg._node.prepend (pl._node);
+
+        let d = document.createElement ('rbr-rank-chart-legend');
+        d.style.right = ctx.chartRect.padding.right + "px";
+        d.style.bottom = ctx.chartRect.padding.bottom + "px";
+        div.appendChild (d);
+
+        let ul = document.createElement ('ul');
+        tids.forEach (tid => {
+          let li = document.createElement ('li');
+          let team = teamsById[tid] || {};
+          li.innerHTML = '<svg width=16 height=16><rect x=0 y=0 width=16 height=16 class=ct-line></rect></svg> <span></span>';
+          li.firstChild.setAttribute ('class', tid2class[tid]);
+          li.lastChild.textContent = '[' + team.short_label + '] ' + team.label; // XXX
+          li.tabIndex = 0;
+          li.onclick = () => {
+            div.setAttribute ('data-selected', tid2class[tid]);
+          };
+          ul.appendChild (li);
+        });
+        d.appendChild (ul);
+      }); // created
+      
+      this.querySelectorAll ('rbr-graph-main').forEach (c => {
+        c.textContent = '';
+        c.appendChild (div);
+      });
+    }, // rbrInit
+  },
+}); // rbr-time-distance-graph
 
 /*
   

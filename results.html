@@ -2,7 +2,7 @@
 <meta charset=utf-8>
 <title></title>
 <link rel=stylesheet href=https://raw.githack.com/pawjy/html-page-components/master/css/default.css>
-
+<meta name=viewport content="width=device-width">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chartist@0.11.4/dist/chartist.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chartist@0.11.4/dist/chartist.min.js"></script>
 
@@ -29,6 +29,51 @@
 
   rbr-barsets-chart, rbr-rank-chart {
       display: block;
+  }
+
+  rbr-rank-chart {
+      position: relative;
+  }
+
+  rbr-rank-chart-legend {
+      display: block;
+      position: absolute;
+      padding-bottom: 20px;
+      padding-right: 10px;
+  }
+
+  rbr-rank-chart-legend li {
+      display: block;
+      margin: 0;
+      padding: 0;
+  }
+
+rbr-rank-chart .ct-series .ct-line { stroke-width: 3px }
+rbr-rank-chart[data-selected~=ct-series-a] .ct-series-a .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-b] .ct-series-b .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-c] .ct-series-c .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-d] .ct-series-d .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-e] .ct-series-e .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-f] .ct-series-f .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-g] .ct-series-g .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-h] .ct-series-h .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-i] .ct-series-i .ct-line { stroke-width: 6px }
+rbr-rank-chart[data-selected~=ct-series-j] .ct-series-j .ct-line { stroke-width: 6px }
+
+rbr-rank-chart .ct-series-a .ct-line { stroke: #ff4f81 }
+rbr-rank-chart .ct-series-b .ct-line { stroke: #36a2eb }
+rbr-rank-chart .ct-series-c .ct-line { stroke: #4bc0c0 }
+rbr-rank-chart .ct-series-d .ct-line { stroke: #ff8c00 }
+rbr-rank-chart .ct-series-e .ct-line { stroke: #6a0dad }
+rbr-rank-chart .ct-series-f .ct-line { stroke: #34c759 }
+rbr-rank-chart .ct-series-g .ct-line { stroke: #ff6347 }
+rbr-rank-chart .ct-series-h .ct-line { stroke: #8a2be2 }
+rbr-rank-chart .ct-series-i .ct-line { stroke: #00bfff }
+rbr-rank-chart .ct-series-j .ct-line { stroke: #ff1493 }
+
+
+  rbr-rank-chart-legend svg {
+      vertical-align: middle;
   }
 
   rbr-barsets-chart .ct-bar {
@@ -70,6 +115,20 @@
   .rbr-team-desc-pointer {
     stroke-width: 1px;
     stroke-dasharray: 5,5;
+  }
+
+  .rbr-grid-day, .rbr-grid-markedpoint {
+      stroke-width: 1px;
+  stroke-dasharray: 6px 0;
+  }
+
+  .rbr-label-markedpoint {
+  alignment-baseline: after-edge;
+  fill: black;
+  }
+
+  .paco-elevation {
+    fill: #eee;
   }
 
 .ct-series-a .ct-bar, .ct-series-a .ct-line, .ct-series-a .ct-point, .ct-series-a .ct-slice-donut { stroke: #1f77b4 }
@@ -134,6 +193,25 @@
   <tab-set>
     <tab-menu></tab-menu>
 
+    <section is=rbr-tab-section id=time-distance-graph>
+      <h1>移動</h1>
+
+      <template>
+        <rbr-time-distance-graph>
+          <rbr-select-teams>
+            <popup-menu>
+              <button type=button>出場者</button>
+              <menu-main>
+                <rbr-list-main></rbr-list-main>
+              </menu-main>
+            </popup-menu>
+          </rbr-select-teams>
+          最大10人まで同時表示できます。
+
+          <rbr-graph-main><progress></progress></rbr-graph-main>
+        </rbr-time-distance-graph>
+      </template>
+    </section>
     <section is=rbr-tab-section id=markedpoint-team-graph>
       <h1>通過</h1>
 
@@ -143,7 +221,7 @@
             <select name=markedpoint_id required></select>
           </rbr-select-markedpoint>
 
-          <rbr-graph-main></rbr-graph-main>
+          <rbr-graph-main><progress></progress></rbr-graph-main>
         </rbr-markedpoint-team-graph>
       </template>
     </section>
@@ -165,7 +243,7 @@
             </popup-menu>
           </rbr-select-teams>
           
-          <rbr-graph-main></rbr-graph-main>
+          <rbr-graph-main><progress></progress></rbr-graph-main>
         </rbr-rank-graph>
       </template>
     </section>
@@ -175,6 +253,7 @@
 
 <script src=https://ibuki.run/js/commoncomponents.js data-export="$fill $paco" async></script>
 <script src=results.js async></script>
+<script src=routes.js async></script>
 <!--
   
 Copyright 2019-2024 Wakaba <wakaba@suikawiki.org>.
