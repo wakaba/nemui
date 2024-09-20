@@ -758,6 +758,7 @@ defineElement ({
       let pointsList = [base.routePoints, data.routePoints, data.forcedPoints];
       computeData (pointsList, computed);
         //computeDataPointTimes (pointsList, base.markedPoints, computed);
+        console.log (base, data, computed);
         
         let chartData = computed.dataToBase.filter (_ => _.effectiveIndex != null).map (_ => {
           let bp = computed.basePoints[_.effectiveIndex];
@@ -810,9 +811,9 @@ defineElement ({
       });
 
       chart.on ('created', function (ctx) {
-        let f = (ctx.axisX.chartRect.x2 - ctx.axisX.chartRect.x1) / (ctx.axisX.options.high - ctx.axisX.options.low);
+        let f = (ctx.axisX.chartRect.x2 - ctx.axisX.chartRect.x1) / (ctx.axisX.range.max - ctx.axisX.range.min);
         for (let x = minTime; x <= maxTime; x += 1) {
-          let xPixel = (x - ctx.axisX.options.low) * f;
+          let xPixel = (x - ctx.axisX.range.min) * f;
 
           let date = new Date ((x * 3600 + tz) * 1000);
           let hour = date.getUTCHours ();
@@ -835,9 +836,10 @@ defineElement ({
           }
         }
 
-        let g = (ctx.axisY.chartRect.y2 - ctx.axisY.chartRect.y1) / (ctx.bounds.high - ctx.bounds.low);
+        //console.log (ctx);
+        let g = (ctx.axisY.chartRect.y2 - ctx.axisY.chartRect.y1) / (ctx.axisY.range.max - ctx.axisY.range.min);
         base.markedPoints.forEach (mp => {
-          let yPixel = (mp.start_distance / 1000 - ctx.bounds.low) * g;
+          let yPixel = (mp.start_distance / 1000 - ctx.axisY.range.min) * g;
           
           ctx.svg.elem ('line', {
             x1: ctx.chartRect.x1,
@@ -859,12 +861,13 @@ defineElement ({
         let h = 300 / (maxElevation - minElevation);
         let pts = [];
         pts.push ([0, 0]);
+        let yPixel;
         base.routePoints.forEach (pt => {
-          let yPixel = (pt.start_distance / 1000 - ctx.bounds.low) * g;
+          yPixel = (pt.start_distance / 1000 - ctx.axisY.range.min) * g;
           let xPixel = (pt.elevation - minElevation) * h;
           pts.push ([xPixel, yPixel]);
         });
-        pts.push ([0, ctx.chartRect.y2 - ctx.chartRect.y1]);
+        pts.push ([0, yPixel]);
         let pl = ctx.svg.elem ('polyline', {
           points: pts.map (_ => [_[0] + ctx.chartRect.x1,
                                  _[1] + ctx.chartRect.y1].join (',')).join (' '),
