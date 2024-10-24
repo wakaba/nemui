@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<meta charset=utf-8>
+<title>nlfonts</title>
+<style>
+  @font-face {
+      font-family: nlsans;
+      src: url(https://fonts.suikawiki.org/opentype/namelogos/namelogossans.ttf);
+  }
+  @font-face {
+      font-family: nlserif;
+      src: url(https://fonts.suikawiki.org/opentype/namelogos/namelogosserif.ttf);
+  }
+  @font-face {
+      font-family: nlserif2;
+      src: url(https://fonts.suikawiki.org/opentype/namelogos/namelogosserif2.ttf);
+  }
+  @font-face {
+      font-family: Unknown;
+      src: url(https://fonts.suikawiki.org/opentype/fallback-question/fallback-question.ttf);
+  }
+
+  body {
+      font-size: 400%;
+      word-break: break-all;
+  }
+
+  .nlserif {
+      font-family: nlserif , Unknown;
+  }
+  .nlserif2 {
+      font-family: nlserif2 , Unknown;
+  }
+  .nlsans {
+      font-family: nlsans , Unknown;
+  }
+</style>
+
+<p>abcTeXandTEXandLaTeXandLATEX.Te,LaTe
+<p class=nlserif>nlserif: abcTeXandTEXandLaTeXandLATEX.Te,LaTe
+<p class=nlserif2>nlserif2: abcTeXandTEXandLaTeXandLATEX.Te,LaTe
+<p class=nlsans>nlsans: abcTeXandTEXandLaTeXandLATEX.Te,LaTe
+<p>abcTeXandTEXandLaTeXandLATEX.Te,LaTe
+  
