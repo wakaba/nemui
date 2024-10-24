@@ -28,6 +28,16 @@
       src: url(tags.ttf);
       unicode-range: U+0020, U+002F, U+E0000-E007F;
   }
+  @font-face {
+      font-family: "ulang5";
+      src: url(ulang5.ttf);
+      unicode-range: U+4e00, U+4e01, U+E0001-E007F, U+0030-3F, U+0020, U+002f;
+  }
+  @font-face {
+      font-family: "ulang6";
+      src: url(ulang6.ttf?11);
+      unicode-range: U+4e00, U+4e01, U+E0000-E007F, U+0030-3F, U+0020, U+002f;
+  }
 
   @font-face {
       font-family: Unknown;
@@ -43,6 +53,9 @@
   .ulang34 {
       font-family: ulang3, ulang4, unknown;
   }
+  .ulang3 {
+      font-family: ulang3, unknown;
+  }
   .ulang4 {
       font-family: ulang4, unknown;
   }
@@ -51,6 +64,15 @@
   }
   .tags {
       font-family: tags, unknown;
+  }
+  .ulang56 {
+      font-family: ulang5, ulang6, unknown;
+  }
+  .ulang5 {
+      font-family: ulang5, unknown;
+  }
+  .ulang6 {
+      font-family: ulang6, unknown;
   }
 
   body {
@@ -113,6 +135,13 @@
       &#xe0001;&#xe006b;&#xe006f;&#x4e01;&#xe007f;
       &#xe0001;&#xe006b;&#xe0070;&#x4e01;&#xe007f;
       &#xe0001;&#xe0076;&#xe0069;&#x4e01;&#xe007f;
+      /
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e01;&#xe007F;:
+    <p class=ulang3>3:
+      /
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e01;&#xe007F;:
     <p class=ulang4>4:
       &#xe0001;&#xe006b;&#xe006f;&#x4e00;&#xe007f;
       &#xe0001;&#xe006b;&#xe0070;&#x4e00;&#xe007f;
@@ -126,6 +155,7 @@
       3: [&#xE0069;]
       4: [&#xE007F;]
       /
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e00;&#xe007F;:
       :&#xE0001;&#xE006B;&#xE006f;&#x4e01;&#xe007F;:
     <p class=ulang32>32:
       &#xe0001;&#xe006b;&#xe006f;&#x4e00;&#xe007f;
@@ -188,5 +218,23 @@
   &#xE0070;&#xE0071;&#xE0072;&#xE0073;&#xE0074;&#xE0075;&#xE0076;&#xE0077; /
   &#xE0078;&#xE0079;&#xE007a;&#xE007b;&#xE007c;&#xE007d;&#xE007e;&#xE007f; /
 
+<p class=ulang56>56:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e01;&#xe007F;:
+<p class=ulang5>5:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e01;&#xe007F;:
+<p class=ulang6>6:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006B;&#xE006f;&#x4e01;&#xe007F;:
 
   
