@@ -11,7 +11,7 @@
   @font-face {
       font-family: "ulang2";
       src: url(ulang2.ttf);
-      unicode-range: U+4e01, U+E0000-E007F;
+      unicode-range: U+4e01, U+E0000-E007F, U+0030-3F, U+0020, U+002F;
   }
   @font-face {
       font-family: "ulang3";
@@ -37,6 +37,52 @@
       font-family: "ulang6";
       src: url(ulang6.ttf?13);
       unicode-range: U+4e00, U+4e01, U+E0000-E007F, U+0030-3F, U+0020, U+002f;
+  }
+  @font-face {
+      font-family: "ulang7";
+      src: url(ulang7.ttf?13);
+      unicode-range: U+4e00-4e01, U+E0076, U+E0069, U+E007F;
+  }
+  @font-face {
+      font-family: "ulang8";
+      src: url(ulang8.ttf?13);
+      unicode-range: U+4e00-4e01, U+E006B, U+E0070, U+E007F;
+  }
+  @font-face {
+      font-family: "ulang7a";
+      src: url(ulang7.ttf?13);
+      unicode-range: U+E0076, U+E0069, U+E007F;
+  }
+  @font-face {
+      font-family: "ulang8a";
+      src: url(ulang8.ttf?13);
+      unicode-range: U+E006B, U+E0070, U+E007F;
+  }
+  @font-face {
+      font-family: "ulang9";
+      src: url(ulang9.ttf?13);
+      unicode-range: U+4e00, U+E0000-E007F;
+  }
+  @font-face {
+      font-family: "ulang10";
+      src: url(ulang10.ttf?13);
+      unicode-range: U+4e01, U+E0000-E007F;
+  }
+  @font-face {
+      font-family: "ulang9a";
+      src: url(ulang9.ttf?13);
+      unicode-range: U+4e00;
+  }
+  @font-face {
+      font-family: "ulang10a";
+      src: url(ulang10.ttf?13);
+      unicode-range: U+4e01;
+  }
+
+    @font-face {
+      font-family: "ascii";
+      src: url(../local/fonts/akr.ttf);
+      unicode-range: U+0020-007F;
   }
 
   @font-face {
@@ -73,6 +119,54 @@
   }
   .ulang6 {
       font-family: ulang6, unknown;
+  }
+  .ulang7 {
+      font-family: ulang7, ascii, unknown;
+  }
+  .ulang8 {
+      font-family: ulang8, ascii, unknown;
+  }
+  .ulang78 {
+      font-family: ulang7, ulang8, ascii, unknown;
+  }
+  .ulang7a {
+      font-family: ulang7a, ascii, unknown;
+  }
+  .ulang8a {
+      font-family: ulang8a, ascii, unknown;
+  }
+  .ulang78a {
+      font-family: ulang7a, ulang8a, ascii, unknown;
+  }
+  .ulang9 {
+      font-family: ulang9, ascii, unknown;
+  }
+  .ulang10 {
+      font-family: ulang10, ascii, unknown;
+  }
+  .ulang910 {
+      font-family: ulang9, ulang10, ascii, unknown;
+  }
+  .ulang910b {
+      font-family: ulang9, ulang10, ascii, unknown;
+      font-feature-settings: "ss01" 1;
+  }
+  .ulang9a {
+      font-family: ulang9a, ascii, unknown;
+  }
+  .ulang10a {
+      font-family: ulang10a, ascii, unknown;
+  }
+  .ulang10b {
+      font-family: ulang10, ascii, unknown;
+      font-feature-settings: "ss01" 1;
+  }
+  .ulang910a {
+      font-family: ulang9a, ulang10a, ascii, unknown;
+  }
+  .ulang910ab {
+      font-family: ulang9a, ulang10a, ascii, unknown;
+      font-feature-settings: "ss01" 1;
   }
 
   body {
@@ -238,3 +332,288 @@
       :&#xE0001;&#xE006B;&#xE006f;&#x4e01;&#xe007F;:
 
   
+<p class=ulang7>7:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang8>8:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang78>78:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang78>&#xE006b;&#xE0070;&#x4e01;&#xe007F;
+  
+<p class=ulang7a>7a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang8a>8a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang78a>78a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang78a>&#xE006b;&#xE0070;&#x4e01;&#xe007F;
+
+
+  <p class=ulang9>9:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang10>10:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang10b>10b:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang910>910:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang910b>910b:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+  <p class=ulang9a>9a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang10a>10a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+<p class=ulang910a>910a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xe007F;:
+
+  <p class=ulang9>9:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+<p class=ulang10>10: 
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+<p class=ulang910>910 Ch:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e02;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+<p class=ulang910b>910b:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e02;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+  <p class=ulang9a>9a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+<p class=ulang10a>10a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+<p class=ulang910a>910a:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+<p class=ulang910ab>910ab:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+
+<p class=serif>12:
+  :&#x4e00;:
+  :&#x4e01;:
+    /
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e00;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE006f;&#x4e01;&#xE0001;&#xE006b;&#xE006f;&#xe007F;:
+    /
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e00;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+      :&#xE0001;&#xE006b;&#xE0070;&#x4e01;&#xE0001;&#xE006b;&#xE0070;&#xe007F;:
+    /
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e00;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
+      :&#xE0001;&#xE0076;&#xE0069;&#x4e01;&#xE0001;&#xE0076;&#xE0069;&#xe007F;:
