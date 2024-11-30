@@ -1,0 +1,3 @@
+FROM quay.io/wakaba/base:sid
+
+ADD mirrordata/ /app/data/mirror/@@MIRROR_SET@@/

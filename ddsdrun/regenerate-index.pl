@@ -31,8 +31,9 @@ sub open_tag_index ($$$) {
   };
 } # open_tag_index
 
-sub regenerate_computed_index ($$$$$) {
-  my ($states, $base_path, $site_type, $site_name, $site_opts) = @_;
+sub regenerate_computed_index ($$$$$$) {
+  my ($states, $base_path, $site_type, $site_name, $site_opts,
+      $touched_mirror_sets) = @_;
   my $esite_name = escape $site_name;
   my $index_parent_path = $base_path->child
       ("snapshots/$site_type/$esite_name");
@@ -46,7 +47,7 @@ sub regenerate_computed_index ($$$$$) {
         if defined $mirrorzip_files->{$mirror_set};
     my $mirrorzip_path = $base_path->child
         ("mirror/$mirror_set/index/mirror-$site_type-$esite_name.jsonl");
-    return $mirrorzip_path->parent->mkpath->then (sub {
+    return Promised::File->new_from_path ($mirrorzip_path->parent)->mkpath->then (sub {
       my $mirrorzip_file = $mirrorzip_path->openw;
       return $mirrorzip_files->{$mirror_set} = $mirrorzip_file;
     });
@@ -199,6 +200,7 @@ sub regenerate_computed_index ($$$$$) {
               my $mirrorzip_file = $_[0];
               print $mirrorzip_file perl2json_bytes $item;
               print $mirrorzip_file "\x0A";
+              $touched_mirror_sets->{$mirror_set} = 1;
             });
           });
         } [keys %pack_name];
@@ -229,6 +231,7 @@ sub regenerate_computed () {
   my $base_path = $DataRootPath;
   my $states = {};
   my $snapshot_index_path = $base_path->child ("snapshots/index.json");
+  my $touched_mirror_sets = {};
   my $file = Promised::File->new_from_path ($snapshot_index_path);
   return $file->read_byte_string->then (sub {
     my $json = json_bytes2perl $_[0];
@@ -237,9 +240,15 @@ sub regenerate_computed () {
         my $data = shift;
         return regenerate_computed_index
             ($states, $base_path, $data->{site_type}, $data->{site_name},
-             $data->{site_opts});
+             $data->{site_opts}, $touched_mirror_sets);
       } [values %{$_[0]}];
     } [values %$json];
+  })->then (sub {
+    my $make_path = $ThisPath->child ('Makefile.reindextemp');
+    my $make = sprintf "all:\n%s\n", join "", map {
+      sprintf "\t\$(MAKE) build-mirror-image MIRROR_SET=%s\n", $_;
+    } keys %$touched_mirror_sets;
+    return Promised::File->new_from_path ($make_path)->write_byte_string ($make);
   });
 } # regenerate_computed
 

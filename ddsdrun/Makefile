@@ -16,10 +16,24 @@ batch:
 	mv local/ddsddata-data ddsddata/data
 	$(MAKE) build-ddsd build-main
 	-chmod ugo+r -R ddsddata/data
-	docker build -t $(DOCKER_IMAGE) .
 	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
+	$(MAKE) -f Makefile.reindextemp 
+	docker build -t $(DOCKER_IMAGE) .
 	docker push $(DOCKER_IMAGE)
 	$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash
+
+MIRROR_SET=...
+build-mirror-image:
+	mkdir -p local/mirror-image/$(MIRROR_SET)
+	cat Dockerfile.ddsdmirror | sed -e s%@@MIRROR_SET@@%$(MIRROR_SET)%g \
+	> local/mirror-image/$(MIRROR_SET)/Dockerfile
+	mv ddsddata/data/mirror/$(MIRROR_SET) \
+	local/mirror-image/$(MIRROR_SET)/mirrordata
+	cd local/mirror-image/$(MIRROR_SET) && \
+	docker build -t $(DOCKER_IMAGE)-$(MIRROR_SET) .
+	docker push $(DOCKER_IMAGE)-$(MIRROR_SET)
+	mv local/mirror-image/$(MIRROR_SET)/mirrordata \
+	ddsddata/data/mirror/$(MIRROR_SET)
 
 BUILD_MAIN = build-main-dev
 build-main: $(BUILD_MAIN)
