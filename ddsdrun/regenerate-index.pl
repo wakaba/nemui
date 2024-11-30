@@ -42,7 +42,7 @@ sub regenerate_computed_index ($$$$$) {
   my $mirrorzip_files = {};
   my $get_mirrorzip_file = sub ($) {
     my $mirror_set = $_[0];
-    return $mirrorzip_files->{$mirror_set}
+    return Promise->resolve ($mirrorzip_files->{$mirror_set})
         if defined $mirrorzip_files->{$mirror_set};
     my $mirrorzip_path = $base_path->child
         ("mirror/$mirror_set/index/mirror-$site_type-$esite_name.jsonl");

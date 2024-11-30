@@ -449,10 +449,12 @@ sub main () {
       die "Bad |large_set_prefix|" 
           unless $args{large_set_prefix} =~ m{\Al[1-9][0-9]*\z};
 
-      # XXX
-      $args{set_prefix} ||= 0;
-      $args{set_prefix}++;
-      $states_sets->{modified} = 1;
+      unless ($args{set_prefix}) {
+        $args{set_prefix} ||= 0;
+        $args{set_prefix}++;
+        $states_sets->{set_prefix} = $args{set_prefix};
+        $states_sets->{modified} = 1;
+      }
       
       my $started = time;
       my $end_time = $started + $timeout;
