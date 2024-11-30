@@ -20,7 +20,7 @@ batch:
 	$(MAKE) -f Makefile.reindextemp 
 	docker build -t $(DOCKER_IMAGE) .
 	docker push $(DOCKER_IMAGE)
-	$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash
+	bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
 
 MIRROR_SET=...
 build-mirror-image:
@@ -41,6 +41,7 @@ build-main: $(BUILD_MAIN)
 build-main-live:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
+	rm -fr ddsddata/data/mirror-index
 	mv ddsddata/data/mirror mirror
 	#
 	git config --global user.email "ci@test"
@@ -70,10 +71,10 @@ build-main-dev:
 	cd ddsddata && git add data && git commit -m current && git push
 	#
 	mv mirror ddsddata/data/mirror
-	@for file in $(wildcard ddsddata/data/mirror-index/*); do \
-	  if [ -e "$$file" ]; then \
-	    name=$$(basename "$$file"); \
-	    mv "$$file" "ddsddata/data/mirror/$$name/index"; \
+	@for dir in $(wildcard ddsddata/data/mirror-index/*); do \
+	  if [ -d "$$dir" ]; then \
+	    name=$$(basename "$$dir"); \
+	    mv "$$dir" "ddsddata/data/mirror/$$name/index"; \
 	  fi; \
 	done
 

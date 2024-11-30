@@ -163,11 +163,14 @@ sub regenerate_computed_index ($$$$$$) {
                 for (@{$site_opts->{tags} or []}) {
                   $tag->{$_} = 1;
                 }
-                if ($summary->{length} > 100*1024*1024) {
-                  if ($summary->{length} > 1*1024*1024*1024) {
-                    $tag->{'1GB+'} = 1;
+                if ($summary->{length} > 10*1024*1024) {
+                  if ($summary->{length} > 100*1024*1024) {
+                    if ($summary->{length} > 1*1024*1024*1024) {
+                      $tag->{'1GB+'} = 1;
+                    }
+                    $tag->{'100MB+'} = 1;
                   }
-                  $tag->{'100MB+'} = 1;
+                  $tag->{'10MB+'} = 1;
                 }
                 for my $file (values %{$summary->{files} or {}}) {
                   if (defined $file->{set_type}) {
