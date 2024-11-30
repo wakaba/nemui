@@ -89,9 +89,9 @@ sub filter_legal ($) {
   } @{$_[0]}];
 } # filter_legal
 
-sub add_to_local_index ($$$$$$$$) {
+sub add_to_local_index ($$$$$$$$$$) {
   my ($site_type, $site_name, $pack_name, $time, $files, $legal,
-      $mirrorzip, $mirrorzip_name) = @_;
+      $mirrorzip, $mirrorzip_name, $set_prefix, $large_set_prefix) = @_;
   my $esite_name = escape $site_name;
   my $epack_name = escape $pack_name;
   my $base_path = $DataRootPath;
@@ -139,6 +139,11 @@ sub add_to_local_index ($$$$$$$$) {
     $index_line->[3]->{is_free} = $legal->{is_free} // 'unknown';
     my $is_free = $index_line->[3]->{is_free} eq 'free';
     my $mirror_set = $is_free ? 'free' : 'nonfree';
+    if ($mirrorzip->{length} > 10*1024*1024) {
+      $mirror_set .= '-' . $large_set_prefix;
+    } else {
+      $mirror_set .= '-' . $set_prefix if length $set_prefix;
+    }
     my $ref_key = $index_line->[2] = sha256_hex join $;,
         $ThisRev,
         (encode_web_utf8 $shash),
@@ -365,7 +370,9 @@ sub process_remote_index ($$$$;%) {
         return add_to_local_index ($site_type, $site_name, $pack_name, $now,
                                    $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
                                    $_[0]->[2]->{json},
-                                   "local/tmp/$key.mirrorzip.zip");
+                                   "local/tmp/$key.mirrorzip.zip",
+                                   $args{set_prefix},
+                                   $args{large_set_prefix});
       });
     } $results;
   })->then (sub {
@@ -387,12 +394,14 @@ sub process_remote_index ($$$$;%) {
   });
 } # process_remote_index
 
-sub run ($$$$) {
-  my ($root_url, $site_type, $site_name, $opts) = @_;
+sub run ($$$$;%) {
+  my ($root_url, $site_type, $site_name, $opts, %args) = @_;
   return Promise->resolve->then (sub {
     return pull_remote_index ($site_name, $root_url);
   })->then (sub {
-    return process_remote_index ($site_type, $site_name, $root_url, $opts, limit => 10);
+    return process_remote_index ($site_type, $site_name, $root_url, $opts,
+                                 limit => 10,
+                                 %args);
   });
 } # run
 
@@ -408,13 +417,41 @@ sub main () {
     my $path = $base_path->child
         ('local/data/root/files/list.json');
     my $file = Promised::File->new_from_path ($path);
-    return $file->read_byte_string->then (sub {
-      my $json = json_bytes2perl $_[0];
+    my $states_sets_path = $base_path->child ("states/sets.json");
+    my $states_sets_file = Promised::File->new_from_path ($states_sets_path);
+    my $states_sets;
+    return Promise->all ([
+      $file->read_byte_string,
+      $states_sets_file->is_file->then (sub {
+        if ($_[0]) {
+          return $states_sets_file->read_byte_string;
+        } else {
+          return '{}';
+        }
+      }),
+    ])->then (sub {
+      my $json = json_bytes2perl $_[0]->[0];
       my $sites = $json->{items};
 
       $sites = rand_limit $sites, 30;
       my $timeout = $ENV{LIVE} ? 60*15 : 60*10;
 
+      $states_sets = json_bytes2perl $_[0]->[1];
+
+      my %args = (
+        set_prefix => $states_sets->{set_prefix} // '',
+        large_set_prefix => $states_sets->{large_set_prefix} // '',
+      );
+      die "Bad |set_prefix|"
+          unless $args{set_prefix} =~ m{\A(?:[1-9][0-9]*|)\z};
+      die "Bad |large_set_prefix|" 
+          unless $args{large_set_prefix} =~ m{\Al[1-9][0-9]*\z};
+
+      # XXX
+      $args{set_prefix} ||= 0;
+      $args{set_prefix}++;
+      $states_sets->{modified} = 1;
+      
       my $started = time;
       my $end_time = $started + $timeout;
       return promised_until {
@@ -424,13 +461,18 @@ sub main () {
         my ($root_url, $site_type, $site_name, $opts) = @$item;
         $opts //= {};
         $opts->{end_time} = $end_time;
-        return run ($root_url, $site_type, $site_name, $opts)->then (sub {
+        return run ($root_url, $site_type, $site_name, $opts, %args)->then (sub {
           if ($end_time < time) {
             return 'done';
           }
           return not 'done';
         });
       };
+    })->then (sub {
+      return unless $states_sets->{modified};
+      delete $states_sets->{modified};
+      return $states_sets_file->write_byte_string
+          (perl2json_bytes_for_record $states_sets);
     });
   });
 } # main

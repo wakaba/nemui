@@ -4,7 +4,6 @@ all:
 
 CURL = curl
 
-BUILD_MAIN = build-main-dev
 DOCKER_IMAGE = $$DDSDRUN_DOCKER_IMAGE
 DOCKER_REGISTRY := $(shell echo $$DDSDRUN_DOCKER_IMAGE | awk -F/ '{print $$1}')
 
@@ -22,7 +21,7 @@ batch:
 	docker push $(DOCKER_IMAGE)
 	$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash
 
-build: build-for-docker-from-old build-ddsd build-main
+BUILD_MAIN = build-main-dev
 build-main: $(BUILD_MAIN)
 
 build-main-live:
@@ -41,8 +40,15 @@ build-main-dev:
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
 	rm -fr ddsddata/data/local ddsddata/data/config
 	#
-	mv ddsddata/data/mirror/free/index ddsddata/data/mirror-free-index
-	mv ddsddata/data/mirror/nonfree/index ddsddata/data/mirror-nonfree-index
+	mkdir -p ddsddata/data/mirror-index
+	@for dir in $(wildcard ddsddata/data/mirror/*); do \
+	  if [ -d "$$dir" ]; then \
+	    name=$$(basename "$$dir"); \
+	    if [ -e "$$dir/index" ]; then \
+	      mv "$$dir/index" "ddsddata/data/mirror-index/$$name"; \
+	    fi; \
+	  fi; \
+	done
 	mv ddsddata/data/mirror mirror
 	#
 	git config --global user.email "ci@test"
@@ -50,16 +56,12 @@ build-main-dev:
 	cd ddsddata && git add data && git commit -m current && git push
 	#
 	mv mirror ddsddata/data/mirror
-	mv ddsddata/data/mirror-free-index ddsddata/data/mirror/free/index
-	mv ddsddata/data/mirror-nonfree-index ddsddata/data/mirror/nonfree/index
-
-build-for-docker: 
-	-chmod ugo+r -R ddsddata/data
-
-build-for-docker-from-old:
-	mkdir -p local
-	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE) cp -R /app/data /local/ddsddata-data
-	mkdir -p local/ddsddata-data
+	@for file in $(wildcard ddsddata/data/mirror-index/*); do \
+	  if [ -e "$$file" ]; then \
+	    name=$$(basename "$$file"); \
+	    mv "$$file" "ddsddata/data/mirror/$$name/index"; \
+	  fi; \
+	done
 
 build-ddsd:
 	$(CURL) -f https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
