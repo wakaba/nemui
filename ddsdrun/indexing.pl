@@ -438,6 +438,8 @@ sub main () {
 
       $states_sets = json_bytes2perl $_[0]->[1];
 
+      $states_sets->{large_set_prefix} //= do { $states_sets->{modified} = 1; 'l1' };
+
       my %args = (
         set_prefix => $states_sets->{set_prefix} // '',
         large_set_prefix => $states_sets->{large_set_prefix} // '',
