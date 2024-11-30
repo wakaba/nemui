@@ -41,7 +41,6 @@ build-main: $(BUILD_MAIN)
 build-main-live:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
-	rm -fr ddsddata/data/mirror-index
 	mv ddsddata/data/mirror mirror
 	#
 	git config --global user.email "ci@test"
@@ -54,6 +53,7 @@ build-main-dev:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
 	rm -fr ddsddata/data/local ddsddata/data/config
+	rm -fr ddsddata/data/mirror-index
 	#
 	mkdir -p ddsddata/data/mirror-index
 	@for dir in $(wildcard ddsddata/data/mirror/*); do \
