@@ -67,6 +67,9 @@ test1:
 build-for-docker:
 	cd ddsdrun && make build build-for-docker
 
+ddsd-batch:
+	cd ddsdrun && make batch
+
 x-build-for-docker:
 	mkdir -p local/data
 	echo abc > local/data/abc.txt

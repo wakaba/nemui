@@ -311,11 +311,13 @@ sub process_remote_index ($$$$;%) {
     $results = rand_limit $results, $args{limit};
     
     return promised_for {
+      my $now = time;
+      return if $opts->{end_time} < $now;
+      
       my ($pack_name, $pack_url) = @{$_[0]};
       my $epack_name = escape $pack_name;
       my $key = sha256_hex "$esite_name--$epack_name";
       
-      my $now = time;
       return ddsd (
         {wd => $base_path},
         'add',
@@ -411,18 +413,19 @@ sub main () {
       my $sites = $json->{items};
 
       $sites = rand_limit $sites, 30;
-      my $timeout = $ENV{LIVE} ? 60*30 : 60*10;
+      my $timeout = $ENV{LIVE} ? 60*15 : 60*10;
 
       my $started = time;
+      my $end_time = $started + $timeout;
       return promised_until {
         my $item = shift @$sites;
         return 'done' unless defined $item;
         
         my ($root_url, $site_type, $site_name, $opts) = @$item;
         $opts //= {};
+        $opts->{end_time} = $end_time;
         return run ($root_url, $site_type, $site_name, $opts)->then (sub {
-          my $elapsed = time - $started;
-          if ($elapsed > $timeout) {
+          if ($end_time < time) {
             return 'done';
           }
           return not 'done';

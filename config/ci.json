@@ -1,12 +1,12 @@
 {
   "github": {
     "build": [
-      {"run": "make build-for-docker",
-       "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE"]},
-      {"docker_build": "$DDSDRUN_DOCKER_IMAGE"}
+      {"run": "make ddsd-batch",
+       "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE",
+                   "BWALLER_URL", "DOCKER_USER", "DOCKER_PASS"]}
     ],
     "tests": [
-      {"docker_push": "$DDSDRUN_DOCKER_IMAGE", "branch": "ddsdrun"}
+      "true"
     ]
   }
 }

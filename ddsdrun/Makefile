@@ -6,13 +6,22 @@ CURL = curl
 
 BUILD_MAIN = build-main-dev
 DOCKER_IMAGE = $$DDSDRUN_DOCKER_IMAGE
+DOCKER_REGISTRY := $(shell echo $$DDSDRUN_DOCKER_IMAGE | awk -F/ '{print $$1}')
+
+batch:
+	$(MAKE) build
+	$(MAKE) build-for-docker
+	docker build -t $(DOCKER_IMAGE) .
+	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
+	docker push $(DOCKER_IMAGE)
+	$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash
 
 build: build-for-docker-from-old build-ddsd build-main
 build-main: $(BUILD_MAIN)
 
 build-main-live:
 	git clone $$DDSDDATA_GIT -b master ddsddata
-	rm -fr ddsddata/data
+	rm -fr ddsddata/data 
 	mv local/ddsddata-data ddsddata/data
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
