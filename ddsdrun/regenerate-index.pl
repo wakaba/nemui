@@ -46,7 +46,7 @@ sub regenerate_computed_index ($$$$$) {
         if defined $mirrorzip_files->{$mirror_set};
     my $mirrorzip_path = $base_path->child
         ("mirror/$mirror_set/index/mirror-$site_type-$esite_name.jsonl");
-    return $mirrorzip_path->mkpath->then (sub {
+    return $mirrorzip_path->parent->mkpath->then (sub {
       my $mirrorzip_file = $mirrorzip_path->openw;
       return $mirrorzip_files->{$mirror_set} = $mirrorzip_file;
     });
