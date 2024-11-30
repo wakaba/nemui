@@ -9,8 +9,14 @@ DOCKER_IMAGE = $$DDSDRUN_DOCKER_IMAGE
 DOCKER_REGISTRY := $(shell echo $$DDSDRUN_DOCKER_IMAGE | awk -F/ '{print $$1}')
 
 batch:
-	$(MAKE) build
-	$(MAKE) build-for-docker
+	mkdir -p local
+	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE) cp -R /app/data /local/ddsddata-data
+	mkdir -p local/ddsddata-data
+	git clone $$DDSDDATA_GIT -b master ddsddata
+	rm -fr ddsddata/data 
+	mv local/ddsddata-data ddsddata/data
+	$(MAKE) build-ddsd build-main
+	-chmod ugo+r -R ddsddata/data
 	docker build -t $(DOCKER_IMAGE) .
 	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
 	docker push $(DOCKER_IMAGE)
@@ -20,9 +26,6 @@ build: build-for-docker-from-old build-ddsd build-main
 build-main: $(BUILD_MAIN)
 
 build-main-live:
-	git clone $$DDSDDATA_GIT -b master ddsddata
-	rm -fr ddsddata/data 
-	mv local/ddsddata-data ddsddata/data
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
 	mv ddsddata/data/mirror mirror
@@ -34,9 +37,6 @@ build-main-live:
 	mv mirror ddsddata/data/mirror
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
 build-main-dev:
-	git clone $$DDSDDATA_GIT -b master ddsddata
-	rm -fr ddsddata/data
-	mv local/ddsddata-data ddsddata/data
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
 	rm -fr ddsddata/data/local ddsddata/data/config
