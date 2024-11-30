@@ -16,7 +16,7 @@
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
             },
             {
-               "run" : "mkdir -p ~/.ssh && \u000A      echo \u0022${{ secrets.SSH_PRIVATE_KEY }}\u0022 > ~/.ssh/id_rsa && \u000A      chmod 600 ~/.ssh/id_rsa && \u000A      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts && \u000A      echo -e \u0022Host github.com\u005Cn  IdentityFile ~/.ssh/id_rsa\u005Cn  StrictHostKeyChecking no\u0022 > ~/.ssh/config && \u000A      chmod 600 ~/.ssh/config"
+               "run" : "mkdir -p ~/.ssh && \u000A      echo \u0022${{ secrets.GH_GIT_KEY }}\u0022 > ~/.ssh/id_rsa && \u000A      chmod 600 ~/.ssh/id_rsa && \u000A      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts && \u000A      echo -e \u0022Host github.com\u005Cn  IdentityFile ~/.ssh/id_rsa\u005Cn  StrictHostKeyChecking no\u0022 > ~/.ssh/config && \u000A      chmod 600 ~/.ssh/config"
             },
             {
                "env" : {

@@ -2,7 +2,7 @@
   "github": {
     "build": [
       {
-        "run": "mkdir -p ~/.ssh && \n      echo \"${{ secrets.SSH_PRIVATE_KEY }}\" > ~/.ssh/id_rsa && \n      chmod 600 ~/.ssh/id_rsa && \n      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts && \n      echo -e \"Host github.com\\n  IdentityFile ~/.ssh/id_rsa\\n  StrictHostKeyChecking no\" > ~/.ssh/config && \n      chmod 600 ~/.ssh/config"
+        "run": "mkdir -p ~/.ssh && \n      echo \"${{ secrets.GH_GIT_KEY }}\" > ~/.ssh/id_rsa && \n      chmod 600 ~/.ssh/id_rsa && \n      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts && \n      echo -e \"Host github.com\\n  IdentityFile ~/.ssh/id_rsa\\n  StrictHostKeyChecking no\" > ~/.ssh/config && \n      chmod 600 ~/.ssh/config"
       },
       
       {"run": "make ddsd-batch",
