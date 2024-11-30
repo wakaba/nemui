@@ -38,23 +38,28 @@ sub regenerate_computed_index ($$$$$) {
       ("snapshots/$site_type/$esite_name");
   my $index_all_path = $base_path->child
       ("indexes/$site_type/$esite_name/all.jsonl");
-  my $free_mirrorzip_path = $base_path->child
-      ("mirror/free/index/mirror-$site_type-$esite_name.jsonl");
-  my $nonfree_mirrorzip_path = $base_path->child
-      ("mirror/nonfree/index/mirror-$site_type-$esite_name.jsonl");
-  return Promised::File->new_from_path ($base_path->child ("indexes/tags"))->mkpath->then (sub {
-    return Promised::File->new_from_path ($index_all_path->parent)->mkpath;
-  })->then (sub {
-    return Promised::File->new_from_path ($free_mirrorzip_path->parent)->mkpath;
-  })->then (sub {
-    return Promised::File->new_from_path ($nonfree_mirrorzip_path->parent)->mkpath;
-  })->then (sub {
-    return Promised::File->new_from_path ($index_parent_path)->get_child_names;
-  })->then (sub {
-    my $names = [grep { /^index-[0-9a-f]{2}\.jsonl$/ } @{$_[0]}];
+  my $states_sets_path = $base_path->child ("states/sets.json");
+  my $mirrorzip_files = {};
+  my $get_mirrorzip_file = sub ($) {
+    my $mirror_set = $_[0];
+    return $mirrorzip_files->{$mirror_set}
+        if defined $mirrorzip_files->{$mirror_set};
+    my $mirrorzip_path = $base_path->child
+        ("mirror/$mirror_set/index/mirror-$site_type-$esite_name.jsonl");
+    return $mirrorzip_path->mkpath->then (sub {
+      my $mirrorzip_file = $mirrorzip_path->openw;
+      return $mirrorzip_files->{$mirror_set} = $mirrorzip_file;
+    });
+  }; # $get_mirrorzip_file
+  return Promise->all ([
+    Promised::File->new_from_path ($index_parent_path)->get_child_names,
+    Promised::File->new_from_path ($states_sets_path)->read_byte_string,
+    Promised::File->new_from_path ($base_path->child ("indexes/tags"))->mkpath,
+    Promised::File->new_from_path ($index_all_path->parent)->mkpath,
+  ])->then (sub {
+    my $names = [grep { /^index-[0-9a-f]{2}\.jsonl$/ } @{$_[0]->[0]}];
+    my $states_sets = json_bytes2perl $_[0]->[1];
     my $index_all_file = $index_all_path->openw;
-    my $free_mirrorzip_file = $free_mirrorzip_path->openw;
-    my $nonfree_mirrorzip_file = $nonfree_mirrorzip_path->openw;
     return promised_for {
       my $path = $index_parent_path->child ($_[0]);
       my $file = Promised::File->new_from_path ($path);
@@ -79,7 +84,8 @@ sub regenerate_computed_index ($$$$$) {
         }
 
         my %pack_name = (%$packs, %$full_packs, %$any_packs);
-        for my $pack_name (keys %pack_name) {
+        return promised_for {
+          my $pack_name = $_[0];
           my $current = $packs->{$pack_name} // $full_packs->{$pack_name} // $any_packs->{$pack_name};
 
           my $epack_name = escape $pack_name;
@@ -180,40 +186,42 @@ sub regenerate_computed_index ($$$$$) {
                 print $file "\x0A";
               }
             }
-            {
-              my $item = [
-                $current->[1],
-                "../$site_type/$esite_name/$current->[1].zip",
-                $summary->{mirrorzip}->{sha256},
-                $summary->{mirrorzip}->{length},
-              ];
-              if ($summary->{legal}->{is_free} eq 'free') {
-                print $free_mirrorzip_file perl2json_bytes $item;
-                print $free_mirrorzip_file "\x0A";
-              } else {
-                print $nonfree_mirrorzip_file perl2json_bytes $item;
-                print $nonfree_mirrorzip_file "\x0A";
-              }
-            }
+
+            my $item = [
+              $current->[1],
+              "../$site_type/$esite_name/$current->[1].zip",
+              $summary->{mirrorzip}->{sha256},
+              $summary->{mirrorzip}->{length},
+            ];
+
+            my $mirror_set = $summary->{mirrorzip}->{set};
+            return $get_mirrorzip_file ($mirror_set)->then (sub {
+              my $mirrorzip_file = $_[0];
+              print $mirrorzip_file perl2json_bytes $item;
+              print $mirrorzip_file "\x0A";
+            });
           });
-        }
+        } [keys %pack_name];
       });
     } $names;
   })->then (sub {
-    my $mirror_index_path = $base_path->child
-        ("mirror/free/index/packref.json");
-    my $file = Promised::File->new_from_path ($mirror_index_path);
-    my $lock = AbortController->new;
-    return $file->lock_new_file (signal => $lock->signal)->then (sub {
-      return $file->read_byte_string;
-    })->then (sub {
-      my $json = length $_[0] ? json_bytes2perl $_[0] : {};
-      die "Bad json" unless defined $json;
-      $json->{type} //= "packref";
-      $json->{source}->{type} //= "files";
-      $json->{source}->{files}->{"file:r:$site_type-$esite_name"}->{url} = "$site_type-$esite_name.jsonl";
-      return $file->write_byte_string (perl2json_bytes_for_record $json);
-    });
+    return promised_for {
+      my $mirror_set = $_[0];
+      my $mirror_index_path = $base_path->child
+          ("mirror/$mirror_set/index/packref.json");
+      my $file = Promised::File->new_from_path ($mirror_index_path);
+      my $lock = AbortController->new;
+      return $file->lock_new_file (signal => $lock->signal)->then (sub {
+        return $file->read_byte_string;
+      })->then (sub {
+        my $json = length $_[0] ? json_bytes2perl $_[0] : {};
+        die "Bad json" unless defined $json;
+        $json->{type} //= "packref";
+        $json->{source}->{type} //= "files";
+        $json->{source}->{files}->{"file:r:$site_type-$esite_name"}->{url} = "mirror-$site_type-$esite_name.jsonl";
+        return $file->write_byte_string (perl2json_bytes_for_record $json);
+      });
+    } [keys %$mirrorzip_files];
   });
 } # regenerate_computed_index
 
