@@ -195,7 +195,7 @@ sub regenerate_computed_index ($$$$$) {
             ];
 
             my $mirror_set = $summary->{mirrorzip}->{set};
-            return $get_mirrorzip_file ($mirror_set)->then (sub {
+            return $get_mirrorzip_file->($mirror_set)->then (sub {
               my $mirrorzip_file = $_[0];
               print $mirrorzip_file perl2json_bytes $item;
               print $mirrorzip_file "\x0A";

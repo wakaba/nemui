@@ -434,7 +434,7 @@ sub main () {
       my $sites = $json->{items};
 
       $sites = rand_limit $sites, 30;
-      my $timeout = $ENV{LIVE} ? 60*15 : 60*10;
+      my $timeout = $ENV{LIVE} ? 60*15 : 60*1;
 
       $states_sets = json_bytes2perl $_[0]->[1];
 
