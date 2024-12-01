@@ -27,6 +27,8 @@ batch:
 	$(MAKE) build-ddsd build-main
 	-chmod ugo+r -R ddsddata/data
 	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
+	# XXXX
+	ls -R ddsddata
 	$(MAKE) -f Makefile.reindextemp
 	mv ddsddata/data/mirror ./
 	docker build -t $(DOCKER_IMAGE) .
