@@ -88,6 +88,7 @@ sub regenerate_computed_index ($$$$$$) {
         return promised_for {
           my $pack_name = $_[0];
           my $current = $packs->{$pack_name} // $full_packs->{$pack_name} // $any_packs->{$pack_name};
+          my $current_is_latest = $current->[1] eq $any_packs->{$pack_name}->[1];
 
           my $epack_name = escape $pack_name;
           my $pack_index_path = $base_path->child
@@ -120,6 +121,7 @@ sub regenerate_computed_index ($$$$$$) {
                 $tag->{broken} = 1 if $summary->{broken};
                 $tag->{'non-free'} = 1 if $summary->{legal}->{is_free} eq 'non-free';
                 $tag->{'license unknown'} = 1 if $summary->{legal}->{is_free} eq 'unknown';
+                $tag->{'latest problematic'} = 1 unless $current_is_latest;
                 $tag->{$summary->{package}->{author}} = 1;
                 $tag->{$summary->{package}->{org}} = 1;
                 $tag->{$_} = 1 for @{$summary->{package}->{tags}};
