@@ -4,7 +4,7 @@ all:
 
 CURL = curl
 
-DOCKER_IMAGE = $$DDSDRUN_DOCKER_IMAGE
+DOCKER_IMAGE = $${DDSDRUN_DOCKER_IMAGE}
 DOCKER_REGISTRY := $(shell echo $$DDSDRUN_DOCKER_IMAGE | awk -F/ '{print $$1}')
 
 batch:
