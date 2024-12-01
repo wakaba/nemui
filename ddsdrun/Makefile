@@ -19,6 +19,11 @@ batch:
 	touch ddsddata/data/states/mirror_set/free_large_set.txt
 	touch ddsddata/data/states/mirror_set/nonfree_set.txt
 	touch ddsddata/data/states/mirror_set/nonfree_large_set.txt
+	#XXX
+	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirror_set/free_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirror_set/free_set.txt` /ddsddata/data/mirror/
+	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirror_set/free_large_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirror_set/free_large_set.txt` /ddsddata/data/mirror/
+	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirror_set/nonfree_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirror_set/nonfree_set.txt` /ddsddata/data/mirror/
+	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirror_set/nonfree_large_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirror_set/nonfree_large_set.txt` /ddsddata/data/mirror/
 	$(MAKE) build-ddsd build-main
 	-chmod ugo+r -R ddsddata/data
 	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
