@@ -82,13 +82,7 @@ build-main-dev:
 	git config --global user.name "Auto"
 	cd ddsddata && git add data && git commit -m current && git push
 	#
-	mv mirror ddsddata/data/mirror
-	@for dir in $(wildcard ddsddata/data/mirror-index/*); do \
-	  if [ -d "$$dir" ]; then \
-	    name=$$(basename "$$dir"); \
-	    mv "$$dir" "ddsddata/data/mirror/$$name/index"; \
-	  fi; \
-	done
+	#mv mirror ddsddata/data/mirror
 
 build-ddsd:
 	$(CURL) -f https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
