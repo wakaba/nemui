@@ -16,7 +16,7 @@ my $ThisPath = path (__FILE__)->parent;
 my $DataRootPath = $ThisPath->child ('ddsddata/data');
 my $DDSDPath = $ThisPath->child ('ddsd')->absolute;
 
-my $ThisRev = $ENV{LIVE} ? 4 : 5;
+my $ThisRev = $ENV{LIVE} ? 4 : 6;
 
 sub escape ($) {
   my $s = shift;
@@ -147,7 +147,8 @@ sub add_to_local_index ($$$$$$$$$) {
         $ThisRev,
         (encode_web_utf8 $shash),
         (encode_web_utf8 $index_line->[3]->{is_free}),
-        $index_line->[3]->{insecure} ? 1 : 0;
+        $index_line->[3]->{insecure} ? 1 : 0,
+        $index_line->[3]->{broken} ? 1 : 0;
 
     my $summary = {};
     {
@@ -264,33 +265,54 @@ sub add_to_local_index ($$$$$$$$$) {
         ("mirror/$mirror_set/$site_type/$esite_name/$ref_key.zip");
     my $states_siterefs_path = $base_path->child
         ("states/siterefs/siterefs-$site_type-$esite_name.json");
+    my $states_sitepackrefs_path = $base_path->child
+        ("states/sitepackrefs/sitepackrefs-$site_type-$esite_name.json");
     my $ref_file = Promised::File->new_from_path ($ref_path);
     my $states_siterefs_file = Promised::File->new_from_path ($states_siterefs_path);
-    return $states_siterefs_file->is_file->then (sub {
-      return $_[0] ? $states_siterefs_file->read_byte_string : '{}';
-    })->then (sub {
-      my $states_siterefs = json_bytes2perl $_[0];
+    my $states_sitepackrefs_file = Promised::File->new_from_path ($states_sitepackrefs_path);
+    return Promise->all ([
+      $states_siterefs_file->is_file->then (sub {
+        return $_[0] ? $states_siterefs_file->read_byte_string : '{}';
+      }),
+      $states_sitepackrefs_file->is_file->then (sub {
+        return $_[0] ? $states_sitepackrefs_file->read_byte_string : '{}';
+      }),
+    ])->then (sub {
+      my $states_siterefs = json_bytes2perl $_[0]->[0];
+      my $states_sitepackrefs = json_bytes2perl $_[0]->[1];
+      my $revert_only = 0;
       if ($ThisRev <= $states_siterefs->{$ref_key} || 0) {
-        return;
+        if ($ref_key eq $states_sitepackrefs->{$pack_name} // '') {
+          return;
+        } else {
+          $revert_only = 1;
+        }
       }
       $states_siterefs->{$ref_key} = $ThisRev;
-      
-      $states_sets->{changed_mirror_sets}->{$mirror_set} = 1;
-      $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
-      return $ref_file->write_byte_string (perl2json_bytes_for_record $ref)->then (sub {
-        return Promised::File->new_from_path ($summary_path)->write_byte_string (perl2json_bytes_for_record $summary);
-      })->then (sub {
-        return Promised::File->new_from_path ($index_path->parent)->mkpath;
-      })->then (sub {
-        my $file = Promised::File->new_from_path ($out_mirrorzip_path);
-        return $file->remove_tree->then (sub {
-          return Promised::File->new_from_path ($out_mirrorzip_path)->hardlink_from ($mirrorzip_path);
+      $states_sitepackrefs->{$pack_name} = $ref_key;
+
+      return Promise->resolve->then (sub {
+        return if $revert_only;
+        
+        $states_sets->{changed_mirror_sets}->{$mirror_set} = 1;
+        $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
+        return $ref_file->write_byte_string (perl2json_bytes_for_record $ref)->then (sub {
+          return Promised::File->new_from_path ($summary_path)->write_byte_string (perl2json_bytes_for_record $summary);
+        })->then (sub {
+          return Promised::File->new_from_path ($index_path->parent)->mkpath;
+        })->then (sub {
+          my $file = Promised::File->new_from_path ($out_mirrorzip_path);
+          return $file->remove_tree->then (sub {
+            return Promised::File->new_from_path ($out_mirrorzip_path)->hardlink_from ($mirrorzip_path);
+          });
         });
       })->then (sub {
         my $index_file = $index_path->opena;
         print $index_file perl2json_bytes $index_line;
         print $index_file "\x0A";
         return $states_siterefs_file->write_byte_string (perl2json_bytes $states_siterefs);
+      })->then (sub {
+        return $states_sitepackrefs_file->write_byte_string (perl2json_bytes $states_sitepackrefs);
       });
     });
   });
