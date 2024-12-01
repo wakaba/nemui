@@ -74,7 +74,7 @@ build-main-dev:
 	rm -fr ddsddata/data/mirror-index
 	#
 	mkdir -p ddsddata/data/mirror-index
-	@for dir in $(wildcard ddsddata/data/mirror/*); do \
+	for dir in $(wildcard ddsddata/data/mirror/*); do \
 	  if [ -d "$$dir" ]; then \
 	    name=$$(basename "$$dir"); \
 	    if [ -e "$$dir/index" ]; then \
@@ -91,7 +91,7 @@ build-main-dev:
 	cd ddsddata && git add data && git commit -m current && git push
 	#
 	mv mirror ddsddata/data/mirror
-	for dir in $(wildcard ddsddata/data/mirror-index/*); do \
+	for dir in $(shell ls ddsddata/data/mirror-index/*); do \
 	  if [ -d "$$dir" ]; then \
 	    name=$$(basename "$$dir"); \
 	    echo mv "$$dir" "ddsddata/data/mirror/$$name/index"; \
