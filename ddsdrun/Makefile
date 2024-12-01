@@ -14,6 +14,10 @@ batch:
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data 
 	mv local/ddsddata-data ddsddata/data
+	touch ddsddata/data/states/mirror_set/free_set.txt
+	touch ddsddata/data/states/mirror_set/free_large_set.txt
+	touch ddsddata/data/states/mirror_set/nonfree_set.txt
+	touch ddsddata/data/states/mirror_set/nonfree_large_set.txt
 	$(MAKE) build-ddsd build-main
 	-chmod ugo+r -R ddsddata/data
 	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
@@ -23,6 +27,8 @@ batch:
 	#bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
 
 MIRROR_SET=...
+
+#MIRROR_SET
 build-mirror-image:
 	mkdir -p local/mirror-image/$(MIRROR_SET)
 	cat Dockerfile.ddsdmirror | sed -e s%@@MIRROR_SET@@%$(MIRROR_SET)%g \

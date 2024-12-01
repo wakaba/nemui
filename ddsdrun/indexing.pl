@@ -89,10 +89,9 @@ sub filter_legal ($) {
   } @{$_[0]}];
 } # filter_legal
 
-sub add_to_local_index ($$$$$$$$$$$) {
+sub add_to_local_index ($$$$$$$$$) {
   my ($site_type, $site_name, $pack_name, $time, $files, $legal,
-      $mirrorzip, $mirrorzip_name, $states_sets,
-      $set_prefix, $large_set_prefix) = @_;
+      $mirrorzip, $mirrorzip_name, $states_sets) = @_;
   my $esite_name = escape $site_name;
   my $epack_name = escape $pack_name;
   my $base_path = $DataRootPath;
@@ -139,11 +138,11 @@ sub add_to_local_index ($$$$$$$$$$$) {
     }
     $index_line->[3]->{is_free} = $legal->{is_free} // 'unknown';
     my $is_free = $index_line->[3]->{is_free} eq 'free';
-    my $mirror_set = $is_free ? 'free' : 'nonfree';
+    my $mirror_set;
     if ($mirrorzip->{length} > 10*1024*1024) {
-      $mirror_set .= '-' . $large_set_prefix;
+      $mirror_set = $states_sets->{$is_free ? 'free_large_set' : 'nonfree_large_set'};
     } else {
-      $mirror_set .= '-' . $set_prefix if length $set_prefix;
+      $mirror_set = $states_sets->{$is_free ? 'free_set' : 'nonfree_set'};
     }
     my $ref_key = $index_line->[2] = sha256_hex join $;,
         $ThisRev,
@@ -373,9 +372,7 @@ sub process_remote_index ($$$$$;%) {
                                    $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
                                    $_[0]->[2]->{json},
                                    "local/tmp/$key.mirrorzip.zip",
-                                   $states_sets,
-                                   $args{set_prefix},
-                                   $args{large_set_prefix});
+                                   $states_sets);
       });
     } $results;
   })->then (sub {
@@ -397,14 +394,13 @@ sub process_remote_index ($$$$$;%) {
   });
 } # process_remote_index
 
-sub run ($$$$$;%) {
-  my ($root_url, $site_type, $site_name, $opts, $states_sets, %args) = @_;
+sub run ($$$$$) {
+  my ($root_url, $site_type, $site_name, $opts, $states_sets) = @_;
   return Promise->resolve->then (sub {
     return pull_remote_index ($site_name, $root_url);
   })->then (sub {
     return process_remote_index ($site_type, $site_name, $root_url, $opts,
-                                 $states_sets, limit => 10,
-                                 %args);
+                                 $states_sets, limit => 10);
   });
 } # run
 
@@ -432,6 +428,10 @@ sub main () {
           return '{}';
         }
       }),
+      Promised::File->new_from_path ($base_path->child ('states/mirror_set/free_set.txt'))->read_byte_string,
+      Promised::File->new_from_path ($base_path->child ('states/mirror_set/free_large_set.txt'))->read_byte_string,
+      Promised::File->new_from_path ($base_path->child ('states/mirror_set/nonfree_set.txt'))->read_byte_string,
+      Promised::File->new_from_path ($base_path->child ('states/mirror_set/nonfree_large_set.txt'))->read_byte_string,
     ])->then (sub {
       my $json = json_bytes2perl $_[0]->[0];
       my $sites = $json->{items};
@@ -441,23 +441,10 @@ sub main () {
 
       $states_sets = json_bytes2perl $_[0]->[1];
 
-      $states_sets->{large_set_prefix} //= do { $states_sets->{modified} = 1; 'l1' };
-
-      my %args = (
-        set_prefix => $states_sets->{set_prefix} // '',
-        large_set_prefix => $states_sets->{large_set_prefix} // '',
-      );
-      die "Bad |set_prefix|"
-          unless $args{set_prefix} =~ m{\A(?:[1-9][0-9]*|)\z};
-      die "Bad |large_set_prefix|" 
-          unless $args{large_set_prefix} =~ m{\Al[1-9][0-9]*\z};
-
-      unless ($args{set_prefix}) {
-        $args{set_prefix} ||= 0;
-        $args{set_prefix}++;
-        $states_sets->{set_prefix} = $args{set_prefix};
-        $states_sets->{modified} = 1;
-      }
+      $states_sets->{free_set} = $_[0]->[2] || 'free-1';
+      $states_sets->{free_large_set} = $_[0]->[3] || 'free-l1';
+      $states_sets->{nonfree_set} = $_[0]->[4] || 'nonfree-1';
+      $states_sets->{nonfree_large_set} = $_[0]->[5] || 'nonfree-l1';
       
       my $started = time;
       my $end_time = $started + $timeout;
@@ -468,7 +455,7 @@ sub main () {
         my ($root_url, $site_type, $site_name, $opts) = @$item;
         $opts //= {};
         $opts->{end_time} = $end_time;
-        return run ($root_url, $site_type, $site_name, $opts, $states_sets, %args)->then (sub {
+        return run ($root_url, $site_type, $site_name, $opts, $states_sets)->then (sub {
           if ($end_time < time) {
             return 'done';
           }
@@ -476,10 +463,14 @@ sub main () {
         });
       };
     })->then (sub {
-      return unless $states_sets->{modified};
-      delete $states_sets->{modified};
-      return $states_sets_file->write_byte_string
-          (perl2json_bytes_for_record $states_sets);
+      return Promise->all ([
+        $states_sets_file->write_byte_string
+            (perl2json_bytes_for_record $states_sets),
+        Promised::File->new_from_path ($base_path->child ('states/mirror_set/free_set.txt'))->write_byte_string ($states_sets->{free_set}),
+        Promised::File->new_from_path ($base_path->child ('states/mirror_set/free_large_set.txt'))->write_byte_string ($states_sets->{free_large_set}),
+        Promised::File->new_from_path ($base_path->child ('states/mirror_set/nonfree_set.txt'))->write_byte_string ($states_sets->{nonfree_set}),
+        Promised::File->new_from_path ($base_path->child ('states/mirror_set/nonfree_large_set.txt'))->write_byte_string ($states_sets->{nonfree_large_set}),
+      ]);
     });
   });
 } # main
