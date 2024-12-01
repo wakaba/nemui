@@ -78,7 +78,9 @@ build-main-dev:
 	  if [ -d "$$dir" ]; then \
 	    name=$$(basename "$$dir"); \
 	    if [ -e "$$dir/index" ]; then \
+	      echo mv "$$dir/index" "ddsddata/data/mirror-index/$$name"; \
 	      mv "$$dir/index" "ddsddata/data/mirror-index/$$name"; \
+	      echo $$?; \
 	    fi; \
 	  fi; \
 	done
@@ -92,7 +94,9 @@ build-main-dev:
 	for dir in $(wildcard ddsddata/data/mirror-index/*); do \
 	  if [ -d "$$dir" ]; then \
 	    name=$$(basename "$$dir"); \
+	    echo mv "$$dir" "ddsddata/data/mirror/$$name/index"; \
 	    mv "$$dir" "ddsddata/data/mirror/$$name/index"; \
+	    echo $$?; \
 	  fi; \
 	done
 
