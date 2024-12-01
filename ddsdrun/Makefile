@@ -42,8 +42,8 @@ build-mirror-image:
 	mv ddsddata/data/mirror/$(MIRROR_SET) \
 	local/mirror-image/$(MIRROR_SET)/mirrordata
 	cd local/mirror-image/$(MIRROR_SET) && \
-	docker build -t $(DOCKER_IMAGE)-$(MIRROR_SET) .
-	docker push $(DOCKER_IMAGE)-$(MIRROR_SET)
+	docker build -t $(DOCKER_IMAGE)$(MIRROR_SET) .
+	docker push $(DOCKER_IMAGE)$(MIRROR_SET)
 	mv local/mirror-image/$(MIRROR_SET)/mirrordata \
 	ddsddata/data/mirror/$(MIRROR_SET)
 
