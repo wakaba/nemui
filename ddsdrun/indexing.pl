@@ -463,6 +463,13 @@ sub main () {
         });
       };
     })->then (sub {
+      my $max = $ENV{LIVE} ? 1*1024*1024*1024 : 1*1024*1024;
+      for my $mirror_set (qw(
+        free_set free_large_set nonfree_set nonfree_large_set
+      )) {
+        $states_sets->{$mirror_set} =~ s{([0-9]+)$}{$1 + 1}e
+            if $states_sets->{mirror_sets}->{$mirror_set}->{length} > $max;
+      }
       return Promise->all ([
         $states_sets_file->write_byte_string
             (perl2json_bytes_for_record $states_sets),
