@@ -159,7 +159,6 @@ sub add_to_local_index ($$$$$$$$$) {
         length => $mirrorzip->{length},
         sha256 => $mirrorzip->{sha256},
       };
-      $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
 
       $summary->{legal} = {%$legal, legal => filter_legal $legal->{legal}};
       
@@ -269,6 +268,7 @@ sub add_to_local_index ($$$$$$$$$) {
       return if $_[0];
 
       $states_sets->{changed_mirror_sets}->{$mirror_set} = 1;
+      $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
       return $ref_file->write_byte_string (perl2json_bytes_for_record $ref)->then (sub {
         return Promised::File->new_from_path ($summary_path)->write_byte_string (perl2json_bytes_for_record $summary);
       })->then (sub {
