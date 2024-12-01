@@ -24,13 +24,12 @@ sub escape ($) {
   return $s;
 } # escape
 
-sub rand_limit ($$) {
-  my ($list, $limit) = @_;
+sub rand_list ($) {
+  my ($list) = @_;
   my %result = map { $_ => $_ } @$list;
   $list = [values %result];
-  $list = [@$list[0..$limit]] if @$list > $limit;
   return $list;
-} # rand_limit
+} # rand_list
 
 sub ddsd ($@) {
   my $args = shift;
@@ -263,18 +262,18 @@ sub add_to_local_index ($$$$$$$$$) {
         ("snapshots/$site_type/$esite_name/summaries/$ref_key.json");
     my $out_mirrorzip_path = $base_path->child
         ("mirror/$mirror_set/$site_type/$esite_name/$ref_key.zip");
-    my $states_site_path = $base_path->child
-        ("states/sites/site-$site_type-$esite_name.json");
+    my $states_siterefs_path = $base_path->child
+        ("states/siterefs/siterefs-$site_type-$esite_name.json");
     my $ref_file = Promised::File->new_from_path ($ref_path);
-    my $states_site_file = Promised::File->new_from_path ($states_site_path);
-    return $states_site_file->is_file->then (sub {
-      return $_[0] ? $states_site_file->read_byte_string : '{}';
+    my $states_siterefs_file = Promised::File->new_from_path ($states_siterefs_path);
+    return $states_siterefs_file->is_file->then (sub {
+      return $_[0] ? $states_siterefs_file->read_byte_string : '{}';
     })->then (sub {
-      my $states_site = json_bytes2perl $_[0];
-      if ($ThisRev <= $states_site->{refs}->{$ref_key} || 0) {
+      my $states_siterefs = json_bytes2perl $_[0];
+      if ($ThisRev <= $states_siterefs->{$ref_key} || 0) {
         return;
       }
-      $states_site->{refs}->{$ref_key} = $ThisRev;
+      $states_siterefs->{$ref_key} = $ThisRev;
       
       $states_sets->{changed_mirror_sets}->{$mirror_set} = 1;
       $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
@@ -291,15 +290,14 @@ sub add_to_local_index ($$$$$$$$$) {
         my $index_file = $index_path->opena;
         print $index_file perl2json_bytes $index_line;
         print $index_file "\x0A";
-        return $states_site_file->write_byte_string (perl2json_bytes $states_site);
+        return $states_siterefs_file->write_byte_string (perl2json_bytes $states_siterefs);
       });
     });
   });
 } # add_to_local_index
 
-sub process_remote_index ($$$$$$;%) {
-  my ($site_type, $site_name, $root_url, $opts, $states_sets, $need_stop,
-      %args) = @_;
+sub process_remote_index ($$$$$$) {
+  my ($site_type, $site_name, $root_url, $opts, $states_sets, $need_stop) = @_;
   my $esite_name = escape $site_name;
   my $base_path = $DataRootPath;
   my $path = $base_path->child
@@ -327,67 +325,85 @@ sub process_remote_index ($$$$$$;%) {
     }
     die "Bad JSON file |$path| (site_type |$site_type|)" unless defined $results;
 
-    $results = rand_limit $results, $args{limit};
-    
-    return promised_for {
-      my $now = time;
-      return if $need_stop->();
-      
-      my ($pack_name, $pack_url) = @{$_[0]};
-      my $epack_name = escape $pack_name;
-      my $key = sha256_hex "$esite_name--$epack_name";
-      
-      return ddsd (
-        {wd => $base_path},
-        'add',
-        $pack_url,
-        "--name", $key,
-      )->catch (sub { })->then (sub {
+    my $states_sitepacks_path = $base_path->child
+        ("states/sitepacks/sitepacks-$site_type-$esite_name.json");
+    my $states_sitepacks_file = Promised::File->new_from_path ($states_sitepacks_path);
+    my $states_sitepacks;
+    my $touched = 0;
+    return $states_sitepacks_file->is_file->then (sub {
+      return $_[0] ? $states_sitepacks_file->read_byte_string : '{}';
+    })->then (sub {
+      $states_sitepacks = json_bytes2perl $_[0];
+      $results = [sort {
+        ($states_sitepacks->{$a->[0]} || 0) <=> ($states_sitepacks->{$b->[0]} || 0);
+      } @{rand_list $results}];
+
+      return promised_wait_until {
+        return 'done' if $need_stop->();
+        return 'done' unless @$results;
+
+        my ($pack_name, $pack_url) = @{shift @$results};
+        my $now = time;
+        $states_sitepacks->{$pack_name} = $now;
+        $touched = 1;
+        
+        my $epack_name = escape $pack_name;
+        my $key = sha256_hex "$esite_name--$epack_name";
+        
         return ddsd (
           {wd => $base_path},
-          'use',
-          $key,
-          '--all',
-        );
-      })->then (sub {
-        return ddsd (
-          {wd => $base_path},
-          'freeze',
-          $key,
-        );
-      })->then (sub {
-        return Promise->all ([
-          ddsd (
-            {wd => $base_path, jsonl => 1},
-            'ls',
+          'add',
+          $pack_url,
+          "--name", $key,
+        )->catch (sub { })->then (sub {
+          return ddsd (
+            {wd => $base_path},
+            'use',
             $key,
-            '--jsonl',
-            '--with-source-meta',
-            '--with-item-meta',
-          ),
-          ddsd (
-            {wd => $base_path, json => 1},
-            'legal',
+            '--all',
+          );
+        })->then (sub {
+          return ddsd (
+            {wd => $base_path},
+            'freeze',
             $key,
-            '--json',
-          ),
-          ddsd (
-            {wd => $base_path, json => 1},
-            'export',
-            'mirrorzip',
-            $key,
-            "local/tmp/$key.mirrorzip.zip",
-            '--json',
-          ),
-        ]);
-      })->then (sub {
-        return add_to_local_index ($site_type, $site_name, $pack_name, $now,
-                                   $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
-                                   $_[0]->[2]->{json},
-                                   "local/tmp/$key.mirrorzip.zip",
-                                   $states_sets);
-      });
-    } $results;
+          );
+        })->then (sub {
+          return Promise->all ([
+            ddsd (
+              {wd => $base_path, jsonl => 1},
+              'ls',
+              $key,
+              '--jsonl',
+              '--with-source-meta',
+              '--with-item-meta',
+            ),
+            ddsd (
+              {wd => $base_path, json => 1},
+              'legal',
+              $key,
+              '--json',
+            ),
+            ddsd (
+              {wd => $base_path, json => 1},
+              'export',
+              'mirrorzip',
+              $key,
+              "local/tmp/$key.mirrorzip.zip",
+              '--json',
+            ),
+          ]);
+        })->then (sub {
+          return add_to_local_index ($site_type, $site_name, $pack_name, $now,
+                                     $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
+                                     $_[0]->[2]->{json},
+                                     "local/tmp/$key.mirrorzip.zip",
+                                     $states_sets);
+        });
+      } $results;
+    })->then (sub {
+      return $states_sitepacks_file->write_byte_string (perl2json_bytes $states_sitepacks);
+    });
   })->then (sub {
     my $snapshot_index_path = $base_path->child
         ("snapshots/index.json");
@@ -413,7 +429,7 @@ sub run ($$$$$$) {
     return pull_remote_index ($site_name, $root_url);
   })->then (sub {
     return process_remote_index ($site_type, $site_name, $root_url, $opts,
-                                 $states_sets, $need_stop, limit => 10);
+                                 $states_sets, $need_stop);
   });
 } # run
 
@@ -433,7 +449,7 @@ sub main () {
     my $states_sets_file = Promised::File->new_from_path ($states_sets_path);
     my $states_sets;
     return Promise->all ([
-      $file->read_byte_string,
+      $file->read_byte_string, # XXX if error (pull failed)
       $states_sets_file->is_file->then (sub {
         if ($_[0]) {
           return $states_sets_file->read_byte_string;
@@ -479,7 +495,7 @@ sub main () {
       }; # $need_stop
 
       my $sites = $json->{items};
-      $sites = rand_limit $sites, 30;
+      $sites = rand_list $sites;
       
       return promised_until {
         my $item = shift @$sites;

@@ -27,7 +27,8 @@ batch:
 	$(MAKE) build-ddsd build-main
 	-chmod ugo+r -R ddsddata/data
 	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
-	$(MAKE) -f Makefile.reindextemp 
+	$(MAKE) -f Makefile.reindextemp
+	mv ddsddata/data/mirror ./
 	docker build -t $(DOCKER_IMAGE) .
 	docker push $(DOCKER_IMAGE)
 	#bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
@@ -59,7 +60,7 @@ build-main-live:
 	git config --global user.name "Auto"
 	cd ddsddata && git add data && git commit -m current && git push
 	#
-	#mv mirror ddsddata/data/mirror
+	mv mirror ddsddata/data/mirror
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
 build-main-dev:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
@@ -82,7 +83,13 @@ build-main-dev:
 	git config --global user.name "Auto"
 	cd ddsddata && git add data && git commit -m current && git push
 	#
-	#mv mirror ddsddata/data/mirror
+	mv mirror ddsddata/data/mirror
+	@for dir in $(wildcard ddsddata/data/mirror-index/*); do \
+	  if [ -d "$$dir" ]; then \
+	    name=$$(basename "$$dir"); \
+	    mv "$$dir" "ddsddata/data/mirror/$$name/index"; \
+	  fi; \
+	done
 
 build-ddsd:
 	$(CURL) -f https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
