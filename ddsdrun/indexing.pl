@@ -281,7 +281,7 @@ sub add_to_local_index ($$$$$$$$$) {
       my $states_siterefs = json_bytes2perl $_[0]->[0];
       my $states_sitepackrefs = json_bytes2perl $_[0]->[1];
       my $revert_only = 0;
-      if ($ThisRev <= $states_siterefs->{$ref_key} || 0) {
+      if ($ThisRev <= ($states_siterefs->{$ref_key} || 0)) {
         if ($ref_key eq $states_sitepackrefs->{$pack_name} // '') {
           return;
         } else {
@@ -498,7 +498,7 @@ sub main () {
         free_set free_large_set nonfree_set nonfree_large_set
       )) {
         $states_sets->{$key} =~ s{([0-9]+)$}{$1 + 1}e
-            if $states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} > $max_size;
+            if ($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size;
       }
 
       my $timeout = $ENV{LIVE} ? 60*15 : 60*1;
@@ -510,7 +510,7 @@ sub main () {
         for my $key (qw(
           free_set free_large_set nonfree_set nonfree_large_set
         )) {
-          return 1 if $states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} > $max_size;
+          return 1 if ($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size;
         }
 
         return 0;

@@ -89,7 +89,7 @@ build-main-dev:
 	cd ddsddata && git add data && git commit -m current && git push
 	#
 	mv mirror ddsddata/data/mirror
-	@for dir in $(wildcard ddsddata/data/mirror-index/*); do \
+	for dir in $(wildcard ddsddata/data/mirror-index/*); do \
 	  if [ -d "$$dir" ]; then \
 	    name=$$(basename "$$dir"); \
 	    mv "$$dir" "ddsddata/data/mirror/$$name/index"; \

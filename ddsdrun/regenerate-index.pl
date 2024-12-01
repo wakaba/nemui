@@ -121,7 +121,11 @@ sub regenerate_computed_index ($$$$$$) {
                 $tag->{broken} = 1 if $summary->{broken};
                 $tag->{'non-free'} = 1 if $summary->{legal}->{is_free} eq 'non-free';
                 $tag->{'license unknown'} = 1 if $summary->{legal}->{is_free} eq 'unknown';
-                $tag->{'latest problematic'} = 1 unless $current_is_latest;
+                $tag->{'latest problematic'} = 1
+                    if not $current_is_latest or
+                    $summary->{broken} or
+                    $summary->{insecure} or
+                    $tag->{'license unknown'};
                 $tag->{$summary->{package}->{author}} = 1;
                 $tag->{$summary->{package}->{org}} = 1;
                 $tag->{$_} = 1 for @{$summary->{package}->{tags}};
