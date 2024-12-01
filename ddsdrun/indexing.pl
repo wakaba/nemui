@@ -89,9 +89,10 @@ sub filter_legal ($) {
   } @{$_[0]}];
 } # filter_legal
 
-sub add_to_local_index ($$$$$$$$$$) {
+sub add_to_local_index ($$$$$$$$$$$) {
   my ($site_type, $site_name, $pack_name, $time, $files, $legal,
-      $mirrorzip, $mirrorzip_name, $set_prefix, $large_set_prefix) = @_;
+      $mirrorzip, $mirrorzip_name, $states_sets,
+      $set_prefix, $large_set_prefix) = @_;
   my $esite_name = escape $site_name;
   my $epack_name = escape $pack_name;
   my $base_path = $DataRootPath;
@@ -159,6 +160,7 @@ sub add_to_local_index ($$$$$$$$$$) {
         length => $mirrorzip->{length},
         sha256 => $mirrorzip->{sha256},
       };
+      $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
 
       $summary->{legal} = {%$legal, legal => filter_legal $legal->{legal}};
       
@@ -284,8 +286,8 @@ sub add_to_local_index ($$$$$$$$$$) {
   });
 } # add_to_local_index
 
-sub process_remote_index ($$$$;%) {
-  my ($site_type, $site_name, $root_url, $opts, %args) = @_;
+sub process_remote_index ($$$$$;%) {
+  my ($site_type, $site_name, $root_url, $opts, $states_sets, %args) = @_;
   my $esite_name = escape $site_name;
   my $base_path = $DataRootPath;
   my $path = $base_path->child
@@ -371,6 +373,7 @@ sub process_remote_index ($$$$;%) {
                                    $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
                                    $_[0]->[2]->{json},
                                    "local/tmp/$key.mirrorzip.zip",
+                                   $states_sets,
                                    $args{set_prefix},
                                    $args{large_set_prefix});
       });
@@ -394,13 +397,13 @@ sub process_remote_index ($$$$;%) {
   });
 } # process_remote_index
 
-sub run ($$$$;%) {
-  my ($root_url, $site_type, $site_name, $opts, %args) = @_;
+sub run ($$$$$;%) {
+  my ($root_url, $site_type, $site_name, $opts, $states_sets, %args) = @_;
   return Promise->resolve->then (sub {
     return pull_remote_index ($site_name, $root_url);
   })->then (sub {
     return process_remote_index ($site_type, $site_name, $root_url, $opts,
-                                 limit => 10,
+                                 $states_sets, limit => 10,
                                  %args);
   });
 } # run
@@ -465,7 +468,7 @@ sub main () {
         my ($root_url, $site_type, $site_name, $opts) = @$item;
         $opts //= {};
         $opts->{end_time} = $end_time;
-        return run ($root_url, $site_type, $site_name, $opts, %args)->then (sub {
+        return run ($root_url, $site_type, $site_name, $opts, $states_sets, %args)->then (sub {
           if ($end_time < time) {
             return 'done';
           }

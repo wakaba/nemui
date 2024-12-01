@@ -20,7 +20,7 @@ batch:
 	$(MAKE) -f Makefile.reindextemp 
 	docker build -t $(DOCKER_IMAGE) .
 	docker push $(DOCKER_IMAGE)
-	bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
+	#bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
 
 MIRROR_SET=...
 build-mirror-image:
