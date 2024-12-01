@@ -203,7 +203,8 @@ sub regenerate_computed_index ($$$$$$) {
               my $mirrorzip_file = $_[0];
               print $mirrorzip_file perl2json_bytes $item;
               print $mirrorzip_file "\x0A";
-              $touched_mirror_sets->{$mirror_set} = 1;
+              $touched_mirror_sets->{$mirror_set} = 1
+                  if $states_sets->{changed_mirror_sets}->{$mirror_set};
             });
           });
         } [keys %pack_name];

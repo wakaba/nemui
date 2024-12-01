@@ -59,7 +59,7 @@ build-main-live:
 	git config --global user.name "Auto"
 	cd ddsddata && git add data && git commit -m current && git push
 	#
-	mv mirror ddsddata/data/mirror
+	#mv mirror ddsddata/data/mirror
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
 build-main-dev:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl

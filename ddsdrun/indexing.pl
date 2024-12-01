@@ -267,6 +267,8 @@ sub add_to_local_index ($$$$$$$$$) {
     my $ref_file = Promised::File->new_from_path ($ref_path);
     return $ref_file->is_file->then (sub {
       return if $_[0];
+
+      $states_sets->{changed_mirror_sets}->{$mirror_set} = 1;
       return $ref_file->write_byte_string (perl2json_bytes_for_record $ref)->then (sub {
         return Promised::File->new_from_path ($summary_path)->write_byte_string (perl2json_bytes_for_record $summary);
       })->then (sub {
@@ -445,6 +447,15 @@ sub main () {
       $states_sets->{free_large_set} = $_[0]->[3] || 'free-l1';
       $states_sets->{nonfree_set} = $_[0]->[4] || 'nonfree-1';
       $states_sets->{nonfree_large_set} = $_[0]->[5] || 'nonfree-l1';
+      delete $states_sets->{changed_mirror_sets};
+
+      my $max = $ENV{LIVE} ? 1*1024*1024*1024 : 100*1024*1024;
+      for my $key (qw(
+        free_set free_large_set nonfree_set nonfree_large_set
+      )) {
+        $states_sets->{$key} =~ s{([0-9]+)$}{$1 + 1}e
+            if $states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} > $max;
+      }
       
       my $started = time;
       my $end_time = $started + $timeout;
@@ -463,13 +474,6 @@ sub main () {
         });
       };
     })->then (sub {
-      my $max = $ENV{LIVE} ? 1*1024*1024*1024 : 1*1024*1024;
-      for my $key (qw(
-        free_set free_large_set nonfree_set nonfree_large_set
-      )) {
-        $states_sets->{$key} =~ s{([0-9]+)$}{$1 + 1}e
-            if $states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} > $max;
-      }
       return Promise->all ([
         $states_sets_file->write_byte_string
             (perl2json_bytes_for_record $states_sets),
