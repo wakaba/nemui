@@ -24,6 +24,8 @@ batch:
 	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirrorsets/free_large_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirrorsets/free_large_set.txt` /ddsddata/data/mirror/
 	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirrorsets/nonfree_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirrorsets/nonfree_set.txt` /ddsddata/data/mirror/
 	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirrorsets/nonfree_large_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirrorsets/nonfree_large_set.txt` /ddsddata/data/mirror/
+	# XXXX
+	ls -R ddsddata
 	$(MAKE) build-ddsd build-main
 	-chmod ugo+r -R ddsddata/data
 	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
