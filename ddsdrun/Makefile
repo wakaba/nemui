@@ -14,6 +14,7 @@ batch:
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data 
 	mv local/ddsddata-data ddsddata/data
+	mkdir -p ddsddata/data/states/mirror_set
 	touch ddsddata/data/states/mirror_set/free_set.txt
 	touch ddsddata/data/states/mirror_set/free_large_set.txt
 	touch ddsddata/data/states/mirror_set/nonfree_set.txt
