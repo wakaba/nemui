@@ -19,6 +19,7 @@ batch:
 	touch ddsddata/data/states/mirrorsets/free_large_set.txt
 	touch ddsddata/data/states/mirrorsets/nonfree_set.txt
 	touch ddsddata/data/states/mirrorsets/nonfree_large_set.txt
+	mkdir -p ddsddata/data/mirror/
 	#XXX
 	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirrorsets/free_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirrorsets/free_set.txt` /ddsddata/data/mirror/
 	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirrorsets/free_large_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirrorsets/free_large_set.txt` /ddsddata/data/mirror/
