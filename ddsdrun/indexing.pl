@@ -263,10 +263,19 @@ sub add_to_local_index ($$$$$$$$$) {
         ("snapshots/$site_type/$esite_name/summaries/$ref_key.json");
     my $out_mirrorzip_path = $base_path->child
         ("mirror/$mirror_set/$site_type/$esite_name/$ref_key.zip");
+    my $states_site_path = $base_path->child
+        ("states/sites/site-$site_type-$esite_name.json");
     my $ref_file = Promised::File->new_from_path ($ref_path);
-    return $ref_file->is_file->then (sub {
-      return if $_[0];
-
+    my $states_site_file = Promised::File->new_from_path ($states_site_path);
+    return $states_site_file->is_file->then (sub {
+      return $_[0] ? $states_site_file->read_byte_string : '{}';
+    })->then (sub {
+      my $states_site = json_bytes2perl $_[0];
+      if ($ThisRev <= $states_site->{refs}->{$ref_key} || 0) {
+        return;
+      }
+      $states_site->{refs}->{$ref_key} = $ThisRev;
+      
       $states_sets->{changed_mirror_sets}->{$mirror_set} = 1;
       $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
       return $ref_file->write_byte_string (perl2json_bytes_for_record $ref)->then (sub {
@@ -282,6 +291,7 @@ sub add_to_local_index ($$$$$$$$$) {
         my $index_file = $index_path->opena;
         print $index_file perl2json_bytes $index_line;
         print $index_file "\x0A";
+        return $states_site_file->write_byte_string (perl2json_bytes $states_site);
       });
     });
   });
@@ -418,7 +428,7 @@ sub main () {
     my $path = $base_path->child
         ('local/data/root/files/list.json');
     my $file = Promised::File->new_from_path ($path);
-    my $states_sets_path = $base_path->child ("states/sets.json");
+    my $states_sets_path = $base_path->child ("states/mirrorsets.json");
     my $states_sets_file = Promised::File->new_from_path ($states_sets_path);
     my $states_sets;
     return Promise->all ([
@@ -430,10 +440,10 @@ sub main () {
           return '{}';
         }
       }),
-      Promised::File->new_from_path ($base_path->child ('states/mirror_set/free_set.txt'))->read_byte_string,
-      Promised::File->new_from_path ($base_path->child ('states/mirror_set/free_large_set.txt'))->read_byte_string,
-      Promised::File->new_from_path ($base_path->child ('states/mirror_set/nonfree_set.txt'))->read_byte_string,
-      Promised::File->new_from_path ($base_path->child ('states/mirror_set/nonfree_large_set.txt'))->read_byte_string,
+      Promised::File->new_from_path ($base_path->child ('states/mirrorsets/free_set.txt'))->read_byte_string,
+      Promised::File->new_from_path ($base_path->child ('states/mirrorsets/free_large_set.txt'))->read_byte_string,
+      Promised::File->new_from_path ($base_path->child ('states/mirrorsets/nonfree_set.txt'))->read_byte_string,
+      Promised::File->new_from_path ($base_path->child ('states/mirrorsets/nonfree_large_set.txt'))->read_byte_string,
     ])->then (sub {
       my $json = json_bytes2perl $_[0]->[0];
       my $sites = $json->{items};
@@ -477,10 +487,10 @@ sub main () {
       return Promise->all ([
         $states_sets_file->write_byte_string
             (perl2json_bytes_for_record $states_sets),
-        Promised::File->new_from_path ($base_path->child ('states/mirror_set/free_set.txt'))->write_byte_string ($states_sets->{free_set}),
-        Promised::File->new_from_path ($base_path->child ('states/mirror_set/free_large_set.txt'))->write_byte_string ($states_sets->{free_large_set}),
-        Promised::File->new_from_path ($base_path->child ('states/mirror_set/nonfree_set.txt'))->write_byte_string ($states_sets->{nonfree_set}),
-        Promised::File->new_from_path ($base_path->child ('states/mirror_set/nonfree_large_set.txt'))->write_byte_string ($states_sets->{nonfree_large_set}),
+        Promised::File->new_from_path ($base_path->child ('states/mirrorsets/free_set.txt'))->write_byte_string ($states_sets->{free_set}),
+        Promised::File->new_from_path ($base_path->child ('states/mirrorsets/free_large_set.txt'))->write_byte_string ($states_sets->{free_large_set}),
+        Promised::File->new_from_path ($base_path->child ('states/mirrorsets/nonfree_set.txt'))->write_byte_string ($states_sets->{nonfree_set}),
+        Promised::File->new_from_path ($base_path->child ('states/mirrorsets/nonfree_large_set.txt'))->write_byte_string ($states_sets->{nonfree_large_set}),
       ]);
     });
   });

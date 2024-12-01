@@ -39,7 +39,7 @@ sub regenerate_computed_index ($$$$$$) {
       ("snapshots/$site_type/$esite_name");
   my $index_all_path = $base_path->child
       ("indexes/$site_type/$esite_name/all.jsonl");
-  my $states_sets_path = $base_path->child ("states/sets.json");
+  my $states_sets_path = $base_path->child ("states/mirrorsets.json");
   my $mirrorzip_files = {};
   my $get_mirrorzip_file = sub ($) {
     my $mirror_set = $_[0];
