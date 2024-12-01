@@ -297,8 +297,9 @@ sub add_to_local_index ($$$$$$$$$) {
   });
 } # add_to_local_index
 
-sub process_remote_index ($$$$$;%) {
-  my ($site_type, $site_name, $root_url, $opts, $states_sets, %args) = @_;
+sub process_remote_index ($$$$$$;%) {
+  my ($site_type, $site_name, $root_url, $opts, $states_sets, $need_stop,
+      %args) = @_;
   my $esite_name = escape $site_name;
   my $base_path = $DataRootPath;
   my $path = $base_path->child
@@ -330,7 +331,7 @@ sub process_remote_index ($$$$$;%) {
     
     return promised_for {
       my $now = time;
-      return if $opts->{end_time} < $now;
+      return if $need_stop->();
       
       my ($pack_name, $pack_url) = @{$_[0]};
       my $epack_name = escape $pack_name;
@@ -406,13 +407,13 @@ sub process_remote_index ($$$$$;%) {
   });
 } # process_remote_index
 
-sub run ($$$$$) {
-  my ($root_url, $site_type, $site_name, $opts, $states_sets) = @_;
+sub run ($$$$$$) {
+  my ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop) = @_;
   return Promise->resolve->then (sub {
     return pull_remote_index ($site_name, $root_url);
   })->then (sub {
     return process_remote_index ($site_type, $site_name, $root_url, $opts,
-                                 $states_sets, limit => 10);
+                                 $states_sets, $need_stop, limit => 10);
   });
 } # run
 
@@ -446,40 +447,48 @@ sub main () {
       Promised::File->new_from_path ($base_path->child ('states/mirrorsets/nonfree_large_set.txt'))->read_byte_string,
     ])->then (sub {
       my $json = json_bytes2perl $_[0]->[0];
-      my $sites = $json->{items};
-
-      $sites = rand_limit $sites, 30;
-      my $timeout = $ENV{LIVE} ? 60*15 : 60*1;
 
       $states_sets = json_bytes2perl $_[0]->[1];
-
       $states_sets->{free_set} = $_[0]->[2] || 'free-1';
       $states_sets->{free_large_set} = $_[0]->[3] || 'free-l1';
       $states_sets->{nonfree_set} = $_[0]->[4] || 'nonfree-1';
       $states_sets->{nonfree_large_set} = $_[0]->[5] || 'nonfree-l1';
       delete $states_sets->{changed_mirror_sets};
 
-      my $max = $ENV{LIVE} ? 1*1024*1024*1024 : 100*1024*1024;
+      my $max_size = $ENV{LIVE} ? 1*1024*1024*1024 : 100*1024*1024;
       for my $key (qw(
         free_set free_large_set nonfree_set nonfree_large_set
       )) {
         $states_sets->{$key} =~ s{([0-9]+)$}{$1 + 1}e
-            if $states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} > $max;
+            if $states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} > $max_size;
       }
-      
+
+      my $timeout = $ENV{LIVE} ? 60*15 : 60*1;
       my $started = time;
       my $end_time = $started + $timeout;
+      my $need_stop = sub {
+        return 1 if $end_time < time;
+        
+        for my $key (qw(
+          free_set free_large_set nonfree_set nonfree_large_set
+        )) {
+          return 1 if $states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} > $max_size;
+        }
+
+        return 0;
+      }; # $need_stop
+
+      my $sites = $json->{items};
+      $sites = rand_limit $sites, 30;
+      
       return promised_until {
         my $item = shift @$sites;
         return 'done' unless defined $item;
         
         my ($root_url, $site_type, $site_name, $opts) = @$item;
         $opts //= {};
-        $opts->{end_time} = $end_time;
-        return run ($root_url, $site_type, $site_name, $opts, $states_sets)->then (sub {
-          if ($end_time < time) {
-            return 'done';
-          }
+        return run ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop)->then (sub {
+          return 1 if $need_stop->();
           return not 'done';
         });
       };
