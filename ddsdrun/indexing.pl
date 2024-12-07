@@ -356,9 +356,33 @@ sub process_remote_index ($$$$$$$) {
       return $_[0] ? $states_sitepacks_file->read_byte_string : '{}';
     })->then (sub {
       $states_sitepacks = json_bytes2perl $_[0];
+      my $p_prefix = {};
+      for (keys %$p_list) {
+        if (/^\^(.+)$/) {
+          $p_prefix->{$1} = $p_list->{$_};
+        }
+      }
       $results = [sort {
-        ($states_sitepacks->{$a->[0]} || $p_list->{$a->[0]} || 0) <=>
-        ($states_sitepacks->{$b->[0]} || $p_list->{$b->[0]} || 0);
+        ($states_sitepacks->{$a->[0]} || $p_list->{$a->[0]} || do {
+          my $x;
+          for my $p (keys %$p_prefix) {
+            if ($p eq substr $a->[0], 0, length $p) {
+              $x = $p_prefix->{$p};
+              last;
+            }
+          }
+          $x;
+        } || 0) <=>
+        ($states_sitepacks->{$b->[0]} || $p_list->{$b->[0]} || do {
+          my $x;
+          for my $p (keys %$p_prefix) {
+            if ($p eq substr $b->[0], 0, length $p) {
+              $x = $p_prefix->{$p};
+              last;
+            }
+          }
+          $x;
+        } || 0);
       } @{rand_list $results}];
 
       return promised_wait_until {
