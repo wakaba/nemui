@@ -1,12 +1,23 @@
 {
   "github": {
     "build": [
-      {"run": "make build-for-docker",
-       "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE"]},
-      {"docker_build": "$DDSDRUN_DOCKER_IMAGE"}
+      {
+        "run": "mkdir -p ~/.ssh && \n      echo \"${{ secrets.GH_GIT_KEY }}\" > ~/.ssh/id_rsa && \n      chmod 600 ~/.ssh/id_rsa && \n      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts && \n      echo -e \"Host github.com\\n  IdentityFile ~/.ssh/id_rsa\\n  StrictHostKeyChecking no\" > ~/.ssh/config && \n      chmod 600 ~/.ssh/config"
+      },
+      
+      {"run": "make ddsd-batch",
+       "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE", 
+                   "DDSDRUN_BUILD_MAIN",
+                   "BWALLER_URL", "DOCKER_USER", "DOCKER_PASS"]}
     ],
     "tests": [
-      {"docker_push": "$DDSDRUN_DOCKER_IMAGE", "branch": "ddsdrun"}
-    ]
+      "true"
+    ],
+    "pages": {
+      "build_secrets": ["DDSDRUN_DOCKER_IMAGE"]
+    },
+    "gaa": true,
+    "autobuild": true,
+    "merger": true
   }
 }

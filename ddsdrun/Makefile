@@ -4,12 +4,19 @@ all:
 
 CURL = curl
 
+updatenightly:
+	$(CURL) -sSLf https://raw.githubusercontent.com/wakaba/ciconfig/master/ciconfig | RUN_GIT=1 REMOVE_UNUSED=1 perl
+
+deps:
+
 DOCKER_IMAGE = $${DDSDRUN_DOCKER_IMAGE}
 DOCKER_REGISTRY := $(shell echo $$DDSDRUN_DOCKER_IMAGE | awk -F/ '{print $$1}')
 
+ddsd-batch: batch
+
 batch:
 	mkdir -p local
-	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE) cp -R /app/data /local/ddsddata-data
+	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE)main cp -R /app/data /local/ddsddata-data
 	mkdir -p local/ddsddata-data
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data 
@@ -34,8 +41,8 @@ batch:
 	ls -lR ddsddata
 	$(MAKE) -f Makefile.reindextemp
 	mv ddsddata/data/mirror ./
-	docker build -t $(DOCKER_IMAGE) .
-	docker push $(DOCKER_IMAGE)
+	docker build -t $(DOCKER_IMAGE)main .
+	docker push $(DOCKER_IMAGE)main
 	#bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
 
 MIRROR_SET=...
@@ -53,19 +60,21 @@ build-mirror-image:
 	mv local/mirror-image/$(MIRROR_SET)/mirrordata \
 	ddsddata/data/mirror/$(MIRROR_SET)
 
-BUILD_MAIN = build-main-dev
-build-main: $(BUILD_MAIN)
+DDSDRUN_BUILD_MAIN ?= build-main-dev
+build-main: $(DDSDRUN_BUILD_MAIN)
 
 build-main-live:
-	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
+	cd ddsddata && LIVE=1 ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
 	mv ddsddata/data/mirror mirror
+	mv ddsddata/data/states states
 	#
 	git config --global user.email "ci@test"
 	git config --global user.name "Auto"
 	cd ddsddata && git add data && git commit -m current && git push
 	#
 	mv mirror ddsddata/data/mirror
+	mv states ddsddata/data/states
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
 build-main-dev:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
@@ -103,4 +112,20 @@ build-main-dev:
 build-ddsd:
 	$(CURL) -f https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
 
+build-github-pages:
+	mkdir -p local
+	docker run -v `pwd`/local:/local --user `id --user` $$DDSDRUN_DOCKER_IMAGE cp -R /app/data /local/ddsddata-data
+	mv local/ddsddata-data/snapshots ./
+	mv local/ddsddata-data/indexes ./
+	rm -fr local
+
 test:
+
+## =head1 LICENSE
+## 
+## Copyright 2024 Wakaba <wakaba@suikawiki.org>.
+## 
+## This library is free software; you can redistribute it and/or modify
+## it under the same terms as Perl itself.
+## 
+## =cut

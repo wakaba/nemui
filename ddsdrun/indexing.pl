@@ -16,7 +16,7 @@ my $ThisPath = path (__FILE__)->parent;
 my $DataRootPath = $ThisPath->child ('ddsddata/data');
 my $DDSDPath = $ThisPath->child ('ddsd')->absolute;
 
-my $ThisRev = $ENV{LIVE} ? 4 : 6;
+my $ThisRev = $ENV{LIVE} ? 6 : 6;
 
 sub escape ($) {
   my $s = shift;
@@ -361,7 +361,7 @@ sub process_remote_index ($$$$$$) {
       } @{rand_list $results}];
 
       return promised_wait_until {
-        return 'done' if $need_stop->();
+        return 'done' if $need_stop->(1);
         return 'done' unless @$results;
 
         my ($pack_name, $pack_url) = @{shift @$results};
@@ -501,16 +501,31 @@ sub main () {
             if ($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size;
       }
 
-      my $timeout = $ENV{LIVE} ? 60*15 : 60*1;
+      my $timeout = $ENV{LIVE} ? 60*15 : 60*3;
+      my $site_timeout = 60*5;
       my $started = time;
+      my $site_started = $started;
       my $end_time = $started + $timeout;
-      my $need_stop = sub {
-        return 1 if $end_time < time;
+      my $need_stop = sub ($) {
+        my $in_run = $_[0];
+        
+        if ($end_time < time) {
+          warn "indexing: Time elapsed ($timeout)\n";
+          return 1;
+        }
+
+        if ($site_started + $site_timeout < time and not $in_run) {
+          warn "indexing: Site time elapsed ($site_timeout)\n";
+          return 1;
+        }
         
         for my $key (qw(
           free_set free_large_set nonfree_set nonfree_large_set
         )) {
-          return 1 if ($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size;
+          if (($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size) {
+            warn "indexing: Max size ($max_size) exceeded ($key)\n";
+            return 1;
+          }
         }
 
         return 0;
@@ -522,11 +537,13 @@ sub main () {
       return promised_until {
         my $item = shift @$sites;
         return 'done' unless defined $item;
-        
+
         my ($root_url, $site_type, $site_name, $opts) = @$item;
+        warn "indexing: Site |$site_type|, |$site_name|\n";
         $opts //= {};
+        $site_started = time;
         return run ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop)->then (sub {
-          return 1 if $need_stop->();
+          return 1 if $need_stop->(0);
           return not 'done';
         });
       };
@@ -544,3 +561,12 @@ sub main () {
 } # main
 
 main->to_cv->recv;
+
+=head1 LICENSE
+
+Copyright 2024 Wakaba <wakaba@suikawiki.org>.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
