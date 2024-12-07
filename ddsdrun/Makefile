@@ -16,7 +16,7 @@ ddsd-batch: batch
 
 batch:
 	mkdir -p local
-	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE)main cp -R /app/data /local/ddsddata-data
+	-docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE)main cp -R /app/data /local/ddsddata-data
 	mkdir -p local/ddsddata-data
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data 
