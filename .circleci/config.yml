@@ -1,0 +1,47 @@
+{
+   "jobs" : {
+      "build" : {
+         "environment" : {
+            "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts/build"
+         },
+         "machine" : {
+            "image" : "default"
+         },
+         "steps" : [
+            "checkout",
+            {
+               "run" : {
+                  "command" : "mkdir -p $CIRCLE_ARTIFACTS"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "true"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "true"
+               }
+            },
+            {
+               "store_artifacts" : {
+                  "path" : "/tmp/circle-artifacts/build"
+               }
+            }
+         ]
+      }
+   },
+   "version" : "2.1",
+   "workflows" : {
+      "build" : {
+         "jobs" : [
+            {
+               "build" : {
+               }
+            }
+         ]
+      },
+      "version" : 2
+   }
+}

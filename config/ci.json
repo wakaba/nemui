@@ -17,7 +17,11 @@
       "build_secrets": ["DDSDRUN_DOCKER_IMAGE"]
     },
     "gaa": true,
-    "autobuild": true,
+    "autobuild": {"per_day": 3},
     "merger": true
+  },
+  "circleci": {
+    "build": ["true"],
+    "tests": ["true"]
   }
 }
