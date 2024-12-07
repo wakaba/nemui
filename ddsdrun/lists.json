@@ -3,6 +3,9 @@
     ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/legal/packref.json", "packref", "legal", {
       "tags": ["legal"]
     }],
+    ["https://catalog.registries.digital.go.jp/rc/dataset/", "ckan", "catalog.registries.digital.go.jp", {
+      "tags": ["デジタル庁"]
+    }],
     ["https://data.city.ikoma.lg.jp/data/dataset", "ckan", "data.city.ikoma.lg.jp", {
       "tags": ["生駒市"]
     }]

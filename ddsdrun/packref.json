@@ -6,6 +6,10 @@
       "file:r:list.json": {
         "url": "lists.json",
         "name": "list.json"
+      },
+      "file:r:prioritized.json": {
+        "url": "https://gist.githubusercontent.com/wakaba/d674f68a9d29fdcb89c3b1f12add9014/raw/prioritized.json",
+        "name": "prioritized.json"
       }
     }
   },

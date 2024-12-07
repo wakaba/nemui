@@ -318,14 +318,14 @@ sub add_to_local_index ($$$$$$$$$) {
   });
 } # add_to_local_index
 
-sub process_remote_index ($$$$$$) {
-  my ($site_type, $site_name, $root_url, $opts, $states_sets, $need_stop) = @_;
+sub process_remote_index ($$$$$$$) {
+  my ($site_type, $site_name, $root_url, $opts, $states_sets, $need_stop, $p_list) = @_;
   my $esite_name = escape $site_name;
   my $base_path = $DataRootPath;
   my $path = $base_path->child
       ('local/data', $esite_name, 'files/package_list.json');
   my $file = Promised::File->new_from_path ($path);
-  return $file->read_byte_string->then (sub {
+  return $file->read_byte_string->then (sub { # XXX if error (pull failed)
     my $json = json_bytes2perl $_[0];
     my $results;
     if ($site_type eq 'ckan') {
@@ -357,7 +357,8 @@ sub process_remote_index ($$$$$$) {
     })->then (sub {
       $states_sitepacks = json_bytes2perl $_[0];
       $results = [sort {
-        ($states_sitepacks->{$a->[0]} || 0) <=> ($states_sitepacks->{$b->[0]} || 0);
+        ($states_sitepacks->{$a->[0]} || $p_list->{$a->[0]} || 0) <=>
+        ($states_sitepacks->{$b->[0]} || $p_list->{$b->[0]} || 0);
       } @{rand_list $results}];
 
       return promised_wait_until {
@@ -445,13 +446,13 @@ sub process_remote_index ($$$$$$) {
   });
 } # process_remote_index
 
-sub run ($$$$$$) {
-  my ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop) = @_;
+sub run ($$$$$$$) {
+  my ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop, $p_list) = @_;
   return Promise->resolve->then (sub {
     return pull_remote_index ($site_name, $root_url);
   })->then (sub {
     return process_remote_index ($site_type, $site_name, $root_url, $opts,
-                                 $states_sets, $need_stop);
+                                 $states_sets, $need_stop, $p_list);
   });
 } # run
 
@@ -459,7 +460,7 @@ sub main () {
   return Promise->resolve->then (sub {
     my $root_url = "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun/ddsdrun/packref.json";
     if ($ENV{LIVE}) {
-      $root_url = "https://raw.githubusercontent.com/wakaba/nemui/ddsdrun-live/ddsdrun/packref.json";
+      $root_url = "https://raw.githubusercontent.com/geocol/ddsd-data/master/indexing/packref.json";
     }
     return pull_remote_index ("root", $root_url);
   })->then (sub {
@@ -467,11 +468,15 @@ sub main () {
     my $path = $base_path->child
         ('local/data/root/files/list.json');
     my $file = Promised::File->new_from_path ($path);
+    my $p_path = $base_path->child
+        ('local/data/root/files/prioritized.json');
+    my $p_file = Promised::File->new_from_path ($p_path);
     my $states_sets_path = $base_path->child ("states/mirrorsets.json");
     my $states_sets_file = Promised::File->new_from_path ($states_sets_path);
     my $states_sets;
     return Promise->all ([
-      $file->read_byte_string, # XXX if error (pull failed)
+      $file->read_byte_string,
+      $p_file->read_byte_string,
       $states_sets_file->is_file->then (sub {
         if ($_[0]) {
           return $states_sets_file->read_byte_string;
@@ -485,12 +490,13 @@ sub main () {
       Promised::File->new_from_path ($base_path->child ('states/mirrorsets/nonfree_large_set.txt'))->read_byte_string,
     ])->then (sub {
       my $json = json_bytes2perl $_[0]->[0];
+      my $p_json = json_bytes2perl $_[0]->[1];
 
-      $states_sets = json_bytes2perl $_[0]->[1];
-      $states_sets->{free_set} = $_[0]->[2] || 'free-1';
-      $states_sets->{free_large_set} = $_[0]->[3] || 'free-l1';
-      $states_sets->{nonfree_set} = $_[0]->[4] || 'nonfree-1';
-      $states_sets->{nonfree_large_set} = $_[0]->[5] || 'nonfree-l1';
+      $states_sets = json_bytes2perl $_[0]->[2];
+      $states_sets->{free_set} = $_[0]->[3] || 'free-1';
+      $states_sets->{free_large_set} = $_[0]->[4] || 'free-l1';
+      $states_sets->{nonfree_set} = $_[0]->[5] || 'nonfree-1';
+      $states_sets->{nonfree_large_set} = $_[0]->[6] || 'nonfree-l1';
       delete $states_sets->{changed_mirror_sets};
 
       my $max_size = $ENV{LIVE} ? 1*1024*1024*1024 : 100*1024*1024;
@@ -501,7 +507,7 @@ sub main () {
             if ($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size;
       }
 
-      my $timeout = $ENV{LIVE} ? 60*15 : 60*3;
+      my $timeout = $ENV{LIVE} ? 60*30 : 60*3;
       my $site_timeout = 60*5;
       my $started = time;
       my $site_started = $started;
@@ -533,6 +539,10 @@ sub main () {
 
       my $sites = $json->{items};
       $sites = rand_list $sites;
+      my $p_sites = {map { $_ => 1 } keys %$p_json};
+      $sites = [sort {
+        ($p_sites->{$a->[2]} || 0) <=> ($p_sites->{$b->[2]} || 0);
+      } @$sites];
       
       return promised_until {
         my $item = shift @$sites;
@@ -542,7 +552,7 @@ sub main () {
         warn "indexing: Site |$site_type|, |$site_name|\n";
         $opts //= {};
         $site_started = time;
-        return run ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop)->then (sub {
+        return run ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop, $p_json->{$site_name})->then (sub {
           return 1 if $need_stop->(0);
           return not 'done';
         });
