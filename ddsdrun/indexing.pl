@@ -539,7 +539,7 @@ sub main () {
 
       my $sites = $json->{items};
       $sites = rand_list $sites;
-      my $p_sites = {map { $_ => 1 } keys %$p_json};
+      my $p_sites = {map { $_ => -1 } keys %$p_json};
       $sites = [sort {
         ($p_sites->{$a->[2]} || 0) <=> ($p_sites->{$b->[2]} || 0);
       } @$sites];
