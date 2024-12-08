@@ -28,6 +28,7 @@
       "true"
     ],
     "build_generated_files": [],
+    "make_deploy_branches": ["master"],
 
     "autobuild": true
   }

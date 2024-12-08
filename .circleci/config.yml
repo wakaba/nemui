@@ -34,6 +34,24 @@
             }
          ]
       },
+      "deploy_master" : {
+         "machine" : {
+            "image" : "default"
+         },
+         "steps" : [
+            "checkout",
+            {
+               "attach_workspace" : {
+                  "at" : "./"
+               }
+            },
+            {
+               "deploy" : {
+                  "command" : "make deploy-master"
+               }
+            }
+         ]
+      },
       "test" : {
          "environment" : {
             "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts/test"
@@ -93,7 +111,7 @@
          "triggers" : [
             {
                "schedule" : {
-                  "cron" : "49 10 * * *",
+                  "cron" : "29 11 * * *",
                   "filters" : {
                      "branches" : {
                         "only" : [
@@ -115,6 +133,24 @@
                "test" : {
                   "requires" : [
                      "build"
+                  ]
+               }
+            },
+            {
+               "deploy_master" : {
+                  "context" : [
+                     "deploy-context"
+                  ],
+                  "filters" : {
+                     "branches" : {
+                        "only" : [
+                           "master"
+                        ]
+                     }
+                  },
+                  "requires" : [
+                     "build",
+                     "test"
                   ]
                }
             }
