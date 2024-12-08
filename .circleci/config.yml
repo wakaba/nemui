@@ -20,13 +20,47 @@
                }
             },
             {
+               "store_artifacts" : {
+                  "path" : "/tmp/circle-artifacts/build"
+               }
+            },
+            {
+               "persist_to_workspace" : {
+                  "paths" : [
+                     ".ciconfigtemp"
+                  ],
+                  "root" : "./"
+               }
+            }
+         ]
+      },
+      "test" : {
+         "environment" : {
+            "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts/test"
+         },
+         "machine" : {
+            "image" : "default"
+         },
+         "steps" : [
+            "checkout",
+            {
+               "attach_workspace" : {
+                  "at" : "./"
+               }
+            },
+            {
+               "run" : {
+                  "command" : "mkdir -p $CIRCLE_ARTIFACTS"
+               }
+            },
+            {
                "run" : {
                   "command" : "true"
                }
             },
             {
                "store_artifacts" : {
-                  "path" : "/tmp/circle-artifacts/build"
+                  "path" : "/tmp/circle-artifacts/test"
                }
             }
          ]
@@ -59,7 +93,7 @@
          "triggers" : [
             {
                "schedule" : {
-                  "cron" : "16 10 * * *",
+                  "cron" : "49 10 * * *",
                   "filters" : {
                      "branches" : {
                         "only" : [
@@ -75,6 +109,13 @@
          "jobs" : [
             {
                "build" : {
+               }
+            },
+            {
+               "test" : {
+                  "requires" : [
+                     "build"
+                  ]
                }
             }
          ]

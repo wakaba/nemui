@@ -27,6 +27,7 @@
     "tests": [
       "true"
     ],
+    "build_generated_files": [],
 
     "autobuild": true
   }
