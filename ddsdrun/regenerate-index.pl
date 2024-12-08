@@ -254,6 +254,13 @@ sub regenerate_computed () {
       } [values %{$_[0]}];
     } [values %$json];
   })->then (sub {
+    my $states_sets_path = $base_path->child ("states/mirrorsets.json");
+    return Promised::File->new_from_path ($states_sets_path)->read_byte_string;
+  })->then (sub {
+    my $states_sets = json_bytes2perl $_[0];
+    for (keys %{$states_sets->{new_mirror_sets} or {}}) {
+      $touched_mirror_sets->{$_} = 1;
+    }
     my $make_path = $ThisPath->child ('Makefile.reindextemp');
     my $make = sprintf "all:\n%s\n", join "", map {
       sprintf "\t\$(MAKE) build-mirror-image MIRROR_SET=%s\n", $_;

@@ -16,7 +16,7 @@ ddsd-batch: batch
 
 batch:
 	mkdir -p local
-	-docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE)main cp -R /app/data /local/ddsddata-data
+	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE)main cp -R /app/data /local/ddsddata-data
 	mkdir -p local/ddsddata-data
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data 
@@ -32,24 +32,21 @@ batch:
 	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirrorsets/free_large_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirrorsets/free_large_set.txt` /ddsddata/data/mirror/
 	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirrorsets/nonfree_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirrorsets/nonfree_set.txt` /ddsddata/data/mirror/
 	-docker run -v `pwd`/ddsddata:/ddsddata --user `id --user` $(DOCKER_IMAGE)`cat ddsddata/data/states/mirrorsets/nonfree_large_set.txt` cp -R /app/data/mirror/`cat ddsddata/data/states/mirrorsets/nonfree_large_set.txt` /ddsddata/data/mirror/
-	# XXXX
-	ls -lR ddsddata
 	$(MAKE) build-ddsd build-main
 	-chmod ugo+r -R ddsddata/data
 	docker login -u $$DOCKER_USER -p $$DOCKER_PASS $(DOCKER_REGISTRY)
-	# XXXX
-	ls -lR ddsddata
 	$(MAKE) -f Makefile.reindextemp
 	mv ddsddata/data/mirror ./
 	docker build -t $(DOCKER_IMAGE)main .
 	docker push $(DOCKER_IMAGE)main
-	#bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
+	bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
 
 MIRROR_SET=...
 
 #MIRROR_SET
 build-mirror-image:
 	mkdir -p local/mirror-image/$(MIRROR_SET)
+	mkdir -p ddsddata/data/mirror/$(MIRROR_SET)
 	cat Dockerfile.ddsdmirror | sed -e s%@@MIRROR_SET@@%$(MIRROR_SET)%g \
 	> local/mirror-image/$(MIRROR_SET)/Dockerfile
 	mv ddsddata/data/mirror/$(MIRROR_SET) \

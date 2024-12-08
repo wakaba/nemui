@@ -16,7 +16,7 @@
             },
             {
                "run" : {
-                  "command" : "true"
+                  "command" : "make ddsd-batch"
                }
             },
             {
@@ -34,6 +34,43 @@
    },
    "version" : "2.1",
    "workflows" : {
+      "autobuild" : {
+         "jobs" : [
+            "build",
+            {
+               "test" : {
+                  "requires" : [
+                     "build"
+                  ]
+               }
+            },
+            {
+               "deploy_master" : {
+                  "context" : [
+                     "deploy-context"
+                  ],
+                  "requires" : [
+                     "build",
+                     "test"
+                  ]
+               }
+            }
+         ],
+         "triggers" : [
+            {
+               "schedule" : {
+                  "cron" : "16 10 * * *",
+                  "filters" : {
+                     "branches" : {
+                        "only" : [
+                           "master"
+                        ]
+                     }
+                  }
+               }
+            }
+         ]
+      },
       "build" : {
          "jobs" : [
             {

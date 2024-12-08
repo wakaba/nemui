@@ -21,7 +21,13 @@
     "merger": true
   },
   "circleci": {
-    "build": ["true"],
-    "tests": ["true"]
+    "build": [
+      "make ddsd-batch"
+    ],
+    "tests": [
+      "true"
+    ],
+
+    "autobuild": true
   }
 }
