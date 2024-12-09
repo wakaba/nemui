@@ -138,27 +138,29 @@ sub add_to_local_index ($$$$$$$$$) {
     $index_line->[3]->{is_free} = $legal->{is_free} // 'unknown';
     my $is_free = $index_line->[3]->{is_free} eq 'free';
     my $mirror_set;
-    if ($mirrorzip->{length} > 10*1024*1024) {
+    if (defined $mirrorzip and $mirrorzip->{length} > 10*1024*1024) {
       $mirror_set = $states_sets->{$is_free ? 'free_large_set' : 'nonfree_large_set'};
     } else {
       $mirror_set = $states_sets->{$is_free ? 'free_set' : 'nonfree_set'};
     }
-    my $ref_key = $index_line->[2] = sha256_hex join $;,
+    my $ref_key_text = join $;,
         $ThisRev,
-        (encode_web_utf8 $shash),
-        (encode_web_utf8 $index_line->[3]->{is_free}),
+        $shash,
+        $index_line->[3]->{is_free},
         $index_line->[3]->{insecure} ? 1 : 0,
         $index_line->[3]->{broken} ? 1 : 0;
+    my $ref_key = $index_line->[2] = sha256_hex encode_web_utf8 $ref_key_text;
 
     my $summary = {};
     {
+      $summary->{ref_key_text} = $ref_key_text;
       $summary->{broken} = 1 if $index_line->[3]->{broken};
       $summary->{insecure} = 1 if $index_line->[3]->{insecure};
       $summary->{mirrorzip} = {
         set => $mirror_set,
         length => $mirrorzip->{length},
         sha256 => $mirrorzip->{sha256},
-      };
+      } if defined $mirrorzip;
 
       $summary->{legal} = {%$legal, legal => filter_legal $legal->{legal}};
       
@@ -295,12 +297,14 @@ sub add_to_local_index ($$$$$$$$$) {
         return if $revert_only;
         
         $states_sets->{changed_mirror_sets}->{$mirror_set} = 1;
-        $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
+        $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length}
+            if defined $mirrorzip;
         return $ref_file->write_byte_string (perl2json_bytes_for_record $ref)->then (sub {
           return Promised::File->new_from_path ($summary_path)->write_byte_string (perl2json_bytes_for_record $summary);
         })->then (sub {
           return Promised::File->new_from_path ($index_path->parent)->mkpath;
         })->then (sub {
+          return unless defined $mirrorzip;
           my $file = Promised::File->new_from_path ($out_mirrorzip_path);
           return $file->remove_tree->then (sub {
             return Promised::File->new_from_path ($out_mirrorzip_path)->hardlink_from ($mirrorzip_path);
@@ -313,6 +317,61 @@ sub add_to_local_index ($$$$$$$$$) {
         return $states_siterefs_file->write_byte_string (perl2json_bytes $states_siterefs);
       })->then (sub {
         return $states_sitepackrefs_file->write_byte_string (perl2json_bytes $states_sitepackrefs);
+      });
+    })->then (sub {
+      return if defined $mirrorzip;
+
+      my @set;
+      push @set, {size => 0, keys => {}};
+      for my $file (@$files) {
+        if (defined $file->{rev} and defined $file->{rev}->{length} and
+            not $file->{type} eq 'meta') {
+          if ($file->{rev}->{length} >= 1*1024*1024*1024) {
+            push @set, {keys => {$file->{key} => 1}};
+          } else {
+            if ($set[0]->{size} + $file->{rev}->{length} >= 1*1024*1024*1024) {
+              unshift @set, {size => 0, keys => {}};
+            }
+            $set[0]->{keys}->{$file->{key}} = 1;
+          }
+        }
+      }
+      my @packref;
+      for my $set (@set) {
+        my $packref = {%$ref};
+        for my $file (@$files) {
+          if (defined $file->{rev} and defined $file->{rev}->{length} and
+              not $file->{type} eq 'meta') {
+            $packref->{files}->{$file->{key}}->{skip} = 1
+                unless $set->{keys}->{$file->{key}};
+          }
+        }
+        push @packref, $packref;
+      }
+
+      my $i = 0;
+      my @name;
+      return Promise->resolve->then (sub {
+        return promised_for {
+          my $packref = shift;
+          my $name = "$site_type/$esite_name/fragment-$ref_key-".$i++.".json";
+          push @name, $name;
+          my $path = $base_path->child ("fragments/$name");
+          return Promised::File->new_from_path ($path)->write_byte_string
+              (perl2json_bytes_for_record $packref);
+        } \@packref;
+      })->then (sub {
+        my $list_path = $base_path->child ('fragments/list.json');
+        my $list_file = Promised::File->new_from_path ($list_path);
+        return $list_file->is_file->then (sub {
+          return $_[0] ? $list_file->read_byte_string : '[]';
+        })->then (sub {
+          my $list = json_bytes2perl $_[0];
+          push @$list, @name;
+          my $found = {};
+          $list = [grep { not $found->{$_}++ } sort { $a cmp $b } @$list];
+          return $list_file->write_byte_string (perl2json_bytes_for_record $list);
+        });
       });
     });
   });
@@ -431,19 +490,31 @@ sub process_remote_index ($$$$$$$) {
               $key,
               '--json',
             ),
-            ddsd (
-              {wd => $base_path, json => 1},
-              'export',
-              'mirrorzip',
-              $key,
-              "local/tmp/$key.mirrorzip.zip",
-              '--json',
-            ),
-          ]);
+          ])->then (sub {
+            my $r = $_[0];
+
+            my $size = 0;
+            for my $x (@{$r->[0]->{jsonl}}) {
+              if (defined $x->{rev} and defined $x->{rev}->{length}) {
+                $size += $x->{rev}->{length};
+              }
+            }
+            return Promise->all ([
+              @$r,
+              $size < 10*1024*1024*1024 ? ddsd (
+                {wd => $base_path, json => 1},
+                'export',
+                'mirrorzip',
+                $key,
+                "local/tmp/$key.mirrorzip.zip",
+                '--json',
+              ) : {json => undef},
+            ]);
+          });
         })->then (sub {
           return add_to_local_index ($site_type, $site_name, $pack_name, $now,
                                      $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
-                                     $_[0]->[2]->{json},
+                                     $_[0]->[2]->{json}, # or undef
                                      "local/tmp/$key.mirrorzip.zip",
                                      $states_sets);
         });

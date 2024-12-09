@@ -121,10 +121,12 @@ sub regenerate_computed_index ($$$$$$) {
                 $tag->{broken} = 1 if $summary->{broken};
                 $tag->{'non-free'} = 1 if $summary->{legal}->{is_free} eq 'non-free';
                 $tag->{'license unknown'} = 1 if $summary->{legal}->{is_free} eq 'unknown';
+                $tag->{'no mirrorzip'} = 1 if not defined $summary->{mirrorzip};
                 $tag->{'latest problematic'} = 1
                     if not $current_is_latest or
                     $summary->{broken} or
-                    $summary->{insecure} or
+                    #$summary->{insecure} or
+                    $tag->{'no mirrorzip'} or
                     $tag->{'license unknown'};
                 $tag->{$summary->{package}->{author}} = 1;
                 $tag->{$summary->{package}->{org}} = 1;
@@ -197,21 +199,23 @@ sub regenerate_computed_index ($$$$$$) {
               }
             }
 
-            my $item = [
-              $current->[1],
-              "../$site_type/$esite_name/$current->[1].zip",
-              $summary->{mirrorzip}->{sha256},
-              $summary->{mirrorzip}->{length},
-            ];
+            if (defined $summary->{mirrorzip}) {
+              my $item = [
+                $current->[1],
+                "../$site_type/$esite_name/$current->[1].zip",
+                $summary->{mirrorzip}->{sha256},
+                $summary->{mirrorzip}->{length},
+              ];
 
-            my $mirror_set = $summary->{mirrorzip}->{set};
-            return $get_mirrorzip_file->($mirror_set)->then (sub {
-              my $mirrorzip_file = $_[0];
-              print $mirrorzip_file perl2json_bytes $item;
-              print $mirrorzip_file "\x0A";
-              $touched_mirror_sets->{$mirror_set} = 1
-                  if $states_sets->{changed_mirror_sets}->{$mirror_set};
-            });
+              my $mirror_set = $summary->{mirrorzip}->{set};
+              return $get_mirrorzip_file->($mirror_set)->then (sub {
+                my $mirrorzip_file = $_[0];
+                print $mirrorzip_file perl2json_bytes $item;
+                print $mirrorzip_file "\x0A";
+                $touched_mirror_sets->{$mirror_set} = 1
+                    if $states_sets->{changed_mirror_sets}->{$mirror_set};
+              });
+            } # mirrorzip
           });
         } [keys %pack_name];
       });

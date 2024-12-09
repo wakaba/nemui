@@ -3,6 +3,9 @@
     ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/legal/packref.json", "packref", "legal", {
       "tags": ["legal"]
     }],
+    ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/fragments/packref.json", "packref", "fragments", {
+      "tags": ["ddsd fragment packrefs"]
+    }],
     ["https://catalog.registries.digital.go.jp/rc/dataset", "ckan", "catalog.registries.digital.go.jp", {
       "tags": ["デジタル庁"]
     }],
