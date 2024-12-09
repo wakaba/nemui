@@ -4,16 +4,17 @@
       "tags": ["legal"]
     }],
     ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/fragments/packref.json", "packref", "fragments", {
+      "base_url": "https://raw.githubusercontent.com/geocol/ddsd-snapshots/refs/heads/master/data/fragments/list.json",
       "tags": ["ddsd fragment packrefs"]
-    }],
-    ["https://catalog.registries.digital.go.jp/rc/dataset", "ckan", "catalog.registries.digital.go.jp", {
-      "tags": ["デジタル庁"]
     }],
     ["https://data.city.ikoma.lg.jp/data/dataset", "ckan", "data.city.ikoma.lg.jp", {
       "tags": ["生駒市"]
     }]
   ],
   "XXX": [
+    ["https://catalog.registries.digital.go.jp/rc/dataset", "ckan", "catalog.registries.digital.go.jp", {
+      "tags": ["デジタル庁"]
+    }],
     ["https://city.himeji.gkan.jp/gkan/", "ckan", "city.himeji.gkan.jp", {
       "tags": ["姫路市・播磨圏域連携中枢都市圏"]
     }],

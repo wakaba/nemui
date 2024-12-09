@@ -8,7 +8,13 @@
       {"run": "make ddsd-batch",
        "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE", 
                    "DDSDRUN_BUILD_MAIN",
-                   "BWALLER_URL", "DOCKER_USER", "DOCKER_PASS"]}
+                   "BWALLER_URL", "DOCKER_USER", "DOCKER_PASS"],
+       "branch": "master"},
+      {"run": "make ddsd-batch",
+       "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE", 
+                   "DDSDRUN_BUILD_MAIN",
+                   "BWALLER_URL", "DOCKER_USER", "DOCKER_PASS"],
+       "branch": "ddsdrun"}
     ],
     "tests": [
       "true"
@@ -22,7 +28,7 @@
   },
   "circleci": {
     "build": [
-      "make ddsd-batch"
+      {"command": "make ddsd-batch", "branch": "master"}
     ],
     "tests": [
       "true"

@@ -16,7 +16,7 @@
             },
             {
                "run" : {
-                  "command" : "make ddsd-batch"
+                  "command" : "if [ \u0022${CIRCLE_BRANCH}\u0022 == 'master' ]; then\u000Atrue\u000Amake ddsd-batch\u000Afi"
                }
             },
             {
@@ -111,7 +111,7 @@
          "triggers" : [
             {
                "schedule" : {
-                  "cron" : "29 11 * * *",
+                  "cron" : "17 16 * * *",
                   "filters" : {
                      "branches" : {
                         "only" : [
