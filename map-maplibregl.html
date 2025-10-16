@@ -1,0 +1,924 @@
+<!DOCTYPE HTML>
+<html>
+  <meta charset=utf-8>
+  <title>Map</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel=stylesheet href=https://pawjy.github.io/html-unit-number/css/default.css>
+<link rel=stylesheet href=https://pawjy.github.io/html-page-components/css/default.css>
+<style>
+  body {
+    margin: 1em;
+  }
+  p {
+    margin: 0;
+  }
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  map-area {
+    height: 40em;
+    /*--paco-map-touch-scroll-viewport: none;*/
+    /*--paco-map-zoom-animation: none;*/
+  }
+  map-area[formcontrol] {
+    /*--paco-marker-value: circle red 1000m green 2px;*/
+  }
+  x-1, x-2, x-3, x-4 {
+    position: absolute;
+    display: block;
+    border: 5px solid gray;
+    min-width: 10px;
+    min-height: 10px;
+  }
+  x-2 { border-color: blue }
+  x-3 { border-color: green }
+  x-4 { border-color: red }
+</style>
+<script src=https://pawjy.github.io/html-page-components/src/page-components.js async></script>
+<script src=https://pawjy.github.io/html-page-components/src/maps.js async></script>
+<script src=https://wiki.suikawiki.org/scripts/time async data-time-selector=time></script>
+<script src=https://pawjy.github.io/html-unit-number/src/unit-number.js async></script>
+
+  <section id=map-section-1 lang=ja>
+    <map-area engine=maplibre controls="type typebuttons scale fullscreen currentposition zoom streetview togglelegend coordinates pitch" maptype=gsi-standard x-maptype=gsi-photo-optimal_bvmap pitch=35 terrain gsi jma osm lat=35.2 lon=135.4 zoom=12 formcontrol>
+      <map-controls>ABC</map-controls>
+      <map-controls position=top-left>XYZ</map-controls>
+      <map-controls position=top-left><button>xyz</button></map-controls>
+      <map-controls position=top-center>123</map-controls>
+      <map-controls position=top-left legend>A legend</map-controls>
+      <map-controls position=top-left>Not a legend</map-controls>
+    </map-area>
+
+    <script>
+      document.querySelector ('map-area').addEventListener ('pcRedraw', x1, {once: true});
+      function x1 () {
+
+        let points = window.x|| [
+    {
+        "lat": 35.02415,
+        "lon": 136.45964
+    },
+    {
+        "lat": 35.02685,
+        "lon": 136.45851
+    },
+    {
+        "lat": 35.02915,
+        "lon": 136.45762
+    },
+    {
+        "lat": 35.03176,
+        "lon": 136.45737
+    },
+    {
+        "lat": 35.03354,
+        "lon": 136.45748
+    },
+    {
+        "lat": 35.0354,
+        "lon": 136.45621
+    },
+    {
+        "lat": 35.03636,
+        "lon": 136.45577
+    },
+    {
+        "lat": 35.03644,
+        "lon": 136.45425
+    },
+    {
+        "lat": 35.03609,
+        "lon": 136.45348
+    },
+    {
+        "lat": 35.03587,
+        "lon": 136.45252
+    },
+    {
+        "lat": 35.03505,
+        "lon": 136.44928
+    },
+    {
+        "lat": 35.03492,
+        "lon": 136.44781
+    },
+    {
+        "lat": 35.03489,
+        "lon": 136.44566
+    },
+    {
+        "lat": 35.03455,
+        "lon": 136.44513
+    },
+    {
+        "lat": 35.03353,
+        "lon": 136.44361
+    },
+    {
+        "lat": 35.03327,
+        "lon": 136.44171
+    },
+    {
+        "lat": 35.03335,
+        "lon": 136.44014
+    },
+    {
+        "lat": 35.03327,
+        "lon": 136.43904
+    },
+    {
+        "lat": 35.03309,
+        "lon": 136.43683
+    },
+    {
+        "lat": 35.03357,
+        "lon": 136.43589
+    },
+    {
+        "lat": 35.03356,
+        "lon": 136.43558
+    },
+    {
+        "lat": 35.03317,
+        "lon": 136.43478
+    },
+    {
+        "lat": 35.03216,
+        "lon": 136.43343
+    },
+    {
+        "lat": 35.03225,
+        "lon": 136.43261
+    },
+    {
+        "lat": 35.03213,
+        "lon": 136.43169
+    },
+    {
+        "lat": 35.03183,
+        "lon": 136.43062
+    },
+    {
+        "lat": 35.03162,
+        "lon": 136.42869
+    },
+    {
+        "lat": 35.03074,
+        "lon": 136.4262
+    },
+    {
+        "lat": 35.02937,
+        "lon": 136.42455
+    },
+    {
+        "lat": 35.02788,
+        "lon": 136.42274
+    },
+    {
+        "lat": 35.02671,
+        "lon": 136.42228
+    },
+    {
+        "lat": 35.02527,
+        "lon": 136.4226
+    },
+    {
+        "lat": 35.02424,
+        "lon": 136.42188
+    },
+    {
+        "lat": 35.02209,
+        "lon": 136.42215
+    },
+    {
+        "lat": 35.02141,
+        "lon": 136.42396
+    },
+    {
+        "lat": 35.0192,
+        "lon": 136.42338
+    },
+    {
+        "lat": 35.01929,
+        "lon": 136.42315
+    },
+    {
+        "lat": 35.01931,
+        "lon": 136.42317
+    },
+    {
+        "lat": 35.0206,
+        "lon": 136.42077
+    },
+    {
+        "lat": 35.02042,
+        "lon": 136.41873
+    },
+    {
+        "lat": 35.01865,
+        "lon": 136.41774
+    },
+    {
+        "lat": 35.01621,
+        "lon": 136.41768
+    },
+    {
+        "lat": 35.01466,
+        "lon": 136.41693
+    },
+    {
+        "lat": 35.01331,
+        "lon": 136.41713
+    },
+    {
+        "lat": 35.01119,
+        "lon": 136.417
+    },
+    {
+        "lat": 35.01061,
+        "lon": 136.41735
+    },
+    {
+        "lat": 35.00979,
+        "lon": 136.41767
+    },
+    {
+        "lat": 35.00779,
+        "lon": 136.41864
+    },
+    {
+        "lat": 35.00552,
+        "lon": 136.41935
+    },
+    {
+        "lat": 35.0048,
+        "lon": 136.41997
+    },
+    {
+        "lat": 35.00265,
+        "lon": 136.42016
+    },
+    {
+        "lat": 35.00184,
+        "lon": 136.42086
+    },
+    {
+        "lat": 35.00123,
+        "lon": 136.42098
+    },
+    {
+        "lat": 35.0011,
+        "lon": 136.42153
+    },
+    {
+        "lat": 34.99995,
+        "lon": 136.42122
+    },
+    {
+        "lat": 34.99914,
+        "lon": 136.42016
+    },
+    {
+        "lat": 34.99847,
+        "lon": 136.4186
+    },
+    {
+        "lat": 34.99772,
+        "lon": 136.41642
+    },
+    {
+        "lat": 34.99679,
+        "lon": 136.4147
+    },
+    {
+        "lat": 34.99615,
+        "lon": 136.41397
+    },
+    {
+        "lat": 34.99556,
+        "lon": 136.41358
+    },
+    {
+        "lat": 34.99392,
+        "lon": 136.41448
+    },
+    {
+        "lat": 34.99191,
+        "lon": 136.41621
+    },
+    {
+        "lat": 34.98951,
+        "lon": 136.41561
+    },
+    {
+        "lat": 34.98877,
+        "lon": 136.41577
+    },
+    {
+        "lat": 34.98798,
+        "lon": 136.41595
+    },
+    {
+        "lat": 34.98577,
+        "lon": 136.41526
+    },
+    {
+        "lat": 34.9849,
+        "lon": 136.41502
+    },
+    {
+        "lat": 34.98423,
+        "lon": 136.41522
+    },
+    {
+        "lat": 34.98208,
+        "lon": 136.41497
+    },
+    {
+        "lat": 34.98081,
+        "lon": 136.41578
+    },
+    {
+        "lat": 34.97901,
+        "lon": 136.41434
+    },
+    {
+        "lat": 34.97691,
+        "lon": 136.41158
+    },
+    {
+        "lat": 34.97502,
+        "lon": 136.40889
+    },
+    {
+        "lat": 34.97225,
+        "lon": 136.40748
+    },
+    {
+        "lat": 34.97125,
+        "lon": 136.40631
+    },
+    {
+        "lat": 34.97072,
+        "lon": 136.40487
+    },
+    {
+        "lat": 34.96837,
+        "lon": 136.40318
+    },
+    {
+        "lat": 34.96697,
+        "lon": 136.40353
+    },
+    {
+        "lat": 34.96603,
+        "lon": 136.40285
+    },
+    {
+        "lat": 34.965,
+        "lon": 136.40206
+    },
+    {
+        "lat": 34.96461,
+        "lon": 136.4016
+    },
+    {
+        "lat": 34.96392,
+        "lon": 136.40043
+    },
+    {
+        "lat": 34.96337,
+        "lon": 136.3993
+    },
+    {
+        "lat": 34.96216,
+        "lon": 136.39971
+    },
+    {
+        "lat": 34.9609,
+        "lon": 136.39969
+    },
+    {
+        "lat": 34.96011,
+        "lon": 136.39879
+    },
+    {
+        "lat": 34.95893,
+        "lon": 136.39747
+    },
+    {
+        "lat": 34.95765,
+        "lon": 136.3968
+    },
+    {
+        "lat": 34.95596,
+        "lon": 136.39637
+    },
+    {
+        "lat": 34.95482,
+        "lon": 136.39646
+    },
+    {
+        "lat": 34.9535,
+        "lon": 136.39597
+    },
+    {
+        "lat": 34.9525,
+        "lon": 136.39532
+    },
+    {
+        "lat": 34.9519,
+        "lon": 136.39547
+    },
+    {
+        "lat": 34.95126,
+        "lon": 136.39432
+    },
+    {
+        "lat": 34.95119,
+        "lon": 136.3919
+    },
+    {
+        "lat": 34.95239,
+        "lon": 136.3897
+    },
+    {
+        "lat": 34.95288,
+        "lon": 136.38788
+    },
+    {
+        "lat": 34.95257,
+        "lon": 136.38585
+    },
+    {
+        "lat": 34.9494,
+        "lon": 136.38247
+    },
+    {
+        "lat": 34.9479,
+        "lon": 136.38049
+    },
+    {
+        "lat": 34.94558,
+        "lon": 136.37754
+    },
+    {
+        "lat": 34.94345,
+        "lon": 136.3744
+    },
+    {
+        "lat": 34.94123,
+        "lon": 136.37341
+    },
+    {
+        "lat": 34.93952,
+        "lon": 136.37532
+    },
+    {
+        "lat": 34.93742,
+        "lon": 136.37469
+    },
+    {
+        "lat": 34.93547,
+        "lon": 136.37295
+    },
+    {
+        "lat": 34.93365,
+        "lon": 136.37165
+    },
+    {
+        "lat": 34.93197,
+        "lon": 136.37211
+    },
+    {
+        "lat": 34.92876,
+        "lon": 136.37285
+    },
+    {
+        "lat": 34.9259,
+        "lon": 136.37348
+    },
+    {
+        "lat": 34.92507,
+        "lon": 136.37519
+    },
+    {
+        "lat": 34.92395,
+        "lon": 136.37339
+    },
+    {
+        "lat": 34.92306,
+        "lon": 136.3697
+    },
+    {
+        "lat": 34.92018,
+        "lon": 136.36715
+    },
+    {
+        "lat": 34.91749,
+        "lon": 136.36738
+    },
+    {
+        "lat": 34.91291,
+        "lon": 136.36529
+    },
+    {
+        "lat": 34.89518,
+        "lon": 136.34557
+    },
+    {
+        "lat": 34.88258,
+        "lon": 136.3135
+    },
+    {
+        "lat": 34.87249,
+        "lon": 136.28145
+    },
+    {
+        "lat": 34.8615,
+        "lon": 136.2256
+    },
+    {
+        "lat": 34.88643,
+        "lon": 136.18279
+    },
+    {
+        "lat": 34.89199,
+        "lon": 136.14161
+    },
+    {
+        "lat": 34.916,
+        "lon": 136.10998
+    },
+    {
+        "lat": 34.91982,
+        "lon": 136.07483
+    },
+    {
+        "lat": 34.90567,
+        "lon": 136.02225
+    },
+    {
+        "lat": 34.91764,
+        "lon": 135.98088
+    },
+    {
+        "lat": 34.92418,
+        "lon": 135.95305
+    },
+    {
+        "lat": 34.94905,
+        "lon": 135.88011
+    },
+    {
+        "lat": 34.97542,
+        "lon": 135.85477
+    },
+    {
+        "lat": 35.00186,
+        "lon": 135.8538
+    },
+    {
+        "lat": 35.01565,
+        "lon": 135.8441
+    },
+    {
+        "lat": 35.02033,
+        "lon": 135.81097
+    },
+    {
+        "lat": 35.03909,
+        "lon": 135.80084
+    },
+    {
+        "lat": 35.05807,
+        "lon": 135.8164
+    },
+    {
+        "lat": 35.08016,
+        "lon": 135.8378
+    },
+    {
+        "lat": 35.12109,
+        "lon": 135.8498
+    },
+    {
+        "lat": 35.15455,
+        "lon": 135.8566
+    },
+    {
+        "lat": 35.17006,
+        "lon": 135.86944
+    },
+    {
+        "lat": 35.19879,
+        "lon": 135.87911
+    },
+    {
+        "lat": 35.21341,
+        "lon": 135.90592
+    },
+    {
+        "lat": 35.20815,
+        "lon": 135.93322
+      },
+      ];
+
+      let geojsonData = {
+      type: 'FeatureCollection',
+      features: [
+        ...points.map(p => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [p.lon, p.lat],
+          },
+          properties: {
+            color: p.color || 'red',
+            radius: p.radius || 5,
+          },
+        })),
+    
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: points.map(c => [c.lon, c.lat])
+          },
+          properties: {
+            color: 'green',
+            width:  2,
+          },
+        },
+      ],
+      };
+
+        let ma = document.querySelector ('map-area');
+        let map = ma.pc_MLMap;
+      
+      map.addSource('myGeojson', {
+      type: 'geojson',
+      data: geojsonData
+      });
+
+      map.addLayer({
+      id: 'points',
+      type: 'circle',
+      source: 'myGeojson',
+      paint: {
+      'circle-radius': ['get', 'radius'],
+      'circle-color': ['get', 'color'],
+      'circle-stroke-color': '#000000',
+      'circle-stroke-width': 1
+      },
+      filter: ['==', ['geometry-type'], 'Point']
+      });
+
+      map.addLayer({
+      id: 'lines',
+      type: 'line',
+      source: 'myGeojson',
+      paint: {
+      'line-color': ['get', 'color'],
+      'line-width': ['get', 'width']
+      },
+      filter: ['==', ['geometry-type'], 'LineString']
+      });
+
+        ma.pcScroll ({
+          center: points[0],
+        });
+
+      }
+      
+    </script>
+
+    <p class=buttons>
+      <button value=gsi-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">standard</button>
+      <button value=gsi-english onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">english</button>
+      <button value=gsi-english-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">english/standard</button>
+      <button value=gsi-lang onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">lang-dependent</button>
+      <button value=gsi-hillshade onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">hillshade</button>
+      <button value=gsi-photo onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">photo</button>
+      <button value=gsi-standard-hillshade onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">standard+hillshade</button>
+      <button value=gsi-hillshade-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">hillshade+standard</button>
+      <button value=gsi-photo-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">photo+standard</button>
+      <button value=none onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">none</button>
+      <button value=B13/TBB onclick="
+        document.querySelector('map-area').setMapType('himawari:'+this.value);
+      ">himawari (B13/TBB)</button>
+      <button value=B03/ALBD onclick="
+        document.querySelector('map-area').setMapType('himawari:'+this.value);
+      ">himawari (B03/ALBD)</button>
+      <button value=B08/TBB onclick="
+        document.querySelector('map-area').setMapType('himawari:'+this.value);
+      ">himawari (B08/TBB)</button>
+      <button value=REP/ETC onclick="
+        document.querySelector('map-area').setMapType('himawari:'+this.value);
+      ">himawari (REP/ETC)</button>
+      <button value=SND/ETC onclick="
+        document.querySelector('map-area').setMapType('himawari:'+this.value);
+      ">himawari (SND/ETC)</button>
+      <button value=B13/TBB onclick="
+        document.querySelector('map-area').setMapType('himawari+gsi-standard:'+this.value);
+      ">himawari+gsi-standard (B13/TBB)</button>
+      <button value=B03/ALBD onclick="
+        document.querySelector('map-area').setMapType('himawari+gsi-standard:'+this.value);
+      ">himawari+gsi-standard (B03/ALBD)</button>
+      <button value=B08/TBB onclick="
+        document.querySelector('map-area').setMapType('himawari+gsi-standard:'+this.value);
+      ">himawari+gsi-standard (B08/TBB)</button>
+      <button value=REP/ETC onclick="
+        document.querySelector('map-area').setMapType('himawari+gsi-standard:'+this.value);
+      ">himawari+gsi-standard (REP/ETC)</button>
+      <button value=SND/ETC onclick="
+        document.querySelector('map-area').setMapType('himawari+gsi-standard:'+this.value);
+      ">himawari+gsi-standard (SND/ETC)</button>
+      <button value=jma-umimesh-wind onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">jma-umimesh-wind</button>
+      <button value=jma-umimesh-wind+gsi-standard onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">jma-umimesh-wind+gsi-standard</button>
+      <button value=osm onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">osm</button>
+      <button value=osm-gsi-hillshade onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">osm-gsi-hillshade</button>
+      <button value=gsi-optimal_bvmap onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">gsi-optimal_bvmap</button>
+      <button value=gsi-photo-optimal_bvmap onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">gsi-photo-optimal_bvmap</button>
+      <button value=gsi-hillshade-optimal_bvmap onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">gsi-hillshade-optimal_bvmap</button>
+      <button value=SND/ETC onclick="
+        document.querySelector('map-area').setMapType('himawari+gsi-optimal_bvmap:'+this.value);
+      ">himawari+gsi-optimal_bvmap (SND/ETC)</button>
+
+      <input id=latlon onfocus=this.select() onchange="
+        var [lat, lon] = this.value.split (/,/);
+        var m = document.querySelector ('map-area');
+        m.setAttribute ('lat', lat);
+        m.setAttribute ('lon', lon);
+      ">
+    <p>
+      <output name=bounds></output>
+    <p>
+      <output name=value></output>
+    <script>
+    (() => {
+      var testRenderCount = 0;
+      var s = document.querySelector ('#map-section-1');
+      s.querySelector ('map-area').addEventListener ('pcRedraw', (ev) => {
+        var o = s.querySelector ('output[name=bounds]');
+        var b = ev.target.getMapBounds ();
+        let zoom = ev.target.pcZoomLevel;
+        if (b) o.textContent = [b.north, b.east, b.south, b.west, zoom,
+                                ev.target.pc_Bearing,
+                                ev.target.pc_Pitch].join (' ');
+
+        var c = ev.target.getMapCenter ();
+        document.querySelector ('#latlon').value = c.lat + ',' + c.lon;
+        
+        var n = ++testRenderCount;
+        ev.target.setMouseHandlers ({
+          mousedown: obj => {
+            console.log (n, "mousedown", obj.getMouseButton (), obj.getPoint ());
+          },
+          mousemove: obj => {
+            //console.log (n, "mousemove", obj.getMouseButton (), obj.getPoint ());
+          },
+          mouseup: obj => {
+            console.log (n, "mouseup", obj.getMouseButton (), obj.getPoint ());
+          },
+        });
+      });
+      s.querySelector ('map-area').addEventListener ('change', (ev) => {
+        var o = s.querySelector ('output[name=value]');
+
+        var v = ev.target.valueAsLatLon;
+        o.textContent = [v.lat, v.lon, null];
+
+        console.pcMaps.getElevation (v.lat, v.lon).then (elevation => {
+          o.textContent = [v.lat, v.lon, elevation];
+        });
+      });
+    }) ();
+    </script>
+    <p>
+      <button type=button onclick="
+        parentNode.parentNode.querySelector ('map-area').noMapDraggable = false;
+      ">Draggable</button>
+      <button type=button onclick="
+        parentNode.parentNode.querySelector ('map-area').noMapDraggable = true;
+      ">Non-draggable</button>
+      <button type=button onclick="
+        var map = document.querySelector ('map-area');
+        var e1 = document.createElement ('x-1');
+        var e2 = document.createElement ('x-2');
+        var e3 = document.createElement ('x-3');
+        var e4 = document.createElement ('x-4');
+        var pp = map.addElementOverlays ({
+          background: e1, foreground: e2, tooltip: e3, interactive: e4,
+        }, () => {
+          var center = map.getMapCenter ();
+          var p1 = pp.getProjection ().divPoint (center);
+          e1.style.left = p1.x + 'px';
+          e1.style.top = p1.y + 'px';
+          
+          e2.style.left = p1.x + 100 + 'px';
+          e2.style.top = p1.y + 'px';
+          
+          e3.style.left = p1.x + 'px';
+          e3.style.top = p1.y + 100 + 'px';
+          
+          e4.style.left = p1.x + 100 + 'px';
+          e4.style.top = p1.y + 100 + 'px';
+        });
+      ">addElementOverlays</button>
+
+    <p>
+      <input-datetime oninput="
+        var map = document.querySelector ('map-area');
+        map.explicitTime = querySelector ('input[type=checkbox]').checked ? this.value : null;
+      ">
+        <input type=checkbox>
+        <input type=date>
+        <input type=time>
+      </input-datetime>
+      
+    <hr style="margin-top: 10em">
+
+    <form>
+      <input type=number name=lat value=0 step=0.0001>
+      <input type=number name=lon value=0 step=0.0001>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          center: {lat: form.elements.lat.value,
+                   lon: form.elements.lon.value},
+        });
+      ">setCenter</button>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          center: {lat: form.elements.lat.value,
+                   lon: form.elements.lon.value},
+          setValue: true,
+        });
+      ">setCenter + setValue</button>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          center: {lat: form.elements.lat.value,
+                   lon: form.elements.lon.value},
+          intoView: true,
+        });
+      ">setCenter + scrollIntoView</button>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          center: {lat: form.elements.lat.value,
+                   lon: form.elements.lon.value},
+          intoView: true,
+          ifNeeded: true,
+        });
+      ">setCenter + scrollIntoViewIfNeeded</button>
+      <button type=button onclick="
+        document.querySelector ('map-area').pcScroll ({
+          bounds: {north: form.elements.lat.valueAsNumber,
+                   west: form.elements.lon.valueAsNumber,
+                   south: form.elements.lat.valueAsNumber + 1,
+                   east: form.elements.lon.valueAsNumber + 1,
+                   },
+        });
+      ">setBounds</button>
+    </form>
+
+    <hr style="margin-top: 10em">
+
+    <p><map-area engine=maplibre gsi controls style="height:28em"></map-area>
+    <p><map-area engine=maplibre controls style="height:17em"></map-area>
+    <p><map-area engine=maplibre controls=coordinates style="height:17em"></map-area>
+  </section>
