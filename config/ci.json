@@ -37,7 +37,8 @@
         "sudo pip install awscli --upgrade",
         "aws --version"
     ],
-    "macos": true
+    "macos": true,
+    "pages": true
   },
   "droneci": {
     "pmbp": true,
