@@ -21,7 +21,6 @@
     ]
   },
   "github": {
-    "pmbp": "latest",
     "env_matrix": {
       "FOO": [1, 2, 3],
       "BAR": [10, 11]
@@ -31,6 +30,7 @@
     ],
     "build": [
     ],
+    "tests": {},
     "macos": true,
     "pages": true
   },
