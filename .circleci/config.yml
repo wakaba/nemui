@@ -5,7 +5,7 @@
             "CIRCLE_ARTIFACTS" : "/tmp/circle-artifacts/build"
          },
          "machine" : {
-            "image" : "ubuntu-2004:202101-01"
+            "image" : "default"
          },
          "steps" : [
             "checkout",
@@ -112,7 +112,7 @@
          ]
       }
    },
-   "version" : 2,
+   "version" : "2.1",
    "workflows" : {
       "build" : {
          "jobs" : [

@@ -10,24 +10,11 @@
          },
          "runs-on" : "${{ matrix.os }}",
          "steps" : [
-         {
-         "run": "false"
-},
-{
-"run": "echo 1",
-"if": "${{ success () }}"
-},
-{
-"run": "echo 2",
-"if": "${{ failure () }}"
-},
-{
-"run": "echo 3",
-"if": "${{ always () }}"
-},
-
             {
-               "uses" : "actions/checkout@v2"
+               "uses" : "actions/checkout@v2",
+               "with" : {
+                  "ssh-key" : "${{ secrets.GH_GIT_KEY }}"
+               }
             },
             {
                "run" : "mkdir -p $CIRCLE_ARTIFACTS"
@@ -57,7 +44,8 @@
                "run" : "make test"
             },
             {
-               "uses" : "actions/upload-artifact@v3",
+               "if" : "${{ always () }}",
+               "uses" : "actions/upload-artifact@v4",
                "with" : {
                   "path" : "/tmp/circle-artifacts/test"
                }
