@@ -120,3 +120,5 @@ create-commit-for-heroku: git-submodules
 	git rm modules/* --cached
 	git add -f modules/*/*
 	git commit -m "for heroku"
+
+build-github-pages:
