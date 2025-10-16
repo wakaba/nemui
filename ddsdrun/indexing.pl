@@ -284,7 +284,7 @@ sub add_to_local_index ($$$$$$$$$) {
       my $states_sitepackrefs = json_bytes2perl $_[0]->[1];
       my $revert_only = 0;
       if ($ThisRev <= ($states_siterefs->{$ref_key} || 0)) {
-        if ($ref_key eq $states_sitepackrefs->{$pack_name} // '') {
+        if ($ref_key eq ($states_sitepackrefs->{$pack_name} // '')) {
           return;
         } else {
           $revert_only = 1;
@@ -338,13 +338,20 @@ sub add_to_local_index ($$$$$$$$$) {
       }
       my @packref;
       for my $set (@set) {
-        my $packref = {%$ref};
+        my $packref = json_chars2perl perl2json_chars $ref;
         for my $file (@$files) {
           if (defined $file->{rev} and defined $file->{rev}->{length} and
               not $file->{type} eq 'meta') {
-            $packref->{files}->{$file->{key}}->{skip} = 1
+            $packref->{source}->{files}->{$file->{key}}->{skip} = 1
                 unless $set->{keys}->{$file->{key}};
+          } elsif ($file->{type} eq 'file' and
+                   (not defined $file->{rev} or
+                    not defined $file->{rev}->{length})) {
+            $packref->{source}->{files}->{$file->{key}}->{skip} = 1;
           }
+        }
+        for (values %{$packref->{source}->{files}}) {
+          delete $_->{sha256};
         }
         push @packref, $packref;
       }
@@ -384,10 +391,15 @@ sub process_remote_index ($$$$$$$) {
   my $path = $base_path->child
       ('local/data', $esite_name, 'files/package_list.json');
   my $file = Promised::File->new_from_path ($path);
-  return $file->read_byte_string->then (sub { # XXX if error (pull failed)
+  return $file->is_file->then (sub {
+    return $_[0] ? $file->read_byte_string : 'null';
+  })->then (sub {
     my $json = json_bytes2perl $_[0];
     my $results;
-    if ($site_type eq 'ckan') {
+    if (not defined $json) {
+      # XXX if error (pull failed)
+      return undef;
+    } elsif ($site_type eq 'ckan') {
       if (defined $json and ref $json eq 'HASH' and
           defined $json->{result} and ref $json->{result} eq 'ARRAY') {
         $results = $json->{result};
@@ -455,6 +467,7 @@ sub process_remote_index ($$$$$$$) {
         
         my $epack_name = escape $pack_name;
         my $key = sha256_hex "$esite_name--$epack_name";
+        my $failed = 0;
         
         return ddsd (
           {wd => $base_path},
@@ -468,61 +481,73 @@ sub process_remote_index ($$$$$$$) {
             $key,
             '--all',
           );
+        })->catch (sub {
+          my $e = $_[0];
+          warn "indexing: ddsd fetch error: |$e|";
+          $failed = 1;
         })->then (sub {
-          return ddsd (
-            {wd => $base_path},
-            'freeze',
-            $key,
-          );
-        })->then (sub {
-          return Promise->all ([
-            ddsd (
-              {wd => $base_path, jsonl => 1},
-              'ls',
+          return if $failed;
+          
+          return Promise->resolve->then (sub {
+            return ddsd (
+              {wd => $base_path},
+              'freeze',
               $key,
-              '--jsonl',
-              '--with-source-meta',
-              '--with-item-meta',
-            ),
-            ddsd (
-              {wd => $base_path, json => 1},
-              'legal',
-              $key,
-              '--json',
-            ),
-          ])->then (sub {
-            my $r = $_[0];
-
-            my $size = 0;
-            for my $x (@{$r->[0]->{jsonl}}) {
-              if (defined $x->{rev} and defined $x->{rev}->{length}) {
-                $size += $x->{rev}->{length};
-              }
-            }
+            );
+          })->then (sub {
             return Promise->all ([
-              @$r,
-              $size < 10*1024*1024*1024 ? ddsd (
-                {wd => $base_path, json => 1},
-                'export',
-                'mirrorzip',
+              ddsd (
+                {wd => $base_path, jsonl => 1},
+                'ls',
                 $key,
-                "local/tmp/$key.mirrorzip.zip",
+                '--jsonl',
+                '--with-source-meta',
+                '--with-item-meta',
+              ),
+              ddsd (
+                {wd => $base_path, json => 1},
+                'legal',
+                $key,
                 '--json',
-              ) : {json => undef},
-            ]);
+              ),
+            ])->then (sub {
+              my $r = $_[0];
+
+              my $size = 0;
+              my $count = 0;
+              for my $x (@{$r->[0]->{jsonl}}) {
+                if (defined $x->{rev} and defined $x->{rev}->{length}) {
+                  $size += $x->{rev}->{length};
+                  $count++ if $x->{type} eq 'file';
+                }
+              }
+              return Promise->all ([
+                @$r,
+                ($size < 11*1024*1024*1024 || $count <= 1) ? ddsd (
+                  {wd => $base_path, json => 1},
+                  'export',
+                  'mirrorzip',
+                  $key,
+                  "local/tmp/$key.mirrorzip.zip",
+                  '--json',
+                ) : do { $states_sets->{fragmented} = 1; {json => undef} },
+              ]);
+            });
+          })->then (sub {
+            return add_to_local_index ($site_type, $site_name, $pack_name, $now,
+                                       $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
+                                       $_[0]->[2]->{json}, # or undef
+                                       "local/tmp/$key.mirrorzip.zip",
+                                       $states_sets);
           });
-        })->then (sub {
-          return add_to_local_index ($site_type, $site_name, $pack_name, $now,
-                                     $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
-                                     $_[0]->[2]->{json}, # or undef
-                                     "local/tmp/$key.mirrorzip.zip",
-                                     $states_sets);
         });
       };
     })->then (sub {
       return $states_sitepacks_file->write_byte_string (perl2json_bytes $states_sitepacks);
-    });
+    })->then (sub { 1 });
   })->then (sub {
+    return unless $_[0];
+    
     my $snapshot_index_path = $base_path->child
         ("snapshots/index.json");
     my $file = Promised::File->new_from_path ($snapshot_index_path);
@@ -595,6 +620,7 @@ sub main () {
       $states_sets->{nonfree_large_set} = $_[0]->[6] || 'nonfree-l1';
       delete $states_sets->{changed_mirror_sets};
       delete $states_sets->{new_mirror_sets};
+      delete $states_sets->{fragmented};
 
       ## Redundant but necessary in case $max_size changes.
       for my $key (qw(
@@ -619,7 +645,7 @@ sub main () {
           return 1;
         }
 
-        if ($site_started + $site_timeout < time and not $in_run) {
+        if ($site_started + $site_timeout < time and $in_run) {
           warn "indexing: Site time elapsed ($site_timeout)\n";
           return 1;
         }
@@ -631,6 +657,10 @@ sub main () {
             warn "indexing: Max size ($max_size) exceeded ($key)\n";
             return 1;
           }
+        }
+        if ($states_sets->{fragmented}) {
+          warn "indexing: Fragments created\n";
+          return 1;
         }
 
         return 0;
