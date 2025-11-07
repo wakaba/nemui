@@ -36,12 +36,13 @@
   x-4 { border-color: red }
 </style>
 <script src=https://pawjy.github.io/html-page-components/src/page-components.js async></script>
-<script src=https://pawjy.github.io/html-page-components/src/maps.js async></script>
+<script src=../html-page-components/src/maps.js onerror='src="https://pawjy.github.io/html-page-components/src/maps.js"' async></script>
 <script src=https://wiki.suikawiki.org/scripts/time async data-time-selector=time></script>
 <script src=https://pawjy.github.io/html-unit-number/src/unit-number.js async></script>
+<script src=https://raw.githack.com/wakaba/js-geo-encodedpolyline/master/encodedpolyline.js></script>
 
   <section id=map-section-1 lang=ja>
-    <map-area engine=maplibre controls="type typebuttons scale fullscreen currentposition zoom streetview togglelegend coordinates pitch" maptype=gsi-optimal_bvmap x-maptype=gsi-standard x-maptype=gsi-photo-optimal_bvmap pitch=35 terrain gsi jma osm lat=35.2 lon=135.4 zoom=12 formcontrol>
+    <map-area engine=maplibre controls="type typebuttons scale fullscreen currentposition zoom streetview togglelegend coordinates pitch" maptype=osm-gsi-hillshade+gsi-optimal_bvmap-label pitch=35 terrain=1.2 gsi jma osm lat=35.2 lon=135.4 zoom=12 formcontrol>
       <map-controls>ABC</map-controls>
       <map-controls position=top-left>XYZ</map-controls>
       <map-controls position=top-left><button>xyz</button></map-controls>
@@ -51,647 +52,426 @@
     </map-area>
 
     <script>
-      document.querySelector ('map-area').addEventListener ('pcRedraw', x1, {once: true});
-      function x1 () {
+  function parseEncodedRoutes (encodedRoutes) {
+    let routes = [];
+    encodedRoutes.forEach (function (_) {
+      var latlon = EncodedPolyline.decode (_.latlon, 2, 1e5);
+      var elevation = EncodedPolyline.decode (_.elevation, 1, 1e3);
+      var distance = _.distance != null ? EncodedPolyline.decode (_.distance, 1, 1e3) : [];
+      delete distance[0];
+      var timestamp = _.timestamp != null ? EncodedPolyline.decode (_.timestamp, 1, 1e0) : [];
+      var roadtype = _.roadtype != null ? EncodedPolyline.decode (_.roadtype, 1, 1e0) : [];
+      var points = [];
+      for (var i = 0; i < latlon.length; i++) {
+        points.push ({lat: latlon[i][0], lon: latlon[i][1],
+                      elevation: elevation[i][0],
+                      to_distance: (distance[i] ? distance[i][0] : null),
+                      timestamp: (timestamp[i] ? timestamp[i][0] : null),
+                      roadtype: (roadtype[i] ? roadtype[i][0] : null)});
+      }
+      if (points.length) routes.push ({points: points});
+    });
+    return routes;
+  } // parseEncodedRoutes
 
-        let points = window.x|| [
-    {
-        "lat": 35.02415,
-        "lon": 136.45964
-    },
-    {
-        "lat": 35.02685,
-        "lon": 136.45851
-    },
-    {
-        "lat": 35.02915,
-        "lon": 136.45762
-    },
-    {
-        "lat": 35.03176,
-        "lon": 136.45737
-    },
-    {
-        "lat": 35.03354,
-        "lon": 136.45748
-    },
-    {
-        "lat": 35.0354,
-        "lon": 136.45621
-    },
-    {
-        "lat": 35.03636,
-        "lon": 136.45577
-    },
-    {
-        "lat": 35.03644,
-        "lon": 136.45425
-    },
-    {
-        "lat": 35.03609,
-        "lon": 136.45348
-    },
-    {
-        "lat": 35.03587,
-        "lon": 136.45252
-    },
-    {
-        "lat": 35.03505,
-        "lon": 136.44928
-    },
-    {
-        "lat": 35.03492,
-        "lon": 136.44781
-    },
-    {
-        "lat": 35.03489,
-        "lon": 136.44566
-    },
-    {
-        "lat": 35.03455,
-        "lon": 136.44513
-    },
-    {
-        "lat": 35.03353,
-        "lon": 136.44361
-    },
-    {
-        "lat": 35.03327,
-        "lon": 136.44171
-    },
-    {
-        "lat": 35.03335,
-        "lon": 136.44014
-    },
-    {
-        "lat": 35.03327,
-        "lon": 136.43904
-    },
-    {
-        "lat": 35.03309,
-        "lon": 136.43683
-    },
-    {
-        "lat": 35.03357,
-        "lon": 136.43589
-    },
-    {
-        "lat": 35.03356,
-        "lon": 136.43558
-    },
-    {
-        "lat": 35.03317,
-        "lon": 136.43478
-    },
-    {
-        "lat": 35.03216,
-        "lon": 136.43343
-    },
-    {
-        "lat": 35.03225,
-        "lon": 136.43261
-    },
-    {
-        "lat": 35.03213,
-        "lon": 136.43169
-    },
-    {
-        "lat": 35.03183,
-        "lon": 136.43062
-    },
-    {
-        "lat": 35.03162,
-        "lon": 136.42869
-    },
-    {
-        "lat": 35.03074,
-        "lon": 136.4262
-    },
-    {
-        "lat": 35.02937,
-        "lon": 136.42455
-    },
-    {
-        "lat": 35.02788,
-        "lon": 136.42274
-    },
-    {
-        "lat": 35.02671,
-        "lon": 136.42228
-    },
-    {
-        "lat": 35.02527,
-        "lon": 136.4226
-    },
-    {
-        "lat": 35.02424,
-        "lon": 136.42188
-    },
-    {
-        "lat": 35.02209,
-        "lon": 136.42215
-    },
-    {
-        "lat": 35.02141,
-        "lon": 136.42396
-    },
-    {
-        "lat": 35.0192,
-        "lon": 136.42338
-    },
-    {
-        "lat": 35.01929,
-        "lon": 136.42315
-    },
-    {
-        "lat": 35.01931,
-        "lon": 136.42317
-    },
-    {
-        "lat": 35.0206,
-        "lon": 136.42077
-    },
-    {
-        "lat": 35.02042,
-        "lon": 136.41873
-    },
-    {
-        "lat": 35.01865,
-        "lon": 136.41774
-    },
-    {
-        "lat": 35.01621,
-        "lon": 136.41768
-    },
-    {
-        "lat": 35.01466,
-        "lon": 136.41693
-    },
-    {
-        "lat": 35.01331,
-        "lon": 136.41713
-    },
-    {
-        "lat": 35.01119,
-        "lon": 136.417
-    },
-    {
-        "lat": 35.01061,
-        "lon": 136.41735
-    },
-    {
-        "lat": 35.00979,
-        "lon": 136.41767
-    },
-    {
-        "lat": 35.00779,
-        "lon": 136.41864
-    },
-    {
-        "lat": 35.00552,
-        "lon": 136.41935
-    },
-    {
-        "lat": 35.0048,
-        "lon": 136.41997
-    },
-    {
-        "lat": 35.00265,
-        "lon": 136.42016
-    },
-    {
-        "lat": 35.00184,
-        "lon": 136.42086
-    },
-    {
-        "lat": 35.00123,
-        "lon": 136.42098
-    },
-    {
-        "lat": 35.0011,
-        "lon": 136.42153
-    },
-    {
-        "lat": 34.99995,
-        "lon": 136.42122
-    },
-    {
-        "lat": 34.99914,
-        "lon": 136.42016
-    },
-    {
-        "lat": 34.99847,
-        "lon": 136.4186
-    },
-    {
-        "lat": 34.99772,
-        "lon": 136.41642
-    },
-    {
-        "lat": 34.99679,
-        "lon": 136.4147
-    },
-    {
-        "lat": 34.99615,
-        "lon": 136.41397
-    },
-    {
-        "lat": 34.99556,
-        "lon": 136.41358
-    },
-    {
-        "lat": 34.99392,
-        "lon": 136.41448
-    },
-    {
-        "lat": 34.99191,
-        "lon": 136.41621
-    },
-    {
-        "lat": 34.98951,
-        "lon": 136.41561
-    },
-    {
-        "lat": 34.98877,
-        "lon": 136.41577
-    },
-    {
-        "lat": 34.98798,
-        "lon": 136.41595
-    },
-    {
-        "lat": 34.98577,
-        "lon": 136.41526
-    },
-    {
-        "lat": 34.9849,
-        "lon": 136.41502
-    },
-    {
-        "lat": 34.98423,
-        "lon": 136.41522
-    },
-    {
-        "lat": 34.98208,
-        "lon": 136.41497
-    },
-    {
-        "lat": 34.98081,
-        "lon": 136.41578
-    },
-    {
-        "lat": 34.97901,
-        "lon": 136.41434
-    },
-    {
-        "lat": 34.97691,
-        "lon": 136.41158
-    },
-    {
-        "lat": 34.97502,
-        "lon": 136.40889
-    },
-    {
-        "lat": 34.97225,
-        "lon": 136.40748
-    },
-    {
-        "lat": 34.97125,
-        "lon": 136.40631
-    },
-    {
-        "lat": 34.97072,
-        "lon": 136.40487
-    },
-    {
-        "lat": 34.96837,
-        "lon": 136.40318
-    },
-    {
-        "lat": 34.96697,
-        "lon": 136.40353
-    },
-    {
-        "lat": 34.96603,
-        "lon": 136.40285
-    },
-    {
-        "lat": 34.965,
-        "lon": 136.40206
-    },
-    {
-        "lat": 34.96461,
-        "lon": 136.4016
-    },
-    {
-        "lat": 34.96392,
-        "lon": 136.40043
-    },
-    {
-        "lat": 34.96337,
-        "lon": 136.3993
-    },
-    {
-        "lat": 34.96216,
-        "lon": 136.39971
-    },
-    {
-        "lat": 34.9609,
-        "lon": 136.39969
-    },
-    {
-        "lat": 34.96011,
-        "lon": 136.39879
-    },
-    {
-        "lat": 34.95893,
-        "lon": 136.39747
-    },
-    {
-        "lat": 34.95765,
-        "lon": 136.3968
-    },
-    {
-        "lat": 34.95596,
-        "lon": 136.39637
-    },
-    {
-        "lat": 34.95482,
-        "lon": 136.39646
-    },
-    {
-        "lat": 34.9535,
-        "lon": 136.39597
-    },
-    {
-        "lat": 34.9525,
-        "lon": 136.39532
-    },
-    {
-        "lat": 34.9519,
-        "lon": 136.39547
-    },
-    {
-        "lat": 34.95126,
-        "lon": 136.39432
-    },
-    {
-        "lat": 34.95119,
-        "lon": 136.3919
-    },
-    {
-        "lat": 34.95239,
-        "lon": 136.3897
-    },
-    {
-        "lat": 34.95288,
-        "lon": 136.38788
-    },
-    {
-        "lat": 34.95257,
-        "lon": 136.38585
-    },
-    {
-        "lat": 34.9494,
-        "lon": 136.38247
-    },
-    {
-        "lat": 34.9479,
-        "lon": 136.38049
-    },
-    {
-        "lat": 34.94558,
-        "lon": 136.37754
-    },
-    {
-        "lat": 34.94345,
-        "lon": 136.3744
-    },
-    {
-        "lat": 34.94123,
-        "lon": 136.37341
-    },
-    {
-        "lat": 34.93952,
-        "lon": 136.37532
-    },
-    {
-        "lat": 34.93742,
-        "lon": 136.37469
-    },
-    {
-        "lat": 34.93547,
-        "lon": 136.37295
-    },
-    {
-        "lat": 34.93365,
-        "lon": 136.37165
-    },
-    {
-        "lat": 34.93197,
-        "lon": 136.37211
-    },
-    {
-        "lat": 34.92876,
-        "lon": 136.37285
-    },
-    {
-        "lat": 34.9259,
-        "lon": 136.37348
-    },
-    {
-        "lat": 34.92507,
-        "lon": 136.37519
-    },
-    {
-        "lat": 34.92395,
-        "lon": 136.37339
-    },
-    {
-        "lat": 34.92306,
-        "lon": 136.3697
-    },
-    {
-        "lat": 34.92018,
-        "lon": 136.36715
-    },
-    {
-        "lat": 34.91749,
-        "lon": 136.36738
-    },
-    {
-        "lat": 34.91291,
-        "lon": 136.36529
-    },
-    {
-        "lat": 34.89518,
-        "lon": 136.34557
-    },
-    {
-        "lat": 34.88258,
-        "lon": 136.3135
-    },
-    {
-        "lat": 34.87249,
-        "lon": 136.28145
-    },
-    {
-        "lat": 34.8615,
-        "lon": 136.2256
-    },
-    {
-        "lat": 34.88643,
-        "lon": 136.18279
-    },
-    {
-        "lat": 34.89199,
-        "lon": 136.14161
-    },
-    {
-        "lat": 34.916,
-        "lon": 136.10998
-    },
-    {
-        "lat": 34.91982,
-        "lon": 136.07483
-    },
-    {
-        "lat": 34.90567,
-        "lon": 136.02225
-    },
-    {
-        "lat": 34.91764,
-        "lon": 135.98088
-    },
-    {
-        "lat": 34.92418,
-        "lon": 135.95305
-    },
-    {
-        "lat": 34.94905,
-        "lon": 135.88011
-    },
-    {
-        "lat": 34.97542,
-        "lon": 135.85477
-    },
-    {
-        "lat": 35.00186,
-        "lon": 135.8538
-    },
-    {
-        "lat": 35.01565,
-        "lon": 135.8441
-    },
-    {
-        "lat": 35.02033,
-        "lon": 135.81097
-    },
-    {
-        "lat": 35.03909,
-        "lon": 135.80084
-    },
-    {
-        "lat": 35.05807,
-        "lon": 135.8164
-    },
-    {
-        "lat": 35.08016,
-        "lon": 135.8378
-    },
-    {
-        "lat": 35.12109,
-        "lon": 135.8498
-    },
-    {
-        "lat": 35.15455,
-        "lon": 135.8566
-    },
-    {
-        "lat": 35.17006,
-        "lon": 135.86944
-    },
-    {
-        "lat": 35.19879,
-        "lon": 135.87911
-    },
-    {
-        "lat": 35.21341,
-        "lon": 135.90592
-    },
-    {
-        "lat": 35.20815,
-        "lon": 135.93322
-      },
-      ];
+      async function createMarkerImage(id, options) {
+        const {
+          width = 64,
+          height = 64,
+          text = "",
+          fontFamily = "sans-serif",
+    fontSize = 20,
+    fgColor = "#ffffff",
+    circleFill = "#ff0000",
+    circleStrokeColor = "#000000",
+    circleStrokeWidth = 2,
+    padding = 6,
+    maxFontShrinkIterations = 10
+  } = options;
 
-      let geojsonData = {
-      type: 'FeatureCollection',
-      features: [
-        ...points.map(p => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [p.lon, p.lat],
-          },
-          properties: {
-            color: p.color || 'red',
-            radius: p.radius || 5,
-          },
-        })),
-    
-        {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: points.map(c => [c.lon, c.lat])
-          },
-          properties: {
-            color: 'green',
-            width:  2,
-          },
-        },
-      ],
-      };
+        const dpr = window.devicePixelRatio || 1;
 
-        let ma = document.querySelector ('map-area');
-        let map = ma.pc_MLMap;
-      
-      map.addSource('myGeojson', {
-      type: 'geojson',
-      data: geojsonData
-      });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
 
-      map.addLayer({
-      id: 'points',
-      type: 'circle',
-      source: 'myGeojson',
-      paint: {
-      'circle-radius': ['get', 'radius'],
-      'circle-color': ['get', 'color'],
-      'circle-stroke-color': '#000000',
-      'circle-stroke-width': 1
-      },
-      filter: ['==', ['geometry-type'], 'Point']
-      });
+        const ctx = canvas.getContext("2d");
+        ctx.scale(dpr, dpr);
 
-      map.addLayer({
-      id: 'lines',
-      type: 'line',
-      source: 'myGeojson',
-      paint: {
-      'line-color': ['get', 'color'],
-      'line-width': ['get', 'width']
-      },
-      filter: ['==', ['geometry-type'], 'LineString']
-      });
+        ctx.clearRect(0, 0, width, height);
 
-        ma.pcScroll ({
-          center: points[0],
+        const cx = width / 2;
+        const cy = height / 2;
+
+        const maxPossibleRadius = Math.min(width, height) / 2;
+        const radius = Math.max(0, maxPossibleRadius - Math.max(circleStrokeWidth / 2, padding));
+
+        if (circleFill) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = circleFill;
+    ctx.fill();
+  }
+
+        if (circleStrokeWidth > 0) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.lineWidth = circleStrokeWidth;
+          ctx.strokeStyle = circleStrokeColor;
+    ctx.stroke();
+  }
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = fgColor;
+
+        ctx.font = `${fontSize}px ${fontFamily}`;
+        
+        ctx.fillText(text, cx, cy);
+        
+        return {id, url: canvas.toDataURL("image/png"), width, height};
+      }
+
+      async function createTextImageDataURL(id, text, options) {
+        const { fontFamily = 'sans-serif', fontSize = 24, color = '#000',
+                  strokeColor = 'white',
+                  strokeWidth = 1,
+                  vertical = false } = options;
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, 'svg');
+        const textEl = document.createElementNS(svgNS, 'text');
+
+        if (vertical) {
+          textEl.setAttribute('writing-mode', 'vertical-rl');
+        }
+        
+  textEl.setAttribute('x', 0);
+  textEl.setAttribute('y', 0);
+  textEl.setAttribute('font-family', fontFamily);
+        textEl.setAttribute('font-size', fontSize);
+        textEl.setAttribute('fill', color);
+        textEl.setAttribute('stroke', strokeColor);
+        textEl.setAttribute('stroke-width', strokeWidth);
+          textEl.setAttribute('paint-order', 'stroke');
+  textEl.textContent = text;
+
+        svg.appendChild(textEl);
+        document.body.appendChild(svg);
+
+        const bbox = textEl.getBBox();
+        svg.setAttribute('width', bbox.width);
+        svg.setAttribute('height', bbox.height);
+        //  textEl.setAttribute('y', bbox.height * 0.8);
+        if (vertical) {
+          textEl.setAttribute('writing-mode', 'vertical-rl');
+          textEl.setAttribute('dominant-baseline', 'text-after-edge');
+          textEl.setAttribute('text-anchor', 'start');
+          textEl.setAttribute('x', 0);
+        } else {
+          textEl.setAttribute('dominant-baseline', 'alphabetic');
+          textEl.setAttribute('text-anchor', 'start');
+          textEl.setAttribute('y', fontSize);
+        }
+
+  const svgData = new XMLSerializer().serializeToString(svg);
+          document.body.removeChild(svg);
+
+        return new Promise((resolve) => {
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+          return resolve({id, url,width:bbox.width,height:bbox.height});
+        });
+      }
+    </script>
+
+    <script>
+      let icons = {};
+      async function addTeamIcon (map, team)  {
+        let id = 'team-icon-' + team.id;
+        if (map.hasImage (id)) return icons[id];
+
+        let x = await createMarkerImage (id, {
+          width: 64,
+          height: 64,
+          text: team.short_label,
+          fontFamily: "sans-serif",
+          fontSize: 20,
+          fgColor: "black",
+          circleFill: "white",
+          circleStrokeColor: "black",
+    circleStrokeWidth: 3,
+    padding: 6
         });
 
-      }
+        return new Promise ((ok, ng) => {
+          let img = document.createElement ('img');
+          img.onerror = ng;
+          img.onload = () => {
+            map.addImage (id, img);
+            ok (icons[id] = x);
+          };
+          img.src = x.url;
+        });
+      } // addTeamIcon
+
+      async function addMarkedPointIcon (map, mp)  {
+        let id = 'markedpoint-icon-' + mp.id;
+        if (map.hasImage (id)) return icons[id];
+
+        let x = await createMarkerImage (id, {
+          width: 64,
+          height: 64,
+          text: mp.short_label,
+          fontFamily: "sans-serif",
+          fontSize: 20,
+          fgColor: "white",
+          circleFill: "blue",
+          circleStrokeColor: "blue",
+    circleStrokeWidth: 3,
+    padding: 6
+        });
+
+        return new Promise ((ok, ng) => {
+          let img = document.createElement ('img');
+          img.onerror = ng;
+          img.onload = () => {
+            map.addImage (id, img);
+            ok (icons[id] = x);
+          };
+          img.src = x.url;
+        });
+      } // addMarkedPointIcon
+      async function addMarkedPointLabel (map, mp)  {
+        let id = 'markedpoint-label-' + mp.id;
+        if (map.hasImage (id)) return icons[id];
+
+        let x = await createTextImageDataURL (id, mp.label, {
+          color: 'blue',
+          vertical: true
+        });
+
+        return new Promise ((ok, ng) => {
+          let img = document.createElement ('img');
+          img.onerror = ng;
+          img.onload = () => {
+            map.addImage (id, img);
+            ok (icons[id] = x);
+          };
+          img.src = x.url;
+        });
+      } // addMarkedPointLabel
+
+      let hasHandlers = {};
+      async function showMarkedPoints (map, mps) {
+        await Promise.all (mps.map (_ => addMarkedPointIcon (map, _).then (x => _.icon = x)));
+        await Promise.all (mps.map (_ => addMarkedPointLabel (map, _).then (x => _.labelImage = x)));
+
+        let data = {
+          type: 'FeatureCollection',
+          features: [
+            ...mps.map ((item, i) => ({
+              type: 'Feature',
+              geometry: {type: 'Point', coordinates: [item.lon, item.lat]},
+              properties: {
+                markedPoint: item,
+                iconImage: item.icon.id,
+                iconImageOffset: [0, - (item.icon.height/2 + 10)],
+                labelImage: item.labelImage.id,
+                labelImageOffset: [0, - (item.labelImage.height/2 + 2 + item.icon.height + 10)],
+              },
+            })),
+          ],
+        };
+        let source = map.getSource ('markedpoints');
+        if (source) {
+          source.setData (data);
+        } else {
+          map.addSource ('markedpoints', {type: 'geojson', data});
+        }
+
+        if (!map.getLayer ('markedpoints')) {
+          map.addLayer ({
+            id: 'markedpoints',
+            source: 'markedpoints',
+            type: 'symbol',
+            layout: {
+              'icon-image': ['get', 'iconImage'],
+              'icon-size': 1,
+              'icon-allow-overlap': true,
+              'icon-offset': ['get', 'iconImageOffset'],
+            },
+          });
+          map.addLayer ({
+            id: 'markedpoint-labels',
+            source: 'markedpoints',
+            type: 'symbol',
+            layout: {
+              'icon-image': ['get', 'labelImage'],
+              'icon-size': 1,
+              'icon-allow-overlap': false,
+              'icon-offset': ['get', 'labelImageOffset'],
+            },
+          });
+          if (!hasHandlers.markedPointClick) {
+            hasHandlers.markedPointClick = true;
+            map.on ('click', 'markedpoints', (e) => {
+              let feature = e.features[0];
+              console.log (feature.properties.markedPoint);
+            });
+          }
+        }
+      } // showMarkedPoints
+
+      async function showTeamLocations (map, locs) {
+        await Promise.all (locs.map (_ => addTeamIcon (map, _.team).then (x => _.icon = x)));
+
+        let data = {
+          type: 'FeatureCollection',
+          features: [
+            ...locs.map ((item, i) => ({
+              type: 'Feature',
+              geometry: {type: 'Point', coordinates: [item.lon, item.lat]},
+              properties: {
+                team: item.team,
+                iconImage: item.icon.id,
+                iconImageOffset: [0, - (item.icon.height/2 + 10)],
+              },
+            })),
+          ],
+        };
+        let source = map.getSource ('team-locations');
+        if (source) {
+          source.setData (data);
+        } else {
+          map.addSource ('team-locations', {type: 'geojson', data});
+        }
+
+        if (!map.getLayer ('team-locations')) {
+          map.addLayer ({
+            id: 'team-locations',
+            source: 'team-locations',
+            type: 'symbol',
+            layout: {
+              'icon-image': ['get', 'iconImage'],
+              'icon-size': 1,
+              'icon-allow-overlap': true,
+              'icon-offset': ['get', 'iconImageffset'],
+            },
+          });
+          if (!hasHandlers.teamClick) {
+            hasHandlers.teamClick = true;
+            map.on ('click', 'team-locations', (e) => {
+              let feature = e.features[0];
+              console.log (feature.properties.team);
+            });
+          }
+        }
+      } // showTeamLocations
+
+      function showRoutes (map, routes) {
+        let data = {
+          type: 'FeatureCollection',
+          features: [
+            ...routes.map (_ => _.points).flat ().map (p => ({
+              type: 'Feature',
+              geometry: {type: 'Point', coordinates: [p.lon, p.lat]},
+              properties: {},
+            })),
+            ...routes.map (_ => _.points).map (pp => ({
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: pp.map (p => [p.lon, p.lat]),
+              },
+              properties: {},
+            })),
+          ],
+        };
+        let source = map.getSource ('routes');
+        if (source) {
+          source.setData (data);
+        } else {
+          map.addSource ('routes', {type: 'geojson', data});
+        }
+
+        if (!map.getLayer ('route-points')) {
+          map.addLayer ({
+            id: 'route-points',
+            source: 'routes',
+            type: 'circle',
+            paint: {
+              'circle-radius': 2,
+              'circle-color': 'red',
+              'circle-stroke-color': '#000000',
+              'circle-stroke-width': 1,
+            },
+            filter: ['==', ['geometry-type'], 'Point']
+          });
+          map.addLayer({
+            id: 'route-lines',
+            source: 'routes',
+            type: 'line',
+            paint: {
+              'line-color': 'green',
+              'line-width': 2,
+            },
+            filter: ['==', ['geometry-type'], 'LineString']
+          });
+        }
+      } // showRoutes
       
+      function showIbukiEvent (url, opts) {
+        let ma = document.querySelector ('map-area');
+        let map = ma.pc_MLMap;
+        if (!map) return false;
+        
+        url = url.replace (/^https?:\/\/ibuki.run\//, 'https://od.ibuki.run/');
+        //not return
+        Promise.all ([
+          fetch (new URL ('info.json?with_routes=1', url)).then (res => {
+            if (res.status !== 200) throw res;
+            return res.json ();
+          }).then (info => {
+            showRoutes (map, parseEncodedRoutes (info.encoded_routes));
+            showMarkedPoints (map, info.marked_points);
+            return info;
+          }),
+          fetch (new URL ('teams.json', url)).then (res => {
+            if (res.status !== 200) throw res;
+            return res.json ();
+          }),
+          fetch (new URL ('teamlocations.json', url)).then (res => {
+            if (res.status !== 200) throw res;
+            return res.json ();
+          }),
+        ]).then (([info, teams, locs]) => {
+          let teamByDK = {};
+          teams.items.forEach (t => {
+            teamByDK['tt,,' + t.id] = t;
+          });
+          let tls = [];
+          Object.keys (locs.items).forEach (dk => {
+            let loc = locs.items[dk];
+            loc.team = teamByDK[dk] || {};
+            tls.push (loc);
+          });
+
+          showTeamLocations (map, tls);
+
+          if (opts.new) {
+            if (tls.length || info.marked_points.length) {
+              ma.pcScroll ({
+                center: tls[0] || info.marked_points.at (-1),
+              });
+            }
+          }
+        });
+
+        return true;
+      } // showIbukiEvent
     </script>
 
     <p class=buttons>
@@ -767,15 +547,33 @@
       <button value=osm-gsi-hillshade onclick="
         document.querySelector('map-area').setMapType(this.value);
       ">osm-gsi-hillshade</button>
+      <button value=osm-gsi-hillshade+gsi-optimal_bvmap-label onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">osm-gsi-hillshade+gsi-optimal_bvmap-label</button>
+      <button value=osm-gsi-hillshade+gsi-optimal_bvmap-contour-label onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">osm-gsi-hillshade+gsi-optimal_bvmap-contour-label</button>
       <button value=gsi-optimal_bvmap onclick="
         document.querySelector('map-area').setMapType(this.value);
       ">gsi-optimal_bvmap</button>
+      <button value=gsi-optimal_bvmap-hillshade onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">gsi-optimal_bvmap-hillshade</button>
+      <button value=gsi-optimal_bvmap-nocontour-hillshade onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">gsi-optimal_bvmap-nocontour-hillshade</button>
       <button value=gsi-photo-optimal_bvmap onclick="
         document.querySelector('map-area').setMapType(this.value);
       ">gsi-photo-optimal_bvmap</button>
+      <button value=gsi-photo-optimal_bvmap-nocontour onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">gsi-photo-optimal_bvmap-nocontour</button>
       <button value=gsi-hillshade-optimal_bvmap onclick="
         document.querySelector('map-area').setMapType(this.value);
       ">gsi-hillshade-optimal_bvmap</button>
+      <button value=gsi-hillshade-optimal_bvmap-nocontour onclick="
+        document.querySelector('map-area').setMapType(this.value);
+      ">gsi-hillshade-optimal_bvmap-nocontour</button>
       <button value=SND/ETC onclick="
         document.querySelector('map-area').setMapType('himawari+gsi-optimal_bvmap:'+this.value);
       ">himawari+gsi-optimal_bvmap (SND/ETC)</button>
@@ -871,6 +669,54 @@
         <input type=date>
         <input type=time>
       </input-datetime>
+
+      <input type=range min=0 value=1.2 max=5 step=0.1 oninput="
+        var map = document.querySelector ('map-area');
+        map.setAttribute ('terrain', this.value);
+      ">
+
+    <p>
+      <input type=url name=ibukiURL onchange="
+        setURL (value, {initiator: 'input'});
+      " style="width: 100%">
+    <script>
+      let ibukiURL = null;
+      let newRequest = true;
+      {
+        let sp = new URLSearchParams (location.hash.replace (/^#/, ''));
+        let ib = sp.get ('ibuki');
+        if (ib) setURL (ib, {initiator: 'hash'});
+        let mt = sp.get ('map');
+        if (mt) document.querySelector ('map-area').setAttribute ('maptype', mt);
+      }
+
+      document.querySelector ('map-area').addEventListener ('pcMapTypeChange', () => {
+        if (ibukiURL) {
+          showIbukiEvent (ibukiURL, {new: newRequest});
+          newRequest = false;
+          updateURL ();
+        }
+      });
+
+      function setURL (u, opts) {
+        if (/\/ev\/[0-9]+\//.test (u)) {
+          ibukiURL = u;
+          newRequest = true;
+          if (showIbukiEvent (ibukiURL, {new: newRequest})) {
+            newRequest = false;
+          }
+          if (opts.initiator !== 'hash') updateURL ();
+          if (opts.initiator !== 'input') document.querySelectorAll ('input[name=ibukiURL]').forEach (_ => _.value = ibukiURL);
+        } else {
+          throw new Error ("Bad URL: " + u);
+        }
+      } // setURL
+
+      function updateURL () {
+        let mt = document.querySelector ('map-area').pcMapType;
+        history.replaceState (null, null, '#ibuki=' + encodeURIComponent (ibukiURL) + '&map=' + mt);
+      }
+    </script>
       
     <hr style="margin-top: 10em">
 
