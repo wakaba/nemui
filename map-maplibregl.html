@@ -325,7 +325,7 @@
         }
       } // showMarkedPoints
 
-      async function showTeamLocations (map, locs) {
+      async function showTeamLocations (map, locs, opts) {
         await Promise.all (locs.map (_ => addTeamIcon (map, _.team).then (x => _.icon = x)));
 
         let data = {
@@ -342,17 +342,17 @@
             })),
           ],
         };
-        let source = map.getSource ('team-locations');
+        let source = map.getSource ('team-locations-' + opts.id);
         if (source) {
           source.setData (data);
         } else {
-          map.addSource ('team-locations', {type: 'geojson', data});
+          map.addSource ('team-locations-' + opts.id, {type: 'geojson', data});
         }
 
-        if (!map.getLayer ('team-locations')) {
+        if (!map.getLayer ('team-locations-' + opts.id)) {
           map.addLayer ({
-            id: 'team-locations',
-            source: 'team-locations',
+            id: 'team-locations-' + opts.id,
+            source: 'team-locations-' + opts.id,
             type: 'symbol',
             layout: {
               'icon-image': ['get', 'iconImage'],
@@ -361,9 +361,9 @@
               'icon-offset': ['get', 'iconImageffset'],
             },
           });
-          if (!hasHandlers.teamClick) {
-            hasHandlers.teamClick = true;
-            map.on ('click', 'team-locations', (e) => {
+          if (!hasHandlers['teamClick-' + opts.id]) {
+            hasHandlers['teamClick-' + opts.id] = true;
+            map.on ('click', 'team-locations-' + opts.id, (e) => {
               let feature = e.features[0];
               console.log (feature.properties.team);
             });
@@ -371,7 +371,7 @@
         }
       } // showTeamLocations
 
-      function showRoutes (map, routes) {
+      function showRoutes (map, routes, opts) {
         let data = {
           type: 'FeatureCollection',
           features: [
@@ -390,43 +390,230 @@
             })),
           ],
         };
-        let source = map.getSource ('routes');
+        let source = map.getSource ('routes-' + opts.id);
         if (source) {
           source.setData (data);
         } else {
-          map.addSource ('routes', {type: 'geojson', data});
+          map.addSource ('routes-' + opts.id, {type: 'geojson', data});
         }
 
-        if (!map.getLayer ('route-points')) {
+        if (!map.getLayer ('route-points-' + opts.id)) {
           map.addLayer ({
-            id: 'route-points',
-            source: 'routes',
+            id: 'route-points-' + opts.id,
+            source: 'routes-' + opts.id,
             type: 'circle',
-            paint: {
-              'circle-radius': 2,
-              'circle-color': 'red',
-              'circle-stroke-color': '#000000',
-              'circle-stroke-width': 1,
-            },
+            paint: opts.pointPaint,
             filter: ['==', ['geometry-type'], 'Point']
           });
           map.addLayer({
-            id: 'route-lines',
-            source: 'routes',
+            id: 'route-lines-' + opts.id,
+            source: 'routes-' + opts.id,
             type: 'line',
-            paint: {
-              'line-color': 'green',
-              'line-width': 2,
-            },
+            paint: opts.linePaint,
             filter: ['==', ['geometry-type'], 'LineString']
           });
         }
       } // showRoutes
+
+      function showTeamHistory (map, taem, routes) {
+        showRoutes (map, routes, {
+          id: 'team-history',
+          linePaint: {
+            'line-color': '#ffff0087',
+            'line-width': 5,
+          },
+          pointPaint: {
+            'circle-radius': 5,
+            'circle-color': 'yellow',
+            'circle-stroke-color': 'gray',
+            'circle-stroke-width': 1,
+          },
+        });
+      } // showTeamHistory
+
+      function directionByPCA (points, idx, window) {
+        const center = points[idx];
+        const deg2rad = Math.PI/180;
+        const R = 6371000;
+        const lat0 = center.lat * deg2rad;
+        const cosLat0 = Math.cos(lat0);
+
+        const start = Math.max(0, idx - window);
+        const end   = Math.min(points.length - 1, idx + window);
+
+        const arr = [];
+        for (let i = start; i <= end; i++) {
+          const p = points[i];
+          const dx = (p.lon - center.lon) * deg2rad * R * cosLat0; 
+          const dy = (p.lat - center.lat) * deg2rad * R;
+          arr.push([dx, dy]);
+        }
+
+        let sx=0, sy=0, sxx=0, sxy=0, syy=0;
+        const n = arr.length;
+        for (const [dx, dy] of arr) { sx += dx; sy += dy; sxx += dx*dx; sxy += dx*dy; syy += dy*dy; }
+  const mx = sx / n, my = sy / n;
+  const covxx = sxx/n - mx*mx;
+  const covxy = sxy/n - mx*my;
+  const covyy = syy/n - my*my;
+
+        const trace = covxx + covyy;
+  const det = covxx*covyy - covxy*covxy;
+  const lambda = trace/2 + Math.sqrt((trace*trace)/4 - det);
+        let vx = covxy;
+  let vy = lambda - covxx;
+  if (Math.abs(vx) < 1e-12 && Math.abs(vy) < 1e-12) { vx = 1; vy = 0; }
+        const len = Math.hypot(vx, vy) || 1;
+        vx /= len; vy /= len;
+
+        const angRad = Math.atan2(vy, vx);
+        const bearing = (90 - angRad*180/Math.PI + 360) % 360;
+        return bearing;
+      }
+
+
+      let prevBearing = 0;
+      let prevPosition = null;
+      let prevNow = 0;
+      let prevTime = 0;
+      let prevEased = 0;
+      function showByTime (ma, map, info, team, routes, time, opts) {
+        let path = routes.map (_ => _.points).flat ();
+        if (path.length < 2) return;
+
+        if (time === null) {
+          let now = performance.now ();
+          let delta = (now - prevNow) / 1000;
+          let factor = 100;
+          time = prevTime + delta * factor;
+          prevNow = now;
+        }
+        prevTime = time;
+
+        let i = 0;
+        while (i < path.length-1 && path[i+1].timestamp < time) i++;
+        if (i >= path.length-1) i = path.length-2;
+
+  const p0 = path[i];
+  const p1 = path[i+1];
+
+        const t = (time - p0.timestamp)/(p1.timestamp - p0.timestamp);
+
+                   const lat = p0.lat + t*(p1.lat - p0.lat);
+                   const lon = p0.lon + t*(p1.lon - p0.lon);
+
+                   const ele0 = p0.elevation == null ? getElevation(p0.lat, p0.lon) : p0.elevation;
+  const ele1 = p1.elevation == null ? getElevation(p1.lat, p1.lon) : p1.elevation;
+  const elevation = ele0 + t*(ele1 - ele0);
+
+        const deltaLon = (p1.lon - p0.lon) * Math.PI/180;
+  const y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
+  const x = Math.cos(p0.lat*Math.PI/180)*Math.sin(p1.lat*Math.PI/180) -
+            Math.sin(p0.lat*Math.PI/180)*Math.cos(p1.lat*Math.PI/180)*Math.cos(deltaLon);
+                   let targetBearing = (Math.atan2(y,x) * 180/Math.PI + 360) % 360;
+                   targetBearing = directionByPCA (path, i, 10);
+
+          let container = map.getContainer ();
+          let rect = container.getBoundingClientRect ();
+          let width = rect.width;
+          let height = rect.height;
+
+        if (width > height) targetBearing += 90;
+        
+        const diff = ((targetBearing - prevBearing + 540) % 360) - 180;
+        const limited = prevBearing + Math.max(Math.min(diff, 5), -5);
+
+        let bearing = opts.animated ? limited : targetBearing;
+        
+        let newCenter = {lon, lat, team};
+
+        let camera = opts.animated ? prevPosition || newCenter : newCenter;
+
+        bearing = targetBearing;
+        camera = newCenter;
+        let cameraOffset = undefined;
+        if (opts.animated) {
+          let targetPoint = map.project (newCenter);
+          let centerPoint = map.project (map.getCenter ());
+          let centerX = width / 2;
+          let centerY = height / 2;
+          let allowedX = width * 0.6 / 2;
+          let allowedY = height * 0.6 / 2;
+          let dx = targetPoint.x - centerPoint.x;
+          let dy = targetPoint.y - centerPoint.y;
+          let overX = 0;
+          let overY = 0;
+          if (dx >  allowedX) overX = +1;
+          if (dx < -allowedX) overX = -1;
+          if (dy >  allowedY) overY = +1;
+          if (dy < -allowedY) overY = -1;
+          if (Math.abs (dx) < allowedX) overX = 0;
+          if (Math.abs (dy) < allowedY) overY = 0;
+          let biasAmountX = width * 0.20;
+          let biasAmountY = height * 0.20;
+          let offsetX = (centerX - centerPoint.x) + -overX * biasAmountX;
+          let offsetY = (centerY - centerPoint.y) + -overY * biasAmountY;
+          cameraOffset = [offsetX, offsetY];
+          if (overX || overY) {
+            //
+          } else {
+            camera = cameraOffset = undefined;
+          }
+          if (map.XXXdragging) camera = cameraOffset = bearing = undefined;
+        }
+        
+        showTeamLocations (map, [newCenter], {
+          id: 'history-current',
+        });
+        let now = performance.now ();
+        if (!opts.animated || now - prevEased > 3*1000) {
+          if (bearing != null) map.easeTo({
+          bearing: bearing,
+          //pitch: pitch,
+          //zoom: zoom,
+            duration: opts.animated ? 60*1000 : 0,
+          });
+          if (camera) console.log(camera)
+          if (camera) map.easeTo({
+            center: camera,
+            ...(cameraOffset ? {offset: cameraOffset} : {}),
+          //pitch: pitch,
+          //zoom: zoom,
+            duration: opts.animated ? 3*1000 : 0,
+            easing : t => t,
+        });
+          prevBearing = bearing;
+          prevPosition = newCenter;
+          prevEased = now;
+        }
+
+        if (document.querySelector ('input[name=animated]:checked')) {
+          requestAnimationFrame (() => {
+            showByTime (ma, map, info, team, routes, null, {animated: true});
+          });
+        }
+      } // showByTime
+
+      document.querySelectorAll ('map-area').forEach (ma => {
+        ma.addEventListener ('mousedown', () => {
+          ma.pc_MLMap.XXXdragging = true;
+        }, {capture: true});
+        window.addEventListener ('mouseup', () => {
+          ma.pc_MLMap.XXXdragging = false;
+        }, {capture: true});
+      });
+
+      let timeSetter;
+      let timeSetterMain = () => {};
       
       function showIbukiEvent (url, opts) {
         let ma = document.querySelector ('map-area');
         let map = ma.pc_MLMap;
         if (!map) return false;
+
+        if (!timeSetter) {
+          ma.pcTimeSetters.push (timeSetter = _ => timeSetterMain (_));
+        }
         
         url = url.replace (/^https?:\/\/ibuki.run\//, 'https://od.ibuki.run/');
         //not return
@@ -435,7 +622,19 @@
             if (res.status !== 200) throw res;
             return res.json ();
           }).then (info => {
-            showRoutes (map, parseEncodedRoutes (info.encoded_routes));
+            showRoutes (map, parseEncodedRoutes (info.encoded_routes), {
+              id: 'route',
+              linePaint: {
+                'line-color': 'green',
+                'line-width': 2,
+              },
+              pointPaint: {
+                'circle-radius': 2,
+                'circle-color': 'green',
+                'circle-stroke-color': '#000000',
+                'circle-stroke-width': 1,
+              },
+            });
             showMarkedPoints (map, info.marked_points);
             return info;
           }),
@@ -447,7 +646,13 @@
             if (res.status !== 200) throw res;
             return res.json ();
           }),
-        ]).then (([info, teams, locs]) => {
+          opts.teamId ? fetch (new URL ('t/' + opts.teamId + '/locationhistory.json', url)).then (res => {
+            if (res.status !== 200) throw res;
+            return res.json ();
+          }).then (json => {
+            return parseEncodedRoutes (json.encoded_routes);
+          }) : null,
+        ]).then (([info, teams, locs, hist]) => {
           let teamByDK = {};
           teams.items.forEach (t => {
             teamByDK['tt,,' + t.id] = t;
@@ -459,19 +664,50 @@
             tls.push (loc);
           });
 
-          showTeamLocations (map, tls);
+          showTeamLocations (map, tls, {
+            id: 'teamlocations',
+          });
+
+          if (hist) {
+            let team = teamByDK['tt,,' + opts.teamId];
+            showTeamHistory (map, team, hist)
+            timeSetterMain = (time) => {
+              if (!time) return;
+              showByTime (ma, map, info, team, hist, time, {});
+            };
+          }
+
+          let now = new Date () . valueOf () / 1000;
+          if (hist) {
+            now = hist?.[0]?.points.at (-1).timestamp;
+          }
+          if (info.end_date < now) now = info.end_date
+          if (now < info.start_date) now = info.start_date;
+          document.querySelectorAll ('input[name=event-time-range]').forEach (e => {
+            e.min = info.start_date
+            e.max = info.end_date;
+            e.valueAsNumber = now;
+            e.dispatchEvent (new Event ('input', {bubbles: true}));
+            e.closest ('input-datetime').querySelector ('input[type=checkbox]').checked = true;
+          });
 
           if (opts.new) {
-            if (tls.length || info.marked_points.length) {
-              ma.pcScroll ({
-                center: tls[0] || info.marked_points.at (-1),
-              });
-            }
+            ma.pcScroll ({
+              center: hist?.[0]?.points[0] || tls[0] || info.marked_points.at (-1) || undefined,
+            });
           }
         });
 
         return true;
       } // showIbukiEvent
+
+      function showIbukiEventByURL (u, opts) {
+        let m = u.match (/^(https?:\/\/[^\/]+\/ev\/[0-9]+\/)(?:t\/([0-9]+)\/|)/);
+        if (!m) throw new Error ("Bad URL: " + u);
+
+        let r = showIbukiEvent (m[1], {...opts, teamId: m[2]});
+        return r;
+      } // showIbukiEventByURL
     </script>
 
     <p class=buttons>
@@ -628,6 +864,11 @@
       });
     }) ();
     </script>
+
+      <input type=range min=0 value=1.2 max=5 step=0.1 oninput="
+        var map = document.querySelector ('map-area');
+        map.setAttribute ('terrain', this.value);
+      ">
     <p>
       <button type=button onclick="
         parentNode.parentNode.querySelector ('map-area').noMapDraggable = false;
@@ -668,13 +909,22 @@
         <input type=checkbox>
         <input type=date>
         <input type=time>
+
+        <input type=range name=event-time-range step=60 oninput="
+          parentNode.value = this.valueAsNumber;
+        " style="width: 50%">
       </input-datetime>
-
-      <input type=range min=0 value=1.2 max=5 step=0.1 oninput="
-        var map = document.querySelector ('map-area');
-        map.setAttribute ('terrain', this.value);
-      ">
-
+      <label><input type=checkbox name=animated> ▶</label>
+      <button type=button onclick="
+        let map = document.querySelector ('map-area');
+        map.setAttribute ('zoom', 12);
+        map.setAttribute ('pitch', 50);
+        document.querySelector ('[name=animated]').checked = true;
+        let time = document.querySelector ('[name=event-time-range]');
+        time.value = parseFloat (time.min) + (time.max - time.min) / 3;
+        time.dispatchEvent (new Event ('input', {bubbles: true}));
+      ">A1</button>
+      
     <p>
       <input type=url name=ibukiURL onchange="
         setURL (value, {initiator: 'input'});
@@ -692,7 +942,7 @@
 
       document.querySelector ('map-area').addEventListener ('pcMapTypeChange', () => {
         if (ibukiURL) {
-          showIbukiEvent (ibukiURL, {new: newRequest});
+          showIbukiEventByURL (ibukiURL, {new: newRequest});
           newRequest = false;
           updateURL ();
         }
@@ -702,7 +952,7 @@
         if (/\/ev\/[0-9]+\//.test (u)) {
           ibukiURL = u;
           newRequest = true;
-          if (showIbukiEvent (ibukiURL, {new: newRequest})) {
+          if (showIbukiEventByURL (ibukiURL, {new: newRequest})) {
             newRequest = false;
           }
           if (opts.initiator !== 'hash') updateURL ();
