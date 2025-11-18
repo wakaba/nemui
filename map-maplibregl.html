@@ -36,7 +36,7 @@
   x-4 { border-color: red }
 </style>
 <script src=https://pawjy.github.io/html-page-components/src/page-components.js async></script>
-<script src=../html-page-components/src/maps.js onerror='src="https://pawjy.github.io/html-page-components/src/maps.js"' async></script>
+<script src=../html-page-components/src/maps.js onerror='let s = document.createElement("script");s.src="https://pawjy.github.io/html-page-components/src/maps.js";document.head.appendChild(s)' async></script>
 <script src=https://wiki.suikawiki.org/scripts/time async data-time-selector=time></script>
 <script src=https://pawjy.github.io/html-unit-number/src/unit-number.js async></script>
 <script src=https://raw.githack.com/wakaba/js-geo-encodedpolyline/master/encodedpolyline.js></script>
@@ -74,20 +74,17 @@
     return routes;
   } // parseEncodedRoutes
 
-      async function createMarkerImage(id, options) {
-        const {
+      async function createMarkerImage (id, opts) {
+        let {
           width = 64,
           height = 64,
           text = "",
           fontFamily = "sans-serif",
     fontSize = 20,
     fgColor = "#ffffff",
-    circleFill = "#ff0000",
-    circleStrokeColor = "#000000",
-    circleStrokeWidth = 2,
-    padding = 6,
-    maxFontShrinkIterations = 10
-  } = options;
+          padding = 6,
+          maxFontShrinkIterations = 10
+        } = opts;
 
         const dpr = window.devicePixelRatio || 1;
 
@@ -96,32 +93,48 @@
         canvas.height = Math.round(height * dpr);
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
+        
+        let ctx = canvas.getContext ("2d");
+        ctx.scale (dpr, dpr);
+        //ctx.clearRect (0, 0, width, height);
 
-        const ctx = canvas.getContext("2d");
-        ctx.scale(dpr, dpr);
+        let cx = width / 2;
+        let cy = height / 2;
+        if (opts.circleFillColor || opts.circleStrokeWidth) {
+          let radius = Math.min (width - 2*padding, height - 2*padding) / 2;
 
-        ctx.clearRect(0, 0, width, height);
+          if (opts.circleFillColor) {
+            ctx.beginPath ();
+            ctx.arc (cx, cy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = opts.circleFillColor;
+            ctx.fill ();
+          }
 
-        const cx = width / 2;
-        const cy = height / 2;
+          if (opts.circleStrokeWidth) {
+            ctx.beginPath ();
+            ctx.arc (cx, cy, radius, 0, Math.PI * 2);
+            ctx.lineWidth = opts.circleStrokeWidth;
+            ctx.strokeStyle = opts.circleStrokeColor;
+            ctx.stroke ();
+          }
+        }
+        
+        if (opts.rectFillColor || opts.rectStrokeWidth) {
+          let radius = Math.min (width - 2*padding, height - 2*padding) / 2;
 
-        const maxPossibleRadius = Math.min(width, height) / 2;
-        const radius = Math.max(0, maxPossibleRadius - Math.max(circleStrokeWidth / 2, padding));
+          if (opts.rectFillColor) {
+            ctx.beginPath ();
+            ctx.fillStyle = opts.rectFillColor;
+            ctx.fillRect (padding, padding, width - 2*padding, height - 2*padding);
+          }
 
-        if (circleFill) {
-          ctx.beginPath();
-          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = circleFill;
-    ctx.fill();
-  }
-
-        if (circleStrokeWidth > 0) {
-          ctx.beginPath();
-          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-          ctx.lineWidth = circleStrokeWidth;
-          ctx.strokeStyle = circleStrokeColor;
-    ctx.stroke();
-  }
+          if (opts.rectStrokeWidth) {
+            ctx.beginPath ();
+            ctx.lineWidth = opts.rectStrokeWidth;
+            ctx.strokeStyle = opts.rectStrokeColor;
+            ctx.strokeRect (padding, padding, width - 2*padding, height - 2*padding);
+          }
+        }
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -134,11 +147,14 @@
         return {id, url: canvas.toDataURL("image/png"), width, height};
       }
 
-      async function createTextImageDataURL(id, text, options) {
-        const { fontFamily = 'sans-serif', fontSize = 24, color = '#000',
+      async function createTextImageDataURL(id, text, opts) {
+        let {
+          fontFamily = 'sans-serif', fontSize = 24, color = '#000',
                   strokeColor = 'white',
-                  strokeWidth = 1,
-                  vertical = false } = options;
+                  strokeWidth = 4,
+          padding = 2,
+          vertical = false,
+        } = opts;
 
         const svgNS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(svgNS, 'svg');
@@ -148,8 +164,8 @@
           textEl.setAttribute('writing-mode', 'vertical-rl');
         }
         
-  textEl.setAttribute('x', 0);
-  textEl.setAttribute('y', 0);
+  textEl.setAttribute ('x', padding);
+        textEl.setAttribute('y', padding);
   textEl.setAttribute('font-family', fontFamily);
         textEl.setAttribute('font-size', fontSize);
         textEl.setAttribute('fill', color);
@@ -162,18 +178,17 @@
         document.body.appendChild(svg);
 
         const bbox = textEl.getBBox();
-        svg.setAttribute('width', bbox.width);
-        svg.setAttribute('height', bbox.height);
-        //  textEl.setAttribute('y', bbox.height * 0.8);
+        svg.setAttribute ('width', bbox.width + 2 * padding);
+        svg.setAttribute ('height', bbox.height + 2 * padding);
         if (vertical) {
           textEl.setAttribute('writing-mode', 'vertical-rl');
           textEl.setAttribute('dominant-baseline', 'text-after-edge');
           textEl.setAttribute('text-anchor', 'start');
-          textEl.setAttribute('x', 0);
+          textEl.setAttribute ('x', padding);
         } else {
           textEl.setAttribute('dominant-baseline', 'alphabetic');
           textEl.setAttribute('text-anchor', 'start');
-          textEl.setAttribute('y', fontSize);
+          textEl.setAttribute ('y', padding + fontSize);
         }
 
   const svgData = new XMLSerializer().serializeToString(svg);
@@ -200,7 +215,7 @@
           fontFamily: "sans-serif",
           fontSize: 20,
           fgColor: "black",
-          circleFill: "white",
+          circleFillColor: "white",
           circleStrokeColor: "black",
     circleStrokeWidth: 3,
     padding: 6
@@ -223,15 +238,20 @@
 
         let x = await createMarkerImage (id, {
           width: 64,
-          height: 64,
+          height: 48,
           text: mp.short_label,
           fontFamily: "sans-serif",
           fontSize: 20,
           fgColor: "white",
-          circleFill: "blue",
-          circleStrokeColor: "blue",
-    circleStrokeWidth: 3,
-    padding: 6
+          rectFillColor: {
+            globalStart: "#d82d29",
+            partialStart: "#d82d29",
+            globalGoal: "#8037e2",
+            partialGoal: "#8037e2",
+          }[mp.type] || "gray",
+          rectStrokeColor: "#eee",
+          rectStrokeWidth: 2,
+          padding: 6,
         });
 
         return new Promise ((ok, ng) => {
@@ -249,8 +269,8 @@
         if (map.hasImage (id)) return icons[id];
 
         let x = await createTextImageDataURL (id, mp.label, {
-          color: 'blue',
-          vertical: true
+          color: 'black',
+          vertical: true,
         });
 
         return new Promise ((ok, ng) => {
@@ -266,35 +286,26 @@
 
       let hasHandlers = {};
       async function showMarkedPoints (map, mps) {
-        await Promise.all (mps.map (_ => addMarkedPointIcon (map, _).then (x => _.icon = x)));
-        await Promise.all (mps.map (_ => addMarkedPointLabel (map, _).then (x => _.labelImage = x)));
-
-        let data = {
-          type: 'FeatureCollection',
-          features: [
-            ...mps.map ((item, i) => ({
-              type: 'Feature',
-              geometry: {type: 'Point', coordinates: [item.lon, item.lat]},
-              properties: {
-                markedPoint: item,
-                iconImage: item.icon.id,
-                iconImageOffset: [0, - (item.icon.height/2 + 10)],
-                labelImage: item.labelImage.id,
-                labelImageOffset: [0, - (item.labelImage.height/2 + 2 + item.icon.height + 10)],
-              },
-            })),
-          ],
-        };
-        let source = map.getSource ('markedpoints');
-        if (source) {
-          source.setData (data);
-        } else {
-          map.addSource ('markedpoints', {type: 'geojson', data});
+        if (!map.getSource ('markedpoints')) {
+          map.addSource ('markedpoints', {type: 'geojson', data: {
+            type: 'FeatureCollection',
+            features: [],
+          }});
         }
-
         if (!map.getLayer ('markedpoints')) {
           map.addLayer ({
             id: 'markedpoints',
+            source: 'markedpoints',
+            type: 'circle',
+            paint: {
+              'circle-radius': 8,
+              'circle-color': 'rgba(0, 255, 0, 0.4)',
+              'circle-stroke-color': '#000000',
+              'circle-stroke-width': 1,
+            },
+          });
+          map.addLayer ({
+            id: 'markedpoint-icons',
             source: 'markedpoints',
             type: 'symbol',
             layout: {
@@ -323,6 +334,28 @@
             });
           }
         }
+        
+        await Promise.all (mps.map (_ => addMarkedPointIcon (map, _).then (x => _.icon = x)));
+        await Promise.all (mps.map (_ => addMarkedPointLabel (map, _).then (x => _.labelImage = x)));
+
+        let data = {
+          type: 'FeatureCollection',
+          features: [
+            ...mps.map ((item, i) => ({
+              type: 'Feature',
+              geometry: {type: 'Point', coordinates: [item.lon, item.lat]},
+              properties: {
+                markedPoint: item,
+                iconImage: item.icon.id,
+                iconImageOffset: [0, - (item.icon.height/2 + 10)],
+                labelImage: item.labelImage.id,
+                labelImageOffset: [0, - (item.labelImage.height/2 + 2 + item.icon.height + 10)],
+              },
+            })),
+          ],
+        };
+        let source = map.getSource ('markedpoints');
+        source.setData (data);
       } // showMarkedPoints
 
       async function showTeamLocations (map, locs, opts) {
@@ -398,24 +431,24 @@
         }
 
         if (!map.getLayer ('route-points-' + opts.id)) {
-          map.addLayer ({
-            id: 'route-points-' + opts.id,
-            source: 'routes-' + opts.id,
-            type: 'circle',
-            paint: opts.pointPaint,
-            filter: ['==', ['geometry-type'], 'Point']
-          });
           map.addLayer({
             id: 'route-lines-' + opts.id,
             source: 'routes-' + opts.id,
             type: 'line',
             paint: opts.linePaint,
             filter: ['==', ['geometry-type'], 'LineString']
-          });
+          }, opts.layerBeforeId || undefined);
+          map.addLayer ({
+            id: 'route-points-' + opts.id,
+            source: 'routes-' + opts.id,
+            type: 'circle',
+            paint: opts.pointPaint,
+            filter: ['==', ['geometry-type'], 'Point']
+          }, opts.layerBeforeId || undefined);
         }
       } // showRoutes
 
-      function showTeamHistory (map, taem, routes) {
+      function showTeamHistory (map, taem, routes, opts) {
         showRoutes (map, routes, {
           id: 'team-history',
           linePaint: {
@@ -428,6 +461,7 @@
             'circle-stroke-color': 'gray',
             'circle-stroke-width': 1,
           },
+          layerBeforeId: opts.layerBeforeId,
         });
       } // showTeamHistory
 
@@ -490,6 +524,8 @@
         }
         prevTime = time;
 
+        let aMode = window.XXXmode || 1;
+
         let i = 0;
         while (i < path.length-1 && path[i+1].timestamp < time) i++;
         if (i >= path.length-1) i = path.length-2;
@@ -510,15 +546,19 @@
   const y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
   const x = Math.cos(p0.lat*Math.PI/180)*Math.sin(p1.lat*Math.PI/180) -
             Math.sin(p0.lat*Math.PI/180)*Math.cos(p1.lat*Math.PI/180)*Math.cos(deltaLon);
-                   let targetBearing = (Math.atan2(y,x) * 180/Math.PI + 360) % 360;
-                   targetBearing = directionByPCA (path, i, 10);
+        let targetBearing = (Math.atan2(y,x) * 180/Math.PI + 360) % 360;
+        if (aMode !== 2) {
+          targetBearing = directionByPCA (path, i, 10);
+        }
 
           let container = map.getContainer ();
           let rect = container.getBoundingClientRect ();
           let width = rect.width;
           let height = rect.height;
 
-        if (width > height) targetBearing += 90;
+        if (aMode !== 2) {
+          if (width > height) targetBearing += 90;
+        }
         
         const diff = ((targetBearing - prevBearing + 540) % 360) - 180;
         const limited = prevBearing + Math.max(Math.min(diff, 5), -5);
@@ -532,13 +572,14 @@
         bearing = targetBearing;
         camera = newCenter;
         let cameraOffset = undefined;
-        if (opts.animated) {
+        if (opts.animated && aMode !== 2) {
+          let unchanged = aMode !== 2 ? 0.6 : 0;
           let targetPoint = map.project (newCenter);
           let centerPoint = map.project (map.getCenter ());
           let centerX = width / 2;
           let centerY = height / 2;
-          let allowedX = width * 0.6 / 2;
-          let allowedY = height * 0.6 / 2;
+          let allowedX = width * unchanged / 2;
+          let allowedY = height * unchanged / 2;
           let dx = targetPoint.x - centerPoint.x;
           let dy = targetPoint.y - centerPoint.y;
           let overX = 0;
@@ -561,27 +602,75 @@
           }
           if (map.XXXdragging) camera = cameraOffset = bearing = undefined;
         }
+        if (aMode === 2) {
+          /*
+          let distanceMeters = 100;
+          const R = 6378137;
+          const bearingRad = targetBearing * Math.PI/180;
+
+          const latRad = camera.lat * Math.PI/180;
+          const lonRad = camera.lon * Math.PI/180;
+
+          const newLat = latRad + (distanceMeters/R) * Math.cos(bearingRad);
+          const newLon = lonRad + (distanceMeters/(R * Math.cos(latRad))) * Math.sin(bearingRad);
+
+          camera = {
+            lat: newLat * 180/Math.PI,
+            lon: newLon * 180/Math.PI
+          };
+
+          cameraOffset = [0, 400];
+          */
+
+          let pitch = window.XXXnewPitch || map.getPitch ();
+          let zoom = map.getZoom ();
+          const elevation_surface = map.queryTerrainElevation(camera);
+          const pitchRad = pitch * Math.PI/180;
+  const cameraDistance = Math.pow(1.5, zoom) * 2;
+  const elevation_camera = elevation_surface + cameraDistance * Math.sin(pitchRad);
+          const deltaH = elevation_surface - elevation_camera;
+
+          function metersPerPixel(lat, zoom) {
+  return 40075016.686 * Math.abs(Math.cos(lat * Math.PI/180)) / Math.pow(2, zoom+8);
+}
+          const mpp = metersPerPixel(camera.lat, zoom);
+          let offsetY = (deltaH / mpp) * Math.cos(pitchRad);
+          cameraOffset = [0, offsetY];
+
+        }
         
         showTeamLocations (map, [newCenter], {
           id: 'history-current',
         });
         let now = performance.now ();
-        if (!opts.animated || now - prevEased > 3*1000) {
+        if (!opts.animated || now - prevEased > 3*1000 ||
+            (aMode === 2 && now - prevEased > 1000)) {
+          if (opts.animated && aMode === 2) {
+            map.easeTo ({
+              ...(bearing != null ? {bearing: bearing} : {}),
+              ...(camera ? {center: camera} : {}),
+              ...(cameraOffset ? {offset: cameraOffset} : {}),
+              ...(window.XXXnewPitch ? {pitch: window.XXXnewPitch} : {}),
+              duration: (window.XXXnewPitch ? 0 : 1000),
+              easing: t => t,
+            });
+            delete window.XXXnewPitch;
+          } else {
           if (bearing != null) map.easeTo({
           bearing: bearing,
           //pitch: pitch,
           //zoom: zoom,
             duration: opts.animated ? 60*1000 : 0,
           });
-          if (camera) console.log(camera)
-          if (camera) map.easeTo({
+            if (camera) map.easeTo({
             center: camera,
             ...(cameraOffset ? {offset: cameraOffset} : {}),
           //pitch: pitch,
           //zoom: zoom,
             duration: opts.animated ? 3*1000 : 0,
             easing : t => t,
-        });
+          });
+          }
           prevBearing = bearing;
           prevPosition = newCenter;
           prevEased = now;
@@ -670,7 +759,9 @@
 
           if (hist) {
             let team = teamByDK['tt,,' + opts.teamId];
-            showTeamHistory (map, team, hist)
+            showTeamHistory (map, team, hist, {
+              layerBeforeId: 'markedpoints',
+            });
             timeSetterMain = (time) => {
               if (!time) return;
               showByTime (ma, map, info, team, hist, time, {});
@@ -917,13 +1008,44 @@
       <label><input type=checkbox name=animated> ▶</label>
       <button type=button onclick="
         let map = document.querySelector ('map-area');
+        map.setAttribute ('maptype', 'osm-gsi-hillshade+gsi-optimal_bvmap-label');
+        setTimeout (() => {
+        map.setAttribute ('zoom', 9);
+        map.setAttribute ('pitch', 40);
+        document.querySelector ('[name=animated]').checked = true;
+        let time = document.querySelector ('[name=event-time-range]');
+        time.value = parseFloat (time.min) + (time.max - time.min) / 3;
+        time.dispatchEvent (new Event ('input', {bubbles: true}));
+        window.XXXmode = 1;
+        }, 1000);
+      ">A0</button>
+      <button type=button onclick="
+        let map = document.querySelector ('map-area');
+        map.setAttribute ('maptype', 'gsi-photo-optimal_bvmap-nocontour');
+        setTimeout (() => {
         map.setAttribute ('zoom', 12);
         map.setAttribute ('pitch', 50);
         document.querySelector ('[name=animated]').checked = true;
         let time = document.querySelector ('[name=event-time-range]');
         time.value = parseFloat (time.min) + (time.max - time.min) / 3;
         time.dispatchEvent (new Event ('input', {bubbles: true}));
+        window.XXXmode = 1;
+        }, 1000);
       ">A1</button>
+      <button type=button onclick="
+        let map = document.querySelector ('map-area');
+        map.setAttribute ('maptype', 'gsi-photo-optimal_bvmap-nocontour');
+        setTimeout (() => {
+        map.setAttribute ('zoom', 15);
+        map.setAttribute ('pitch', 50);
+        //window.XXXnewPitch = 60;
+        document.querySelector ('[name=animated]').checked = true;
+        let time = document.querySelector ('[name=event-time-range]');
+        time.value = parseFloat (time.min) + (time.max - time.min) / 3;
+        time.dispatchEvent (new Event ('input', {bubbles: true}));
+        window.XXXmode = 1;
+        }, 1000);
+      ">A2</button>
       
     <p>
       <input type=url name=ibukiURL onchange="
