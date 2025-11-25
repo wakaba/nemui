@@ -42,7 +42,7 @@
 <script src=https://raw.githack.com/wakaba/js-geo-encodedpolyline/master/encodedpolyline.js></script>
 
   <section id=map-section-1 lang=ja>
-    <map-area engine=maplibre controls="type typebuttons scale fullscreen currentposition zoom streetview togglelegend coordinates pitch" maptype=osm-gsi-hillshade+gsi-optimal_bvmap-label pitch=35 terrain=1.2 gsi jma osm lat=35.2 lon=135.4 zoom=12 formcontrol>
+    <map-area engine=maplibre controls="type typebuttons scale fullscreen currentposition zoom streetview togglelegend coordinates pitch" maptype=osm-gsi-hillshade+gsi-optimal_bvmap-label pitch=35 terrain=1.8 gsi jma osm lat=35.2 lon=135.4 zoom=12 formcontrol>
       <map-controls>ABC</map-controls>
       <map-controls position=top-left>XYZ</map-controls>
       <map-controls position=top-left><button>xyz</button></map-controls>
@@ -358,15 +358,17 @@
         source.setData (data);
       } // showMarkedPoints
 
-      async function showTeamLocations (map, locs, opts) {
-        await Promise.all (locs.map (_ => addTeamIcon (map, _.team).then (x => _.icon = x)));
+      let trackedTeamDk = null;
+      async function showTeamLocations (map, items, opts) {
+        await Promise.all (items.map (_ => addTeamIcon (map, _.team).then (x => _.icon = x)));
 
         let data = {
           type: 'FeatureCollection',
           features: [
-            ...locs.map ((item, i) => ({
+            ...items.map ((item, i) => ({
               type: 'Feature',
-              geometry: {type: 'Point', coordinates: [item.lon, item.lat]},
+              geometry: {type: 'Point',
+                         coordinates: [item.point.lon, item.point.lat]},
               properties: {
                 team: item.team,
                 iconImage: item.icon.id,
@@ -399,6 +401,7 @@
             map.on ('click', 'team-locations-' + opts.id, (e) => {
               let feature = e.features[0];
               console.log (feature.properties.team);
+              trackedTeamDk = JSON.parse (feature.properties.team).dk;
             });
           }
         }
@@ -506,17 +509,15 @@
       }
 
 
-      let prevBearing = 0;
-      let prevPosition = null;
       let prevNow = 0;
       let prevTime = 0;
       let prevEased = 0;
-      function showByTime (ma, map, info, team, routes, time, opts) {
-        let path = routes.map (_ => _.points).flat ();
-        if (path.length < 2) return;
+      let prevTimer = 0;
+      let prevTeamDk = null;
+      function showByTime (ma, map, info, teamData, teamStatuses, time, opts) {
 
+        let now = performance.now ();
         if (time === null) {
-          let now = performance.now ();
           let delta = (now - prevNow) / 1000;
           let factor = 100;
           time = prevTime + delta * factor;
@@ -524,161 +525,112 @@
         }
         prevTime = time;
 
-        let aMode = window.XXXmode || 1;
+        let container = map.getContainer ();
+        let rect = container.getBoundingClientRect ();
+        let width = rect.width;
+        let height = rect.height;
 
-        let i = 0;
-        while (i < path.length-1 && path[i+1].timestamp < time) i++;
-        if (i >= path.length-1) i = path.length-2;
+        let locItems = {};
+        let newCameraPoint = undefined;
+        let newCameraOffset = undefined;
+        let newBearing = undefined;
+        for (let ts of Object.values (teamStatuses)) {
+          let td = teamData[ts.dk];
 
-  const p0 = path[i];
-  const p1 = path[i+1];
-
-        const t = (time - p0.timestamp)/(p1.timestamp - p0.timestamp);
-
-                   const lat = p0.lat + t*(p1.lat - p0.lat);
-                   const lon = p0.lon + t*(p1.lon - p0.lon);
-
-                   const ele0 = p0.elevation == null ? getElevation(p0.lat, p0.lon) : p0.elevation;
-  const ele1 = p1.elevation == null ? getElevation(p1.lat, p1.lon) : p1.elevation;
-  const elevation = ele0 + t*(ele1 - ele0);
-
-        const deltaLon = (p1.lon - p0.lon) * Math.PI/180;
-  const y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
-  const x = Math.cos(p0.lat*Math.PI/180)*Math.sin(p1.lat*Math.PI/180) -
-            Math.sin(p0.lat*Math.PI/180)*Math.cos(p1.lat*Math.PI/180)*Math.cos(deltaLon);
-        let targetBearing = (Math.atan2(y,x) * 180/Math.PI + 360) % 360;
-        if (aMode !== 2) {
-          targetBearing = directionByPCA (path, i, 10);
-        }
-
-          let container = map.getContainer ();
-          let rect = container.getBoundingClientRect ();
-          let width = rect.width;
-          let height = rect.height;
-
-        if (aMode !== 2) {
-          if (width > height) targetBearing += 90;
-        }
+          let path = ts.routes.map (_ => _.points).flat ();
+          if (path.length < 2) return;
         
-        const diff = ((targetBearing - prevBearing + 540) % 360) - 180;
-        const limited = prevBearing + Math.max(Math.min(diff, 5), -5);
+          let i = 0;
+          while (i < path.length-1 && path[i+1].timestamp < time) i++;
+          if (i >= path.length-1) i = path.length-2;
+          let p0 = path[i];
+          let p1 = path[i+1];
+          let t = (time - p0.timestamp)/(p1.timestamp - p0.timestamp);
 
-        let bearing = opts.animated ? limited : targetBearing;
-        
-        let newCenter = {lon, lat, team};
-
-        let camera = opts.animated ? prevPosition || newCenter : newCenter;
-
-        bearing = targetBearing;
-        camera = newCenter;
-        let cameraOffset = undefined;
-        if (opts.animated && aMode !== 2) {
-          let unchanged = aMode !== 2 ? 0.6 : 0;
-          let targetPoint = map.project (newCenter);
-          let centerPoint = map.project (map.getCenter ());
-          let centerX = width / 2;
-          let centerY = height / 2;
-          let allowedX = width * unchanged / 2;
-          let allowedY = height * unchanged / 2;
-          let dx = targetPoint.x - centerPoint.x;
-          let dy = targetPoint.y - centerPoint.y;
-          let overX = 0;
-          let overY = 0;
-          if (dx >  allowedX) overX = +1;
-          if (dx < -allowedX) overX = -1;
-          if (dy >  allowedY) overY = +1;
-          if (dy < -allowedY) overY = -1;
-          if (Math.abs (dx) < allowedX) overX = 0;
-          if (Math.abs (dy) < allowedY) overY = 0;
-          let biasAmountX = width * 0.20;
-          let biasAmountY = height * 0.20;
-          let offsetX = (centerX - centerPoint.x) + -overX * biasAmountX;
-          let offsetY = (centerY - centerPoint.y) + -overY * biasAmountY;
-          cameraOffset = [offsetX, offsetY];
-          if (overX || overY) {
-            //
-          } else {
-            camera = cameraOffset = undefined;
-          }
-          if (map.XXXdragging) camera = cameraOffset = bearing = undefined;
-        }
-        if (aMode === 2) {
-          /*
-          let distanceMeters = 100;
-          const R = 6378137;
-          const bearingRad = targetBearing * Math.PI/180;
-
-          const latRad = camera.lat * Math.PI/180;
-          const lonRad = camera.lon * Math.PI/180;
-
-          const newLat = latRad + (distanceMeters/R) * Math.cos(bearingRad);
-          const newLon = lonRad + (distanceMeters/(R * Math.cos(latRad))) * Math.sin(bearingRad);
-
-          camera = {
-            lat: newLat * 180/Math.PI,
-            lon: newLon * 180/Math.PI
+          let newPoint = {
+            lat: p0.lat + t*(p1.lat - p0.lat),
+            lon: p0.lon + t*(p1.lon - p0.lon),
           };
+          locItems[td.dk] = {team: td, point: newPoint};
 
-          cameraOffset = [0, 400];
-          */
+          if (trackedTeamDk === td.dk) {
+            let deltaLon = (p1.lon - p0.lon) * Math.PI/180;
+            let y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
+            let x = Math.cos(p0.lat*Math.PI/180)*Math.sin(p1.lat*Math.PI/180) - Math.sin(p0.lat*Math.PI/180)*Math.cos(p1.lat*Math.PI/180)*Math.cos(deltaLon);
+            let targetBearing = (Math.atan2(y,x) * 180/Math.PI + 360) % 360;
+            targetBearing = directionByPCA (path, i, 10);
+            if (width > height) targetBearing += 90;
 
-          let pitch = window.XXXnewPitch || map.getPitch ();
-          let zoom = map.getZoom ();
-          const elevation_surface = map.queryTerrainElevation(camera);
-          const pitchRad = pitch * Math.PI/180;
-  const cameraDistance = Math.pow(1.5, zoom) * 2;
-  const elevation_camera = elevation_surface + cameraDistance * Math.sin(pitchRad);
-          const deltaH = elevation_surface - elevation_camera;
+            newBearing = targetBearing;
+            newCameraPoint = newPoint;
+            newCameraOffset = undefined;
+            if (opts.animated) {
+              let unchanged = 0.6;
+              let targetPoint = map.project (newCameraPoint);
+              let centerPoint = map.project (map.getCenter ());
+              let centerX = width / 2;
+              let centerY = height / 2;
+              let allowedX = width * unchanged / 2;
+              let allowedY = height * unchanged / 2;
+              let dx = targetPoint.x - centerPoint.x;
+              let dy = targetPoint.y - centerPoint.y;
+              let overX = 0;
+              let overY = 0;
+              if (dx >  allowedX) overX = +1;
+              if (dx < -allowedX) overX = -1;
+              if (dy >  allowedY) overY = +1;
+              if (dy < -allowedY) overY = -1;
+              if (Math.abs (dx) < allowedX) overX = 0;
+              if (Math.abs (dy) < allowedY) overY = 0;
+              let biasAmountX = width * 0.20;
+              let biasAmountY = height * 0.20;
+              let offsetX = (centerX - centerPoint.x) + -overX * biasAmountX;
+              let offsetY = (centerY - centerPoint.y) + -overY * biasAmountY;
+              newCameraOffset = [offsetX, offsetY];
+              if (overX || overY) {
+                //
+              } else {
+                newCameraPoint = newCameraOffset = undefined;
+              }
+              if (map.XXXdragging) newCameraPoint = newCameraOffset = newBearing = undefined;
+            }
 
-          function metersPerPixel(lat, zoom) {
-  return 40075016.686 * Math.abs(Math.cos(lat * Math.PI/180)) / Math.pow(2, zoom+8);
-}
-          const mpp = metersPerPixel(camera.lat, zoom);
-          let offsetY = (deltaH / mpp) * Math.cos(pitchRad);
-          cameraOffset = [0, offsetY];
+            if (prevTeamDk !== td.dk) {
+              showTeamHistory (map, td, ts.routes, {
+                layerBeforeId: 'markedpoints',
+              });
+              prevTeanDk = td.dk;
+            }
+          } // tracked
+        } // ts
 
-        }
-        
-        showTeamLocations (map, [newCenter], {
+        showTeamLocations (map, Object.values (locItems), {
           id: 'history-current',
         });
-        let now = performance.now ();
-        if (!opts.animated || now - prevEased > 3*1000 ||
-            (aMode === 2 && now - prevEased > 1000)) {
-          if (opts.animated && aMode === 2) {
-            map.easeTo ({
-              ...(bearing != null ? {bearing: bearing} : {}),
-              ...(camera ? {center: camera} : {}),
-              ...(cameraOffset ? {offset: cameraOffset} : {}),
-              ...(window.XXXnewPitch ? {pitch: window.XXXnewPitch} : {}),
-              duration: (window.XXXnewPitch ? 0 : 1000),
-              easing: t => t,
+
+        if (newCameraPoint || newBearing) {
+          console.log("XXXX", newBearing, newCameraPoint)
+          if (!opts.animated || now - prevEased > 3*1000) {
+            if (newBearing != null) map.easeTo({
+              bearing: newBearing,
+              duration: opts.animated ? 60*1000 : 0,
             });
-            delete window.XXXnewPitch;
-          } else {
-          if (bearing != null) map.easeTo({
-          bearing: bearing,
-          //pitch: pitch,
-          //zoom: zoom,
-            duration: opts.animated ? 60*1000 : 0,
-          });
-            if (camera) map.easeTo({
-            center: camera,
-            ...(cameraOffset ? {offset: cameraOffset} : {}),
-          //pitch: pitch,
-          //zoom: zoom,
-            duration: opts.animated ? 3*1000 : 0,
-            easing : t => t,
-          });
+            if (newCameraPoint) map.easeTo({
+              center: newCameraPoint,
+              ...(newCameraOffset ? {offset: newCameraOffset} : {}),
+              duration: opts.animated ? 3*1000 : 0,
+              easing : t => t,
+            });
+            prevEased = now;
           }
-          prevBearing = bearing;
-          prevPosition = newCenter;
-          prevEased = now;
-        }
+        } // opts.ease
 
         if (document.querySelector ('input[name=animated]:checked')) {
-          requestAnimationFrame (() => {
-            showByTime (ma, map, info, team, routes, null, {animated: true});
+          cancelAnimationFrame (prevTimer);
+          prevTimer = requestAnimationFrame (() => {
+            showByTime (ma, map, info, teamData, teamStatuses, null, {
+              animated: true,
+            });
           });
         }
       } // showByTime
@@ -731,47 +683,29 @@
             if (res.status !== 200) throw res;
             return res.json ();
           }),
-          fetch (new URL ('teamlocations.json', url)).then (res => {
+          /*fetch (new URL ('teamlocations.json', url)).then (res => {
             if (res.status !== 200) throw res;
             return res.json ();
-          }),
-          opts.teamId ? fetch (new URL ('t/' + opts.teamId + '/locationhistory.json', url)).then (res => {
-            if (res.status !== 200) throw res;
-            return res.json ();
-          }).then (json => {
-            return parseEncodedRoutes (json.encoded_routes);
-          }) : null,
-        ]).then (([info, teams, locs, hist]) => {
-          let teamByDK = {};
+          }),*/
+        ]).then (([info, teams/*, locs*/]) => {
+          let teamData = {};
           teams.items.forEach (t => {
-            teamByDK['tt,,' + t.id] = t;
-          });
-          let tls = [];
-          Object.keys (locs.items).forEach (dk => {
-            let loc = locs.items[dk];
-            loc.team = teamByDK[dk] || {};
-            tls.push (loc);
+            t.dk = 'tt,,' + t.id;
+            teamData[t.dk] = t;
           });
 
-          showTeamLocations (map, tls, {
+          /*
+          showTeamLocations (map, Object.keys (locs.items).map (dk => {
+            return {team: teamData[dk], point: locs.items[dk]};
+          }), {
             id: 'teamlocations',
           });
-
-          if (hist) {
-            let team = teamByDK['tt,,' + opts.teamId];
-            showTeamHistory (map, team, hist, {
-              layerBeforeId: 'markedpoints',
-            });
-            timeSetterMain = (time) => {
-              if (!time) return;
-              showByTime (ma, map, info, team, hist, time, {});
-            };
-          }
+          */
 
           let now = new Date () . valueOf () / 1000;
-          if (hist) {
-            now = hist?.[0]?.points.at (-1).timestamp;
-          }
+          //if (hist) {
+          //  now = hist?.[0]?.points.at (-1).timestamp;
+          //}
           if (info.end_date < now) now = info.end_date
           if (now < info.start_date) now = info.start_date;
           document.querySelectorAll ('input[name=event-time-range]').forEach (e => {
@@ -784,7 +718,48 @@
 
           if (opts.new) {
             ma.pcScroll ({
-              center: hist?.[0]?.points[0] || tls[0] || info.marked_points.at (-1) || undefined,
+              center: info.marked_points.at (-1) || undefined,
+            });
+          }
+
+          let teamStatuses = {};
+          let loadTeam = (url, team) => {
+            return fetch (new URL ('t/' + team.id + '/locationhistory.json', url)).then (res => {
+              if (res.status !== 200) throw res;
+              return res.json ();
+            }).then (json => {
+              return parseEncodedRoutes (json.encoded_routes);
+            }).then (hist => {
+              teamStatuses[team.dk] = {dk: team.dk, routes: hist};
+            });
+          }; // loadTeam
+          if (opts.teamId) {
+            let team = teamData['tt,,' + opts.teamId];
+            if (!team) throw new Error ("Bad team: " + opts.teamId);
+            return loadTeam (url, team).then (() => {
+              trackedTeamDk = team.dk;
+
+              timeSetterMain = (time) => {
+                if (!time) return;
+                showByTime (ma, map, info, teamData, teamStatuses, time, {});
+              };
+              showByTime (ma, map, info, teamData, teamStatuses, null, {});
+            });
+          } else {
+            let first = true;
+            Object.values (teamData).map ((team) => {
+              loadTeam (url, team).then (() => {
+                if (first) {
+                  trackedTeamDk = team.dk;
+                  first = false;
+
+                  timeSetterMain = (time) => {
+                    if (!time) return;
+                    showByTime (ma, map, info, teamData, teamStatuses, time, {});
+                  };
+                }
+                showByTime (ma, map, info, teamData, teamStatuses, null, {});
+              });
             });
           }
         });
@@ -956,10 +931,12 @@
     }) ();
     </script>
 
-      <input type=range min=0 value=1.2 max=5 step=0.1 oninput="
+      <input type=range min=0 value=1.8 max=5 step=0.1 oninput="
         var map = document.querySelector ('map-area');
         map.setAttribute ('terrain', this.value);
+        nextElementSibling.value = value;
       ">
+      <output name=current_terrain>1.8</output>
     <p>
       <button type=button onclick="
         parentNode.parentNode.querySelector ('map-area').noMapDraggable = false;
@@ -1016,7 +993,6 @@
         let time = document.querySelector ('[name=event-time-range]');
         time.value = parseFloat (time.min) + (time.max - time.min) / 3;
         time.dispatchEvent (new Event ('input', {bubbles: true}));
-        window.XXXmode = 1;
         }, 1000);
       ">A0</button>
       <button type=button onclick="
@@ -1029,7 +1005,6 @@
         let time = document.querySelector ('[name=event-time-range]');
         time.value = parseFloat (time.min) + (time.max - time.min) / 3;
         time.dispatchEvent (new Event ('input', {bubbles: true}));
-        window.XXXmode = 1;
         }, 1000);
       ">A1</button>
       <button type=button onclick="
@@ -1038,12 +1013,10 @@
         setTimeout (() => {
         map.setAttribute ('zoom', 15);
         map.setAttribute ('pitch', 50);
-        //window.XXXnewPitch = 60;
         document.querySelector ('[name=animated]').checked = true;
         let time = document.querySelector ('[name=event-time-range]');
         time.value = parseFloat (time.min) + (time.max - time.min) / 3;
         time.dispatchEvent (new Event ('input', {bubbles: true}));
-        window.XXXmode = 1;
         }, 1000);
       ">A2</button>
       
@@ -1086,7 +1059,7 @@
 
       function updateURL () {
         let mt = document.querySelector ('map-area').pcMapType;
-        history.replaceState (null, null, '#ibuki=' + encodeURIComponent (ibukiURL) + '&map=' + mt);
+        history.replaceState (null, null, '#ibuki=' + encodeURIComponent (ibukiURL) + '&map=' + encodeURIComponent (mt));
       }
     </script>
       
