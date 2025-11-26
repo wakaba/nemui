@@ -204,8 +204,9 @@
 
     <script>
       let icons = {};
-      async function addTeamIcon (map, team)  {
+      async function addTeamIcon (map, team, opts)  {
         let id = 'team-icon-' + team.id;
+        if (opts.tracked) id += '-tracked';
         if (map.hasImage (id)) return icons[id];
 
         let x = await createMarkerImage (id, {
@@ -215,7 +216,7 @@
           fontFamily: "sans-serif",
           fontSize: 20,
           fgColor: "black",
-          circleFillColor: "white",
+          circleFillColor: opts.tracked ? "yellow" : "white",
           circleStrokeColor: "black",
     circleStrokeWidth: 3,
     padding: 6
@@ -360,7 +361,10 @@
 
       let trackedTeamDk = null;
       async function showTeamLocations (map, items, opts) {
-        await Promise.all (items.map (_ => addTeamIcon (map, _.team).then (x => _.icon = x)));
+        await Promise.all (items.map (_ => addTeamIcon (map, _.team, {}).then (x => _.icon = x)));
+        await Promise.all (items.map (_ => addTeamIcon (map, _.team, {
+          tracked: true,
+        }).then (x => _.trackedIcon = x)));
 
         let data = {
           type: 'FeatureCollection',
@@ -373,6 +377,8 @@
                 team: item.team,
                 iconImage: item.icon.id,
                 iconImageOffset: [0, - (item.icon.height/2 + 10)],
+                trackedIconImage: item.trackedIcon.id,
+                tracked: trackedTeamDk === item.team.dk,
               },
             })),
           ],
@@ -390,7 +396,11 @@
             source: 'team-locations-' + opts.id,
             type: 'symbol',
             layout: {
-              'icon-image': ['get', 'iconImage'],
+              'icon-image': [
+                'case',
+                ['get', 'tracked'], ['get', 'trackedIconImage'],
+                ['get', 'iconImage'],
+              ],
               'icon-size': 1,
               'icon-allow-overlap': true,
               'icon-offset': ['get', 'iconImageffset'],
@@ -508,29 +518,54 @@
         return bearing;
       }
 
-
+      let prevTimer1;
+      let prevTimer2;
       let prevNow = 0;
       let prevTime = 0;
-      let prevEased = 0;
-      let prevTimer = 0;
-      let prevTeamDk = null;
+      let time = 0;
       function showByTime (ma, map, info, teamData, teamStatuses, time, opts) {
+        if (time) {
+          prevTime = time;
+          prevNow = performance.now ();
+        }
+        
+        if (prevTimer1 || prevTimer2) return;
+        if (map.XXXdragging) {
+          prevTimer2 = setTimeout (() => {
+            prevTimer1 = prevTimer2 = null;
+            _showByTime (ma, map, info, teamData, teamStatuses, opts);
+          }, 500);
+        } else {
+          prevTimer1 = requestAnimationFrame (() => {
+            prevTimer1 = prevTimer2 = null;
+            _showByTime (ma, map, info, teamData, teamStatuses, opts);
+          });
+        }
+      } // showByTime
+      let prevEased = 0;
+      let prevTeamDk = null;
+      let locItems = {};
+      let trackedLocItems = {};
+      let timeFactor = 600;
+      function _showByTime (ma, map, info, teamData, teamStatuses, opts) {
 
         let now = performance.now ();
-        if (time === null) {
+        if (opts.animated) {
           let delta = (now - prevNow) / 1000;
-          let factor = 100;
-          time = prevTime + delta * factor;
+          time = prevTime + delta * timeFactor;
           prevNow = now;
+          prevTime = time;
+        } else {
+          time = prevTime;
         }
-        prevTime = time;
 
         let container = map.getContainer ();
         let rect = container.getBoundingClientRect ();
         let width = rect.width;
         let height = rect.height;
 
-        let locItems = {};
+        locItems = {};
+        trackedLocItems = {};
         let newCameraPoint = undefined;
         let newCameraOffset = undefined;
         let newBearing = undefined;
@@ -538,7 +573,7 @@
           let td = teamData[ts.dk];
 
           let path = ts.routes.map (_ => _.points).flat ();
-          if (path.length < 2) return;
+          if (path.length < 2) continue;
         
           let i = 0;
           while (i < path.length-1 && path[i+1].timestamp < time) i++;
@@ -546,14 +581,23 @@
           let p0 = path[i];
           let p1 = path[i+1];
           let t = (time - p0.timestamp)/(p1.timestamp - p0.timestamp);
+          if (i === 0) {
+            t = 0;
+          } else if (path.length-2 <= i) {
+            t = 1;
+          }
 
           let newPoint = {
             lat: p0.lat + t*(p1.lat - p0.lat),
             lon: p0.lon + t*(p1.lon - p0.lon),
           };
-          locItems[td.dk] = {team: td, point: newPoint};
-
           if (trackedTeamDk === td.dk) {
+            trackedLocItems[td.dk] = {team: td, point: newPoint};
+          } else {
+            locItems[td.dk] = {team: td, point: newPoint};
+          }
+
+          if (trackedTeamDk === td.dk && !map.XXXdragging) {
             let deltaLon = (p1.lon - p0.lon) * Math.PI/180;
             let y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
             let x = Math.cos(p0.lat*Math.PI/180)*Math.sin(p1.lat*Math.PI/180) - Math.sin(p0.lat*Math.PI/180)*Math.cos(p1.lat*Math.PI/180)*Math.cos(deltaLon);
@@ -592,9 +636,8 @@
               } else {
                 newCameraPoint = newCameraOffset = undefined;
               }
-              if (map.XXXdragging) newCameraPoint = newCameraOffset = newBearing = undefined;
             }
-
+            
             if (prevTeamDk !== td.dk) {
               showTeamHistory (map, td, ts.routes, {
                 layerBeforeId: 'markedpoints',
@@ -607,9 +650,11 @@
         showTeamLocations (map, Object.values (locItems), {
           id: 'history-current',
         });
+        showTeamLocations (map, Object.values (trackedLocItems), {
+          id: 'history-current-tracked',
+        });
 
         if (newCameraPoint || newBearing) {
-          console.log("XXXX", newBearing, newCameraPoint)
           if (!opts.animated || now - prevEased > 3*1000) {
             if (newBearing != null) map.easeTo({
               bearing: newBearing,
@@ -626,14 +671,12 @@
         } // opts.ease
 
         if (document.querySelector ('input[name=animated]:checked')) {
-          cancelAnimationFrame (prevTimer);
-          prevTimer = requestAnimationFrame (() => {
-            showByTime (ma, map, info, teamData, teamStatuses, null, {
-              animated: true,
-            });
+          showByTime (ma, map, info, teamData, teamStatuses, null, {
+            animated: true,
           });
         }
-      } // showByTime
+        document.querySelector ('input-datetime').value = time;
+      } // _showByTime
 
       document.querySelectorAll ('map-area').forEach (ma => {
         ma.addEventListener ('mousedown', () => {
@@ -646,7 +689,8 @@
 
       let timeSetter;
       let timeSetterMain = () => {};
-      
+
+      let teamStatuses = {};
       function showIbukiEvent (url, opts) {
         let ma = document.querySelector ('map-area');
         let map = ma.pc_MLMap;
@@ -656,7 +700,7 @@
           ma.pcTimeSetters.push (timeSetter = _ => timeSetterMain (_));
         }
         
-        url = url.replace (/^https?:\/\/ibuki.run\//, 'https://od.ibuki.run/');
+        url = url.replace (/^https?:\/\/(?:\w+\.|)ibuki.run\//, 'https://od.ibuki.run/');
         //not return
         Promise.all ([
           fetch (new URL ('info.json?with_routes=1', url)).then (res => {
@@ -722,7 +766,7 @@
             });
           }
 
-          let teamStatuses = {};
+          teamStatuses = {};
           let loadTeam = (url, team) => {
             return fetch (new URL ('t/' + team.id + '/locationhistory.json', url)).then (res => {
               if (res.status !== 200) throw res;
@@ -747,8 +791,13 @@
             });
           } else {
             let first = true;
-            Object.values (teamData).map ((team) => {
-              loadTeam (url, team).then (() => {
+            let progress = document.querySelector ('progress');
+            progress.hidden = false;
+            progress.min = 0;
+            progress.max = Object.keys (teamData).length;
+            progress.value = 0;
+            Promise.all (Object.values (teamData).map ((team) => {
+              return loadTeam (url, team).then (() => {
                 if (first) {
                   trackedTeamDk = team.dk;
                   first = false;
@@ -759,8 +808,10 @@
                   };
                 }
                 showByTime (ma, map, info, teamData, teamStatuses, null, {});
+
+                progress.value++;
               });
-            });
+            })).then (() => progress.hidden = true);
           }
         });
 
@@ -969,6 +1020,7 @@
         });
       ">addElementOverlays</button>
 
+      
     <p>
       <input-datetime oninput="
         var map = document.querySelector ('map-area');
@@ -983,6 +1035,13 @@
         " style="width: 50%">
       </input-datetime>
       <label><input type=checkbox name=animated> ▶</label>
+      <select onchange="timeFactor = parseFloat (value)">
+        <option value=1>等倍速 1s/s
+        <option value=100>100倍速 100s/s
+        <option value=300>5分/s
+        <option value=600 selected>10分/s
+        <option value=3600>1時間/s
+      </select>
       <button type=button onclick="
         let map = document.querySelector ('map-area');
         map.setAttribute ('maptype', 'osm-gsi-hillshade+gsi-optimal_bvmap-label');
@@ -1019,11 +1078,11 @@
         time.dispatchEvent (new Event ('input', {bubbles: true}));
         }, 1000);
       ">A2</button>
-      
     <p>
       <input type=url name=ibukiURL onchange="
         setURL (value, {initiator: 'input'});
       " style="width: 100%">
+      <progress hidden></progress>
     <script>
       let ibukiURL = null;
       let newRequest = true;
