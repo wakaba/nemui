@@ -35,11 +35,13 @@
   x-3 { border-color: green }
   x-4 { border-color: red }
 </style>
-<script src=https://pawjy.github.io/html-page-components/src/page-components.js async></script>
+<script src=https://pawjy.github.io/html-page-components/src/page-components.js data-export=$fill async></script>
 <script src=../html-page-components/src/maps.js onerror='let s = document.createElement("script");s.src="https://pawjy.github.io/html-page-components/src/maps.js";document.head.appendChild(s)' async></script>
 <script src=https://wiki.suikawiki.org/scripts/time async data-time-selector=time></script>
 <script src=https://pawjy.github.io/html-unit-number/src/unit-number.js async></script>
 <script src=https://raw.githack.com/wakaba/js-geo-encodedpolyline/master/encodedpolyline.js></script>
+<script src=https://raw.githack.com/geocol/js-routes/refs/heads/master/src/routes.js></script>
+<script src=https://raw.githack.com/geocol/js-routes/refs/heads/master/src/routepoints.js></script>
 
   <section id=map-section-1 lang=ja>
     <map-area engine=maplibre controls="type typebuttons scale fullscreen currentposition zoom streetview togglelegend coordinates pitch" maptype=osm-gsi-hillshade+gsi-optimal_bvmap-label pitch=35 terrain=1.8 gsi jma osm lat=35.2 lon=135.4 zoom=12 formcontrol>
@@ -378,7 +380,7 @@
                 iconImage: item.icon.id,
                 iconImageOffset: [0, - (item.icon.height/2 + 10)],
                 trackedIconImage: item.trackedIcon.id,
-                tracked: trackedTeamDk === item.team.dk,
+                tracked: opts.tracked || false,
               },
             })),
           ],
@@ -564,15 +566,14 @@
         let width = rect.width;
         let height = rect.height;
 
-        locItems = {};
-        trackedLocItems = {};
+        let txes = {};
         let newCameraPoint = undefined;
         let newCameraOffset = undefined;
         let newBearing = undefined;
         for (let ts of Object.values (teamStatuses)) {
           let td = teamData[ts.dk];
 
-          let path = ts.routes.map (_ => _.points).flat ();
+          let path = ts.computed.dataPoints;
           if (path.length < 2) continue;
         
           let i = 0;
@@ -586,29 +587,66 @@
           } else if (path.length-2 <= i) {
             t = 1;
           }
+          txes[ts.dk] = {path, i, p0, p1, computedBaseIndex: 0,
+                         td, dk: ts.dk};
+          for (let j = p0.index; j >= 0; j--) {
+            let x = ts.computed.dataToBase[j]?.effectiveIndex;
+            if (Number.isFinite (x)) {
+              txes[ts.dk].computedBaseIndex = x;
+              break;
+            }
+          }
 
-          let newPoint = {
+          txes[ts.dk].point = {
             lat: p0.lat + t*(p1.lat - p0.lat),
             lon: p0.lon + t*(p1.lon - p0.lon),
           };
-          if (trackedTeamDk === td.dk) {
-            trackedLocItems[td.dk] = {team: td, point: newPoint};
-          } else {
-            locItems[td.dk] = {team: td, point: newPoint};
+        } // ts
+
+        {
+          let tdk = trackedTeamDk;
+          if (document.querySelector ('input[name=track_by_rank]:checked')) {
+            let rank = document.querySelector ('input[name=tracked_rank]').valueAsNumber;
+            let tx = Object.values (txes).sort ((a, b) => b.computedBaseIndex - a.computedBaseIndex)[rank - 1];
+            if (tx) tdk = tx.dk;
           }
 
-          if (trackedTeamDk === td.dk && !map.XXXdragging) {
-            let deltaLon = (p1.lon - p0.lon) * Math.PI/180;
-            let y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
-            let x = Math.cos(p0.lat*Math.PI/180)*Math.sin(p1.lat*Math.PI/180) - Math.sin(p0.lat*Math.PI/180)*Math.cos(p1.lat*Math.PI/180)*Math.cos(deltaLon);
-            let targetBearing = (Math.atan2(y,x) * 180/Math.PI + 360) % 360;
-            targetBearing = directionByPCA (path, i, 10);
-            if (width > height) targetBearing += 90;
+          locItems = {};
+          trackedLocItems = {};
+          Object.values (txes).forEach (tx => {
+            if (tdk === tx.dk) {
+              trackedLocItems[tx.dk] = {team: tx.td, point: tx.point};
+            } else {
+              locItems[tx.dk] = {team: tx.td, point: tx.point};
+            }
+          });
+          showTeamLocations (map, Object.values (locItems), {
+            id: 'history-current',
+          });
+          showTeamLocations (map, Object.values (trackedLocItems), {
+            id: 'history-current-tracked',
+            tracked: true,
+          });
+          
+          let tx = txes[tdk];
+          if (tx) {
+            let td = teamData[tdk];
+            let ts = teamStatuses[tdk];
+            
+            if (!map.XXXdragging) {
+              let p0 = tx.p0;
+              let p1 = tx.p1;
+              let deltaLon = (p1.lon - p0.lon) * Math.PI/180;
+              let y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
+              let x = Math.cos(p0.lat*Math.PI/180)*Math.sin(p1.lat*Math.PI/180) - Math.sin(p0.lat*Math.PI/180)*Math.cos(p1.lat*Math.PI/180)*Math.cos(deltaLon);
+              let targetBearing = (Math.atan2(y,x) * 180/Math.PI + 360) % 360;
+              targetBearing = directionByPCA (tx.path, tx.i, 10);
+              if (width > height) targetBearing += 90;
 
-            newBearing = targetBearing;
-            newCameraPoint = newPoint;
-            newCameraOffset = undefined;
-            if (opts.animated) {
+              newBearing = targetBearing;
+              newCameraPoint = tx.point
+              newCameraOffset = undefined;
+              if (opts.animated) {
               let unchanged = 0.6;
               let targetPoint = map.project (newCameraPoint);
               let centerPoint = map.project (map.getCenter ());
@@ -638,21 +676,22 @@
               }
             }
             
-            if (prevTeamDk !== td.dk) {
-              showTeamHistory (map, td, ts.routes, {
-                layerBeforeId: 'markedpoints',
-              });
-              prevTeanDk = td.dk;
-            }
-          } // tracked
-        } // ts
-
-        showTeamLocations (map, Object.values (locItems), {
-          id: 'history-current',
-        });
-        showTeamLocations (map, Object.values (trackedLocItems), {
-          id: 'history-current-tracked',
-        });
+              if (prevTeamDk !== tdk) {
+                showTeamHistory (map, td, ts.routes, {
+                  layerBeforeId: 'markedpoints',
+                });
+                prevTeamDk = tdk;
+              }
+            } // tracked
+            
+            let rank = Object.values (txes).filter (_ => _.computedBaseIndex > tx.computedBaseIndex).length + 1;
+            $fill (document.querySelector ('.tracked-team-info'), {
+              td,
+              ts,
+              rank,
+            });
+          } // tx
+        }
 
         if (newCameraPoint || newBearing) {
           if (!opts.animated || now - prevEased > 3*1000) {
@@ -707,7 +746,7 @@
             if (res.status !== 200) throw res;
             return res.json ();
           }).then (info => {
-            showRoutes (map, parseEncodedRoutes (info.encoded_routes), {
+            showRoutes (map, info.routes = parseEncodedRoutes (info.encoded_routes), {
               id: 'route',
               linePaint: {
                 'line-color': 'green',
@@ -765,7 +804,14 @@
               center: info.marked_points.at (-1) || undefined,
             });
           }
-
+                              
+          let baseRoutes = info.routes.map (_ => _.points).flat ();
+          let computed = {elapsed: {}};
+          {
+            let radius = 100;
+            computeBase ([baseRoutes], radius, computed);
+          }
+          
           teamStatuses = {};
           let loadTeam = (url, team) => {
             return fetch (new URL ('t/' + team.id + '/locationhistory.json', url)).then (res => {
@@ -777,29 +823,25 @@
               teamStatuses[team.dk] = {dk: team.dk, routes: hist};
             });
           }; // loadTeam
+          let tds = [];
           if (opts.teamId) {
-            let team = teamData['tt,,' + opts.teamId];
-            if (!team) throw new Error ("Bad team: " + opts.teamId);
-            return loadTeam (url, team).then (() => {
-              trackedTeamDk = team.dk;
-
-              timeSetterMain = (time) => {
-                if (!time) return;
-                showByTime (ma, map, info, teamData, teamStatuses, time, {});
-              };
-              showByTime (ma, map, info, teamData, teamStatuses, null, {});
-            });
+            let td = teamData['tt,,' + opts.teamId];
+            if (!td) throw new Error ("Bad team: " + opts.teamId);
+            tds.push (td);
           } else {
+            tds = Object.values (teamData);
+          }
+          {
             let first = true;
             let progress = document.querySelector ('progress');
             progress.hidden = false;
             progress.min = 0;
-            progress.max = Object.keys (teamData).length;
+            progress.max = tds.length;
             progress.value = 0;
-            Promise.all (Object.values (teamData).map ((team) => {
-              return loadTeam (url, team).then (() => {
+            Promise.all (tds.map ((td) => {
+              return loadTeam (url, td).then (() => {
                 if (first) {
-                  trackedTeamDk = team.dk;
+                  trackedTeamDk = td.dk;
                   first = false;
 
                   timeSetterMain = (time) => {
@@ -809,6 +851,29 @@
                 }
                 showByTime (ma, map, info, teamData, teamStatuses, null, {});
 
+                let ts = teamStatuses[td.dk] || {};
+
+                let forced = [];
+              /*XXX
+              info.marked_points.forEach (mp => {
+                let tr = teamResultItems[mp.id];
+                if (tr && tr.n) {
+                  forced.push ({timestamp: tr.c, lat: mp.lat, lon: mp.lon,
+                                baseOrigIndex: mp.index,
+                                source: 'mp' + mp.type});
+                }
+              });
+              (((teamResultItems[0] || {}).d || {}).m || []).forEach (_ => {
+                forced.push ({timestamp: _.t, lat: 0, lon: 0, source: 'marker'});
+              });
+              */
+
+                let cp = {...computed};
+                let pointsList = [baseRoutes, (ts.routes || []).map (_ => _.points).flat (), forced];
+                computeData (pointsList, cp);
+                ts.computed = cp;
+              console.log(cp)//XXXX
+                
                 progress.value++;
               });
             })).then (() => progress.hidden = true);
@@ -1083,6 +1148,13 @@
         setURL (value, {initiator: 'input'});
       " style="width: 100%">
       <progress hidden></progress>
+      <span class=tracked-team-info>
+        <unit-number type=rank unit=位 data-field=rank></unit-number>
+        <bdi data-field=td.short_label></bdi>
+        <bdi data-field=td.label></bdi>
+      </span>
+      <input type=checkbox name=track_by_rank>
+      <input type=number name=tracked_rank value=1 min=1 step=1 required>
     <script>
       let ibukiURL = null;
       let newRequest = true;
