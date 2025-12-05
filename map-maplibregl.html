@@ -76,6 +76,47 @@
     return routes;
   } // parseEncodedRoutes
 
+function attachTimestamps (route, startTime) {
+  let baseSpeed = 5.0; // m/s
+  let gradeFactor = 0;
+  
+  function haversine(a, b) {
+    const R = 6371000;
+    const rad = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * rad;
+    const dLon = (b.lon - a.lon) * rad;
+    const lat1 = a.lat * rad;
+    const lat2 = b.lat * rad;
+
+    const h = Math.sin(dLat / 2)**2 +
+              Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2)**2;
+
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  let current = startTime;
+  route[0].timestamp = startTime;
+
+  for (let i = 1; i < route.length; i++) {
+    const A = route[i - 1];
+    const B = route[i];
+
+    const dist = haversine(A, B);
+    const elevDiff = (B.elevation ?? 0) - (A.elevation ?? 0);
+
+    const grade = dist > 0 ? elevDiff / dist : 0;
+
+    const speed = baseSpeed * (1 / (1 + gradeFactor * grade));
+
+    const dt = dist / speed;
+    current += dt;
+    B.timestamp = current;
+  }
+} // attachTimestamps
+
+</script>
+
+  <script>
       async function createMarkerImage (id, opts) {
         let {
           width = 64,
@@ -363,8 +404,8 @@
 
       let trackedTeamDk = null;
       async function showTeamLocations (map, items, opts) {
-        await Promise.all (items.map (_ => addTeamIcon (map, _.team, {}).then (x => _.icon = x)));
-        await Promise.all (items.map (_ => addTeamIcon (map, _.team, {
+        await Promise.all (items.map (_ => addTeamIcon (map, _.td, {}).then (x => _.icon = x)));
+        await Promise.all (items.map (_ => addTeamIcon (map, _.td, {
           tracked: true,
         }).then (x => _.trackedIcon = x)));
 
@@ -376,7 +417,7 @@
               geometry: {type: 'Point',
                          coordinates: [item.point.lon, item.point.lat]},
               properties: {
-                team: item.team,
+                td: item.td,
                 iconImage: item.icon.id,
                 iconImageOffset: [0, - (item.icon.height/2 + 10)],
                 trackedIconImage: item.trackedIcon.id,
@@ -412,8 +453,8 @@
             hasHandlers['teamClick-' + opts.id] = true;
             map.on ('click', 'team-locations-' + opts.id, (e) => {
               let feature = e.features[0];
-              console.log (feature.properties.team);
-              trackedTeamDk = JSON.parse (feature.properties.team).dk;
+              console.log (feature.properties.td);
+              trackedTeamDk = JSON.parse (feature.properties.td).dk;
             });
           }
         }
@@ -615,9 +656,9 @@
           trackedLocItems = {};
           Object.values (txes).forEach (tx => {
             if (tdk === tx.dk) {
-              trackedLocItems[tx.dk] = {team: tx.td, point: tx.point};
+              trackedLocItems[tx.dk] = {td: tx.td, point: tx.point};
             } else {
-              locItems[tx.dk] = {team: tx.td, point: tx.point};
+              locItems[tx.dk] = {td: tx.td, point: tx.point};
             }
           });
           showTeamLocations (map, Object.values (locItems), {
@@ -779,7 +820,7 @@
 
           /*
           showTeamLocations (map, Object.keys (locs.items).map (dk => {
-            return {team: teamData[dk], point: locs.items[dk]};
+            return {td: teamData[dk], point: locs.items[dk]};
           }), {
             id: 'teamlocations',
           });
@@ -805,26 +846,36 @@
             });
           }
                               
-          let baseRoutes = info.routes.map (_ => _.points).flat ();
+          let baseRoute = info.routes.map (_ => _.points).flat ();
           let computed = {elapsed: {}};
           {
             let radius = 100;
-            computeBase ([baseRoutes], radius, computed);
+            computeBase ([baseRoute], radius, computed);
           }
           
           teamStatuses = {};
-          let loadTeam = (url, team) => {
-            return fetch (new URL ('t/' + team.id + '/locationhistory.json', url)).then (res => {
-              if (res.status !== 200) throw res;
-              return res.json ();
-            }).then (json => {
-              return parseEncodedRoutes (json.encoded_routes);
-            }).then (hist => {
-              teamStatuses[team.dk] = {dk: team.dk, routes: hist};
-            });
+          let loadTeam = async (url, td) => {
+            if (td.dk === ',,route') {
+              let ts = {dk: td.dk};
+              ts.routes = [{points: baseRoute}];
+              attachTimestamps (ts.routes[0].points, info.start_date);
+              teamStatuses[td.dk] = ts;
+            } else {
+              return fetch (new URL ('t/' + td.id + '/locationhistory.json', url)).then (res => {
+                if (res.status !== 200) throw res;
+                return res.json ();
+              }).then (json => {
+                return parseEncodedRoutes (json.encoded_routes);
+              }).then (hist => {
+                teamStatuses[td.dk] = {dk: td.dk, routes: hist};
+              });
+            }
           }; // loadTeam
           let tds = [];
-          if (opts.teamId) {
+          if (opts.routeOnly) {
+            let td = teamData[',,route'] = {dk: ',,route'};
+            tds.push (td);
+          } else if (opts.teamId) {
             let td = teamData['tt,,' + opts.teamId];
             if (!td) throw new Error ("Bad team: " + opts.teamId);
             tds.push (td);
@@ -849,7 +900,6 @@
                     showByTime (ma, map, info, teamData, teamStatuses, time, {});
                   };
                 }
-                showByTime (ma, map, info, teamData, teamStatuses, null, {});
 
                 let ts = teamStatuses[td.dk] || {};
 
@@ -869,12 +919,13 @@
               */
 
                 let cp = {...computed};
-                let pointsList = [baseRoutes, (ts.routes || []).map (_ => _.points).flat (), forced];
+                let pointsList = [baseRoute, (ts.routes || []).map (_ => _.points).flat (), forced];
                 computeData (pointsList, cp);
                 ts.computed = cp;
               console.log(cp)//XXXX
                 
                 progress.value++;
+                showByTime (ma, map, info, teamData, teamStatuses, null, {});
               });
             })).then (() => progress.hidden = true);
           }
@@ -884,10 +935,10 @@
       } // showIbukiEvent
 
       function showIbukiEventByURL (u, opts) {
-        let m = u.match (/^(https?:\/\/[^\/]+\/ev\/[0-9]+\/)(?:t\/([0-9]+)\/|)/);
+        let m = u.match (/^(https?:\/\/[^\/]+\/ev\/[0-9]+\/)(?:t\/([0-9]+)\/|)(#route|)/);
         if (!m) throw new Error ("Bad URL: " + u);
 
-        let r = showIbukiEvent (m[1], {...opts, teamId: m[2]});
+        let r = showIbukiEvent (m[1], {...opts, teamId: m[2], routeOnly: m[3]});
         return r;
       } // showIbukiEventByURL
     </script>
