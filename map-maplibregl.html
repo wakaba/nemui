@@ -347,6 +347,7 @@ function attachTimestamps (route, startTime) {
               'circle-stroke-color': '#000000',
               'circle-stroke-width': 1,
             },
+            minzoom: 10,
           });
           map.addLayer ({
             id: 'markedpoint-icons',
@@ -358,6 +359,7 @@ function attachTimestamps (route, startTime) {
               'icon-allow-overlap': true,
               'icon-offset': ['get', 'iconImageOffset'],
             },
+            minzoom: 10,
           });
           map.addLayer ({
             id: 'markedpoint-labels',
@@ -369,6 +371,7 @@ function attachTimestamps (route, startTime) {
               'icon-allow-overlap': false,
               'icon-offset': ['get', 'labelImageOffset'],
             },
+            minzoom: 10,
           });
           if (!hasHandlers.markedPointClick) {
             hasHandlers.markedPointClick = true;
@@ -460,25 +463,64 @@ function attachTimestamps (route, startTime) {
         }
       } // showTeamLocations
 
-      function showRoutes (map, routes, opts) {
-        let data = {
-          type: 'FeatureCollection',
-          features: [
+function showRoutes (map, routes, opts) {
+  function splitByRoadtype(points) {
+  if (points.length === 0) return [];
+
+  const segments = [];
+  let currentType = points[0].computedRoadtype ?? points[0].roadtype ?? 0;
+  let currentSegment = [points[0]];
+
+  for (let i = 1; i < points.length; i++) {
+    const p = points[i];
+    const type = p.computedRoadtype ?? p.roadtype ?? 0;
+
+    if (type === currentType) {
+      currentSegment.push(p);
+    } else {
+      segments.push({
+        roadtype: currentType,
+        points: currentSegment
+      });
+      currentType = type;
+      currentSegment = [points[i - 1], p];  
+    }
+  }
+
+    segments.push({
+      roadtype: currentType,
+      points: currentSegment
+    });
+    
+    return segments;
+  } // splitByRoadtype
+  
+  let data = {
+    type: 'FeatureCollection',
+    features: [
             ...routes.map (_ => _.points).flat ().map (p => ({
               type: 'Feature',
               geometry: {type: 'Point', coordinates: [p.lon, p.lat]},
-              properties: {},
-            })),
-            ...routes.map (_ => _.points).map (pp => ({
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: pp.map (p => [p.lon, p.lat]),
+              properties: {
+                roadtype: p.computedRoadtype ?? p.roadtype ?? 0,
               },
-              properties: {},
             })),
-          ],
-        };
+      ...routes.flatMap(route => {
+  const segments = splitByRoadtype(route.points);
+
+  return segments.map(seg => ({
+    type: 'Feature',
+    geometry: {
+      type: 'LineString',
+      coordinates: seg.points.map(p => [p.lon, p.lat]),
+    },
+    properties: {
+      roadtype: seg.roadtype,
+    },
+  }));
+      }),
+    ],
+  }; // data
         let source = map.getSource ('routes-' + opts.id);
         if (source) {
           source.setData (data);
@@ -491,15 +533,18 @@ function attachTimestamps (route, startTime) {
             id: 'route-lines-' + opts.id,
             source: 'routes-' + opts.id,
             type: 'line',
-            paint: opts.linePaint,
+            paint: opts.linePaint || {},
+            layout: opts.lineLayout || {},
             filter: ['==', ['geometry-type'], 'LineString']
           }, opts.layerBeforeId || undefined);
           map.addLayer ({
             id: 'route-points-' + opts.id,
             source: 'routes-' + opts.id,
             type: 'circle',
-            paint: opts.pointPaint,
-            filter: ['==', ['geometry-type'], 'Point']
+            paint: opts.pointPaint || {},
+            layout: opts.pointLayout || {},
+            filter: ['==', ['geometry-type'], 'Point'],
+            minzoom: opts.pointMinZoom,
           }, opts.layerBeforeId || undefined);
         }
       } // showRoutes
@@ -509,7 +554,7 @@ function attachTimestamps (route, startTime) {
           id: 'team-history',
           linePaint: {
             'line-color': '#ffff0087',
-            'line-width': 5,
+            'line-width': 3,
           },
           pointPaint: {
             'circle-radius': 5,
@@ -718,7 +763,7 @@ function attachTimestamps (route, startTime) {
             }
             
               if (prevTeamDk !== tdk) {
-                showTeamHistory (map, td, ts.routes, {
+                if (ts.showHistory) showTeamHistory (map, td, ts.routes, {
                   layerBeforeId: 'markedpoints',
                 });
                 prevTeamDk = tdk;
@@ -787,18 +832,35 @@ function attachTimestamps (route, startTime) {
             if (res.status !== 200) throw res;
             return res.json ();
           }).then (info => {
+            let color = [
+              'match',
+              ['get', 'roadtype'],
+              1, "rgba(79, 38, 114, 0.8)",
+              2, "rgba(247, 147, 30, 0.8)",
+              3, "rgba(237, 28, 36, 0.8)",
+              9, "rgba(255, 255, 255, 0.8)",
+              "#13b739", // --map-roadtype-0-color
+            ];
             showRoutes (map, info.routes = parseEncodedRoutes (info.encoded_routes), {
               id: 'route',
               linePaint: {
-                'line-color': 'green',
-                'line-width': 2,
+                'line-color': color,
+                //'line-opacity': 0.3,
+                'line-width': [
+                  'step',
+                  ['zoom'],
+                  3,
+                  13, 5,
+                  15, 7,
+                ],
               },
               pointPaint: {
-                'circle-radius': 2,
-                'circle-color': 'green',
+                'circle-radius': 9,
+                'circle-color': color,
                 'circle-stroke-color': '#000000',
-                'circle-stroke-width': 1,
+                'circle-stroke-width': 0,
               },
+              pointMinZoom: 19,
             });
             showMarkedPoints (map, info.marked_points);
             return info;
@@ -867,7 +929,8 @@ function attachTimestamps (route, startTime) {
               }).then (json => {
                 return parseEncodedRoutes (json.encoded_routes);
               }).then (hist => {
-                teamStatuses[td.dk] = {dk: td.dk, routes: hist};
+                teamStatuses[td.dk] = {dk: td.dk, routes: hist,
+                                       showHistory: true};
               });
             }
           }; // loadTeam
@@ -1184,13 +1247,13 @@ function attachTimestamps (route, startTime) {
       ">A1</button>
       <button type=button onclick="
         let map = document.querySelector ('map-area');
-        map.setAttribute ('maptype', 'gsi-photo-optimal_bvmap-nocontour');
+        map.setAttribute ('maptype', 'osm-gsi-hillshade+gsi-optimal_bvmap-label');
         setTimeout (() => {
-        map.setAttribute ('zoom', 15);
-        map.setAttribute ('pitch', 50);
+        map.setAttribute ('zoom', 13);
+        map.setAttribute ('pitch', 40);
         document.querySelector ('[name=animated]').checked = true;
         let time = document.querySelector ('[name=event-time-range]');
-        time.value = parseFloat (time.min) + (time.max - time.min) / 3;
+        time.value = parseFloat (time.min);
         time.dispatchEvent (new Event ('input', {bubbles: true}));
         }, 1000);
       ">A2</button>
