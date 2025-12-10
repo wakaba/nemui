@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+  <meta charset=utf-8>
+  <title>Map</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel=stylesheet href=https://pawjy.github.io/html-unit-number/css/default.css>
+<link rel=stylesheet href=https://pawjy.github.io/html-page-components/css/default.css>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+  map-area {
+    height: 100vh;
+  }
+</style>
+<script src=https://pawjy.github.io/html-page-components/src/page-components.js data-export=$fill async></script>
+<script src=../html-page-components/src/maps.js onerror='let s = document.createElement("script");s.src="https://pawjy.github.io/html-page-components/src/maps.js";document.head.appendChild(s)' async></script>
+<script src=https://wiki.suikawiki.org/scripts/time async data-time-selector=time></script>
+<script src=https://pawjy.github.io/html-unit-number/src/unit-number.js async></script>
+<script src=https://raw.githack.com/wakaba/js-geo-encodedpolyline/master/encodedpolyline.js></script>
+<script src=https://raw.githack.com/geocol/js-routes/refs/heads/master/src/routes.js></script>
+<script src=https://raw.githack.com/geocol/js-routes/refs/heads/master/src/routepoints.js></script>
+
+<map-area engine=maplibre maptype=osm-gsi-hillshade+gsi-optimal_bvmap-label pitch=40 terrain=1.8 gsi jma osm zoom=12>
+</map-area>
+<input type=checkbox name=animated checked hidden>
+
+<script src=map1.js></script>
+  <script>
+      let ibukiURL = null;
+      let newRequest = true;
+      {
+        let sp = new URLSearchParams (location.hash.replace (/^#/, ''));
+        let ib = sp.get ('ibuki');
+        if (ib) setURL (ib, {initiator: 'hash'});
+        let mt = sp.get ('map');
+        if (mt) document.querySelector ('map-area').setAttribute ('maptype', mt);
+      }
+
+      document.querySelector ('map-area').addEventListener ('pcMapTypeChange', () => {
+        if (ibukiURL) {
+          showIbukiEventByURL (ibukiURL, {new: newRequest});
+          newRequest = false;
+          updateURL ();
+        }
+      });
+
+      function setURL (u, opts) {
+        if (/\/ev\/[0-9]+\//.test (u)) {
+          ibukiURL = u;
+          newRequest = true;
+          if (showIbukiEventByURL (ibukiURL, {new: newRequest})) {
+            newRequest = false;
+          }
+          if (opts.initiator !== 'hash') updateURL ();
+          if (opts.initiator !== 'input') document.querySelectorAll ('input[name=ibukiURL]').forEach (_ => _.value = ibukiURL);
+        } else {
+          throw new Error ("Bad URL: " + u);
+        }
+      } // setURL
+
+      function updateURL () {
+        let mt = document.querySelector ('map-area').pcMapType;
+        history.replaceState (null, null, '#ibuki=' + encodeURIComponent (ibukiURL) + '&map=' + encodeURIComponent (mt));
+      }
+    </script>
+      

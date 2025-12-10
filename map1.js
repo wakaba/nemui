@@ -603,8 +603,6 @@ let prevDuration = 0;
 
         let txes = {};
         let newCameraPoint = undefined;
-        let newCameraOffset = undefined;
-        let newCameraDuration = 3000;
         let newBearing = undefined;
         for (let ts of Object.values (teamStatuses)) {
           let td = teamData[ts.dk];
@@ -669,8 +667,7 @@ let prevDuration = 0;
             let td = teamData[tdk];
             let ts = teamStatuses[tdk];
             
-            if (!map.XXXdragging) {
-              let p0 = tx.p0;
+            let p0 = tx.p0;
               let p1 = tx.p1;
               let deltaLon = (p1.lon - p0.lon) * Math.PI/180;
               let y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
@@ -681,105 +678,21 @@ let prevDuration = 0;
 
               newBearing = targetBearing;
               newCameraPoint = tx.point
-              newCameraOffset = undefined;
-              if (opts.animated) {
-                let unchanged = 0.5;
-                unchanged = 0.01//XXX
-                let targetPoint = map.project (newCameraPoint);
-              let centerPoint = map.project (map.getCenter ());
-              let centerX = width / 2;
-              let centerY = height / 2;
-              let allowedX = width * unchanged / 2;
-              let allowedY = height * unchanged / 2;
-              let dx = targetPoint.x - centerPoint.x;
-              let dy = targetPoint.y - centerPoint.y;
-              let overX = 0;
-              let overY = 0;
-              if (dx >  allowedX) overX = +1;
-              if (dx < -allowedX) overX = -1;
-              if (dy >  allowedY) overY = +1;
-              if (dy < -allowedY) overY = -1;
-              if (Math.abs (dx) < allowedX) overX = 0;
-              if (Math.abs (dy) < allowedY) overY = 0;
-              let biasAmountX = width * 0.20;
-              let biasAmountY = height * 0.20;
-              let offsetX = (centerX - centerPoint.x) + -overX * biasAmountX;
-              let offsetY = (centerY - centerPoint.y) + -overY * biasAmountY;
-                newCameraOffset = [offsetX, offsetY];
-                newCameraOffset = null // XXX
-                if (overX || overY) {
-                  if (targetPoint.x < 0 || targetPoint.y < 0 ||
-                      targetPoint.x > width || targetPoint.y > height) {
-                    newCameraDuration = 1000;
-                  } else {
-                    //
-                  }
-                } else {
-                  newCameraPoint = newCameraOffset = undefined;
-                }
-
-                {
-                  let nw = map.unproject ({x: centerX - allowedX, y: centerY - allowedY});
-                  let ne = map.unproject ({x: centerX + allowedX, y: centerY - allowedY});
-                  let se = map.unproject ({x: centerX + allowedX, y: centerY + allowedY});
-                  let sw = map.unproject ({x: centerX - allowedX, y: centerY + allowedY});
-
-                  let geojson = {
-                    type: "Feature",
-                    geometry: {
-                      type: "Polygon",
-                      coordinates: [[
-        [nw.lng, nw.lat],
-        [ne.lng, ne.lat],
-        [se.lng, se.lat],
-        [sw.lng, sw.lat],
-        [nw.lng, nw.lat],
-      ]],
-                    },
-                    properties: {
-                      outside: newCameraPoint ? newCameraDuration > 1000 ? 1 : 2 : 0,
-                    },
-                  };
-
-                  if (map.getSource("focus-rect")) {
-                    map.getSource("focus-rect").setData(geojson);
-                  } else {
-                    map.addSource("focus-rect", { type: "geojson", data: geojson });
-                    map.addLayer({
-      id: "focus-rect-outline",
-      type: "line",
-      source: "focus-rect",
-                      paint: {
-                        "line-color": [
-                          'match', ['get', 'outside'],
-                          2, 'red', 1, 'orange', "green",
-                        ],
-                        "line-width": [
-                          'match', ['get', 'outside'],
-                          2, 8, 1, 4, 2,
-                        ],
-                        "line-opacity": 0.8,
-                      }
-                    });
-                  }
-                }
-              } else { // not animated
-                newCameraDuration = 0;
-              }
-            
+              
               if (prevTeamDk !== tdk) {
                 if (ts.showHistory) showTeamHistory (map, td, ts.routes, {
                   layerBeforeId: 'markedpoints',
                 });
                 prevTeamDk = tdk;
               }
-            } // tracked
             
-            let rank = Object.values (txes).filter (_ => _.computedBaseIndex > tx.computedBaseIndex).length + 1;
-            $fill (document.querySelector ('.tracked-team-info'), {
-              td,
-              ts,
-              rank,
+            document.querySelectorAll ('.tracked-team-info').forEach (e => {
+              let rank = Object.values (txes).filter (_ => _.computedBaseIndex > tx.computedBaseIndex).length + 1;
+              $fill (e, {
+                td,
+                ts,
+                rank,
+              });
             });
           } // tx
         }
@@ -787,27 +700,9 @@ let prevDuration = 0;
         if (newCameraPoint || newBearing) {
           mani.update ({
             cameraPoint: newCameraPoint,
-            cameraOffset: newCameraOffset,
             bearing: newBearing,
-            soon: ! newCameraDuration,
+            soon: ! opts.animated,
           });
-          /*
-          if (!opts.animated ||
-              now - prevEased > (newCameraDuration || 3*1000)) {
-            if (newBearing != null) map.easeTo({
-              bearing: newBearing,
-              duration: opts.animated ? 30*1000 : 0,
-            });
-            if (newCameraPoint) map.easeTo({
-              center: newCameraPoint,
-              ...(newCameraOffset ? {offset: newCameraOffset} : {}),
-              duration: newCameraDuration,
-              easing : t => t,
-            });
-            prevEased = now;
-            if (newCameraPoint) prevDuration = newCameraDuration
-            }
-            */
         } // opts.ease
 
         if (document.querySelector ('input[name=animated]:checked')) {
@@ -815,7 +710,7 @@ let prevDuration = 0;
             animated: true,
           });
         }
-        document.querySelector ('input-datetime').value = time;
+        document.querySelectorAll ('input-datetime').forEach (_ => _.value = time);
       } // _showByTime
 
       document.querySelectorAll ('map-area').forEach (ma => {
@@ -835,13 +730,10 @@ class MapAnimator {
     this.running = false;
   } // constructor
 
-  update({ cameraPoint, cameraOffset, bearing, soon }) {
+  update ({ cameraPoint, bearing, soon }) {
     if (soon) {
       let ease = {};
-      if (cameraPoint) {
-        ease.center = cameraPoint;
-        if (cameraOffset) ease.offset = cameraOffset;
-      }
+      if (cameraPoint) ease.center = cameraPoint;
       if (bearing != null) ease.bearing = bearing;
       this.map.jumpTo (ease);
       this.anim = {camera: {}, bearing: {}};
@@ -902,14 +794,24 @@ class MapAnimator {
         
         const dt = dtMs / 1000;
         function computeAlpha(rawPxDist) {
-          const α_min = 0.1;
-          const α_max = 0.4;   
-          const D = 1000;
+          const a_min = 0.1;
+          const a_max_normal = 0.4;
+          const a_max_fast = 0.8;
+          const D_normal = 1000;
+          const D_fast = 3000;
 
           if (rawPxDist <= 0) return 0;
-          const ratio = Math.min(rawPxDist / D, 1);
+          let alpha = a_min + (a_max_normal - a_min) * (1 - Math.min(rawPxDist / D_normal, 1));
 
-          return α_min + (α_max - α_min) * (1 - ratio);
+          if (rawPxDist > D_normal) {
+    const extraRatio = Math.min((rawPxDist - D_normal) / (D_fast - D_normal), 1);
+
+    const boostedMax = a_max_normal + (a_max_fast - a_max_normal) * extraRatio;
+
+    alpha =  boostedMax;
+          }
+
+          return alpha;
         }
 
         const startPx = this.map.project(this.anim.camera.smooth);
@@ -919,7 +821,29 @@ class MapAnimator {
         const dy = endPx.y - startPx.y;
         const rawPxDist = Math.sqrt(dx*dx + dy*dy);
 
-        const alpha = computeAlpha(rawPxDist); 
+        let alpha = computeAlpha(rawPxDist);
+        {
+          const W = this.map._canvas.width;
+          const H = this.map._canvas.height;
+
+          let overflow = 0;
+
+          const margin = 0.15;
+const left   =  W * margin;
+const right  =  W * (1 - margin);
+const top    =  H * margin;
+const bottom = H * (1 - margin);
+
+if (endPx.x < left)   overflow += (left - endPx.x) / W;
+else if (endPx.x > right) overflow += (endPx.x - right) / W;
+
+if (endPx.y < top)    overflow += (top - endPx.y) / H;
+          else if (endPx.y > bottom) overflow += (endPx.y - bottom) / H;
+          
+          overflow = Math.min(overflow, 1);
+          alpha = alpha + overflow * (0.6 - alpha);
+        }
+
         smooth = {
   lat: smooth.lat + (raw.lat - smooth.lat) * alpha,
           lon: smooth.lon + (raw.lon - smooth.lon) * alpha,
@@ -1072,6 +996,7 @@ let step;
             ma.pcScroll ({
               center: info.marked_points.at (-1) || undefined,
             });
+            ma.explicitTime = info.start_date;
           }
                               
           let baseRoute = info.routes.map (_ => _.points).flat ();
@@ -1113,7 +1038,7 @@ let step;
           }
           {
             let first = true;
-            let progress = document.querySelector ('progress');
+            let progress = document.querySelector ('progress') || {};
             progress.hidden = false;
             progress.min = 0;
             progress.max = tds.length;
