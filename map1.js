@@ -622,7 +622,7 @@ let prevDuration = 0;
             t = 1;
           }
           txes[ts.dk] = {path, i, p0, p1, computedBaseIndex: 0,
-                         td, dk: ts.dk};
+                         td, dk: ts.dk, hidden: ! ts.showCurrent};
           for (let j = p0.index; j >= 0; j--) {
             let x = ts.computed.dataToBase[j]?.effectiveIndex;
             if (Number.isFinite (x)) {
@@ -648,7 +648,9 @@ let prevDuration = 0;
           locItems = {};
           trackedLocItems = {};
           Object.values (txes).forEach (tx => {
-            if (tdk === tx.dk) {
+            if (tx.hidden) {
+              //
+            } else if (tdk === tx.dk) {
               trackedLocItems[tx.dk] = {td: tx.td, point: tx.point};
             } else {
               locItems[tx.dk] = {td: tx.td, point: tx.point};
@@ -996,7 +998,6 @@ let step;
             ma.pcScroll ({
               center: info.marked_points.at (-1) || undefined,
             });
-            ma.explicitTime = info.start_date;
           }
                               
           let baseRoute = info.routes.map (_ => _.points).flat ();
@@ -1021,7 +1022,8 @@ let step;
                 return parseEncodedRoutes (json.encoded_routes);
               }).then (hist => {
                 teamStatuses[td.dk] = {dk: td.dk, routes: hist,
-                                       showHistory: true};
+                                       showHistory: true,
+                                       showCurrent: true};
               });
             }
           }; // loadTeam
@@ -1080,7 +1082,11 @@ let step;
                 progress.value++;
                 showByTime (mani, map, info, teamData, teamStatuses, null, {});
               });
-            })).then (() => progress.hidden = true);
+            })).then (() => {
+              if (opts.start) {
+                ma.explicitTime = info.start_date;
+              }
+            }).then (() => progress.hidden = true);
           }
         });
 

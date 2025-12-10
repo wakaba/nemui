@@ -34,13 +34,11 @@
         let sp = new URLSearchParams (location.hash.replace (/^#/, ''));
         let ib = sp.get ('ibuki');
         if (ib) setURL (ib, {initiator: 'hash'});
-        let mt = sp.get ('map');
-        if (mt) document.querySelector ('map-area').setAttribute ('maptype', mt);
       }
 
       document.querySelector ('map-area').addEventListener ('pcMapTypeChange', () => {
         if (ibukiURL) {
-          showIbukiEventByURL (ibukiURL, {new: newRequest});
+          showIbukiEventByURL (ibukiURL, {new: newRequest, start: newRequest});
           newRequest = false;
           updateURL ();
         }
@@ -50,11 +48,10 @@
         if (/\/ev\/[0-9]+\//.test (u)) {
           ibukiURL = u;
           newRequest = true;
-          if (showIbukiEventByURL (ibukiURL, {new: newRequest})) {
+          if (showIbukiEventByURL (ibukiURL, {new: newRequest, start: true})) {
             newRequest = false;
           }
           if (opts.initiator !== 'hash') updateURL ();
-          if (opts.initiator !== 'input') document.querySelectorAll ('input[name=ibukiURL]').forEach (_ => _.value = ibukiURL);
         } else {
           throw new Error ("Bad URL: " + u);
         }
@@ -62,7 +59,7 @@
 
       function updateURL () {
         let mt = document.querySelector ('map-area').pcMapType;
-        history.replaceState (null, null, '#ibuki=' + encodeURIComponent (ibukiURL) + '&map=' + encodeURIComponent (mt));
+        history.replaceState (null, null, '#ibuki=' + encodeURIComponent (ibukiURL));
       }
     </script>
       
