@@ -13,6 +13,9 @@
   map-area {
     height: 100vh;
   }
+  .maplibregl-ctrl-attrib.maplibregl-compact-show {
+    zoom: 40%;
+  }
 </style>
 <script src=https://pawjy.github.io/html-page-components/src/page-components.js data-export=$fill async></script>
 <script src=../html-page-components/src/maps.js onerror='let s = document.createElement("script");s.src="https://pawjy.github.io/html-page-components/src/maps.js";document.head.appendChild(s)' async></script>
@@ -27,39 +30,65 @@
 <input type=checkbox name=animated checked hidden>
 
 <script src=map1.js></script>
-  <script>
-      let ibukiURL = null;
-      let newRequest = true;
-      {
-        let sp = new URLSearchParams (location.hash.replace (/^#/, ''));
-        let ib = sp.get ('ibuki');
-        if (ib) setURL (ib, {initiator: 'hash'});
-      }
+<script>
+  let ibukiURL = null;
+  let routeColor = null;
+  let markedPointCircleColor = null;
+  let newRequest = true;
+  {
+    let sp = new URLSearchParams (location.hash.replace (/^#/, ''));
+    let ib = sp.get ('ibuki');
+    if (ib) setURL (ib, {
+      initiator: 'hash', routeColor: sp.get ('routecolor'),
+      markedPointCircleColor: sp.get ('markedpointcirclecolor'),
+    });
+  }
 
       document.querySelector ('map-area').addEventListener ('pcMapTypeChange', () => {
         if (ibukiURL) {
-          showIbukiEventByURL (ibukiURL, {new: newRequest, start: newRequest});
+          showIbukiEventByURL (ibukiURL, {
+            new: newRequest, start: newRequest, routeColor,
+            markedPointCircleColor,
+          });
           newRequest = false;
           updateURL ();
         }
       });
 
-      function setURL (u, opts) {
-        if (/\/ev\/[0-9]+\//.test (u)) {
-          ibukiURL = u;
-          newRequest = true;
-          if (showIbukiEventByURL (ibukiURL, {new: newRequest, start: true})) {
-            newRequest = false;
-          }
-          if (opts.initiator !== 'hash') updateURL ();
-        } else {
-          throw new Error ("Bad URL: " + u);
-        }
-      } // setURL
-
-      function updateURL () {
-        let mt = document.querySelector ('map-area').pcMapType;
-        history.replaceState (null, null, '#ibuki=' + encodeURIComponent (ibukiURL));
+  function setURL (u, opts) {
+    if (/\/ev\/[0-9]+\//.test (u)) {
+      ibukiURL = u;
+      newRequest = true;
+      if (opts.routeColor) routeColor = opts.routeColor;
+      if (opts.markedPointCircleColor) markedPointCircleColor = opts.markedPointCircleColor;
+      if (showIbukiEventByURL (ibukiURL, {
+        new: newRequest, start: true, routeColor, markedPointCircleColor,
+      })) {
+        newRequest = false;
       }
-    </script>
+      if (opts.initiator !== 'hash') updateURL ();
+    } else {
+      throw new Error ("Bad URL: " + u);
+    }
+  } // setURL
+
+  function updateURL () {
+    let mt = document.querySelector ('map-area').pcMapType;
+    history.replaceState (
+      null, null, '#ibuki=' + encodeURIComponent (ibukiURL)
+        + '&routecolor=' + encodeURIComponent (routeColor)
+        + '&markedpointcirclecolor=' + encodeURIComponent (markedPointCircleColor),
+    );
+  }
+</script>
       
+
+  <script>
+    onmessage = ev => {
+      // XXX ev.origin
+
+      initMapControllerChannel (ev.ports[0]);
+    };
+  </script>
+
+  

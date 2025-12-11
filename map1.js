@@ -266,22 +266,22 @@ function attachTimestamps (route, startTime) {
         });
       } // addMarkedPointLabel
 
-      let hasHandlers = {};
-      async function showMarkedPoints (map, mps) {
+let hasHandlers = {};
+async function showMarkedPoints (map, mps, opts) {
         if (!map.getSource ('markedpoints')) {
           map.addSource ('markedpoints', {type: 'geojson', data: {
             type: 'FeatureCollection',
             features: [],
           }});
         }
-        if (!map.getLayer ('markedpoints')) {
-          map.addLayer ({
+  if (!map.getLayer ('markedpoints')) {
+    map.addLayer ({
             id: 'markedpoints',
             source: 'markedpoints',
             type: 'circle',
             paint: {
               'circle-radius': 8,
-              'circle-color': 'rgba(0, 255, 0, 0.4)',
+              'circle-color': opts.circleColor || 'rgba(0, 255, 0, 0.4)',
               'circle-stroke-color': '#000000',
               'circle-stroke-width': 1,
             },
@@ -713,6 +713,7 @@ let prevDuration = 0;
           });
         }
         document.querySelectorAll ('input-datetime').forEach (_ => _.value = time);
+        notifyMapControllerChannel ({time});
       } // _showByTime
 
       document.querySelectorAll ('map-area').forEach (ma => {
@@ -893,6 +894,11 @@ let step;
       duration: frameMs,
       easing: t => t,
     });
+    
+    if (needNextFrame &&
+        !document.querySelector ('input[name=animated]:checked')) {
+      needNextFrame = false;
+    }
     if (needNextFrame) {
       //requestAnimationFrame(this._animate.bind(this));
       setTimeout(this._animate.bind(this), frameMs);
@@ -907,33 +913,33 @@ let step;
       let timeSetterMain = () => {};
 
       let teamStatuses = {};
-      function showIbukiEvent (url, opts) {
-        let ma = document.querySelector ('map-area');
-        let map = ma.pc_MLMap;
-        if (!map) return false;
-        let mani = new MapAnimator (map);
+function showIbukiEvent (url, opts) {
+  let ma = document.querySelector ('map-area');
+  let map = ma.pc_MLMap;
+  if (!map) return false;
+  let mani = new MapAnimator (map);
 
-        if (!timeSetter) {
-          ma.pcTimeSetters.push (timeSetter = _ => timeSetterMain (_));
-        }
+  if (!timeSetter) {
+    ma.pcTimeSetters.push (timeSetter = _ => timeSetterMain (_));
+  }
         
-        url = url.replace (/^https?:\/\/(?:\w+\.|)ibuki.run\//, 'https://od.ibuki.run/');
-        //not return
-        Promise.all ([
-          fetch (new URL ('info.json?with_routes=1', url)).then (res => {
-            if (res.status !== 200) throw res;
-            return res.json ();
-          }).then (info => {
-            let color = [
-              'match',
-              ['get', 'roadtype'],
-              1, "rgba(79, 38, 114, 0.8)",
-              2, "rgba(247, 147, 30, 0.8)",
-              3, "rgba(237, 28, 36, 0.8)",
-              9, "rgba(255, 255, 255, 0.8)",
-              "#13b739", // --map-roadtype-0-color
-            ];
-            showRoutes (map, info.routes = parseEncodedRoutes (info.encoded_routes), {
+  url = url.replace (/^https?:\/\/(?:\w+\.|)ibuki.run\//, 'https://od.ibuki.run/');
+  //not return
+  Promise.all ([
+    fetch (new URL ('info.json?with_routes=1', url)).then (res => {
+      if (res.status !== 200) throw res;
+      return res.json ();
+    }).then (info => {
+      let color = [
+        'match',
+        ['get', 'roadtype'],
+        1, "rgba(79, 38, 114, 0.8)",
+        2, "rgba(247, 147, 30, 0.8)",
+        3, "rgba(237, 28, 36, 0.8)",
+        9, "rgba(255, 255, 255, 0.8)",
+        opts.routeColor || "#13b739", // --map-roadtype-0-color
+      ];
+      showRoutes (map, info.routes = parseEncodedRoutes (info.encoded_routes), {
               id: 'route',
               linePaint: {
                 'line-color': color,
@@ -954,7 +960,9 @@ let step;
               },
               pointMinZoom: 19,
             });
-            showMarkedPoints (map, info.marked_points);
+      showMarkedPoints (map, info.marked_points, {
+        circleColor: opts.markedPointCircleColor,
+      });
             return info;
           }),
           fetch (new URL ('teams.json', url)).then (res => {
@@ -993,6 +1001,11 @@ let step;
             e.dispatchEvent (new Event ('input', {bubbles: true}));
             e.closest ('input-datetime').querySelector ('input[type=checkbox]').checked = true;
           });
+          notifyMapControllerChannel ({
+            time: 0,
+            startTime: info.start_date,
+            endTime: info.end_date,
+          });
 
           if (opts.new) {
             ma.pcScroll ({
@@ -1014,6 +1027,9 @@ let step;
               ts.routes = [{points: computed.basePoints}];
               attachTimestamps (ts.routes[0].points, info.start_date);
               teamStatuses[td.dk] = ts;
+              notifyMapControllerChannel ({
+                endTime: ts.routes.at (-1).points.at (-1).timestamp,
+              });
             } else {
               return fetch (new URL ('t/' + td.id + '/locationhistory.json', url)).then (res => {
                 if (res.status !== 200) throw res;
@@ -1053,7 +1069,9 @@ let step;
 
                   timeSetterMain = (time) => {
                     if (!time) return;
-                    showByTime (mani, map, info, teamData, teamStatuses, time, {});
+                    showByTime (mani, map, info, teamData, teamStatuses, time, {
+                      animated: true, // XXX for "play" button only
+                    });
                   };
                 }
 
@@ -1093,10 +1111,54 @@ let step;
         return true;
       } // showIbukiEvent
 
-      function showIbukiEventByURL (u, opts) {
+function showIbukiEventByURL (u, opts) {
         let m = u.match (/^(https?:\/\/[^\/]+\/ev\/[0-9]+\/)(?:t\/([0-9]+)\/|)(#route|)/);
         if (!m) throw new Error ("Bad URL: " + u);
 
-        let r = showIbukiEvent (m[1], {...opts, teamId: m[2], routeOnly: m[3]});
-        return r;
-      } // showIbukiEventByURL
+  let r = showIbukiEvent (m[1], {...opts, teamId: m[2], routeOnly: m[3]});
+  return r;
+} // showIbukiEventByURL
+
+{
+  let port;
+  let info = {};
+  
+  function initMapControllerChannel (p) {
+    port = p;
+    port.onmessage = (ev) => {
+      let cmd = ev.data.command;
+      let args = ev.data.args;
+      if (cmd === 'settime') {
+        document.querySelector ('map-area').explicitTime = args.time;
+      } else if (cmd === 'setzoom') {
+        document.querySelector ('map-area').setAttribute ('zoom', args.zoom);
+      } else if (cmd === 'setterrain') {
+        document.querySelector ('map-area').setAttribute ('terrain', args.terrain);
+      } else if (cmd === 'setpitch') {
+        document.querySelector ('map-area').setAttribute ('pitch', args.pitch);
+      } else if (cmd === 'settimefactor') {
+        timeFactor = args.timefactor;
+      } else if (cmd === 'start') {
+        document.querySelector ('input[name=animated]').checked = true;
+        document.querySelector ('map-area').explicitTime = info.time + 0.1;
+      } else if (cmd === 'stop') {
+        document.querySelector ('input[name=animated]').checked = false;
+      } else {
+        console.log ("Bad command", ev.data);
+      }
+    };
+    notifyMapControllerChannel ({});
+  } // initChannel
+  
+  function notifyMapControllerChannel (args) {
+    for (let k in args) {
+      info[k] = args[k];
+    }
+    
+    if (!port) return;
+    port.postMessage ({
+      command: 'info',
+      args: info,
+    });
+  } // notifyMapControllerChannel
+}

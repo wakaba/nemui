@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<title>Map</title>
+<style>
+  iframe.map {
+      width: 100%;
+      height: 80vh;
+      resize: both;
+  }
+</style>
+
+<p id=container></p>
+<div id=controller>
+  <p><input type=url name=url placeholder="https://ibuki.run/ev/{id}/">
+  <input type=color name=routecolor value="#13b739">
+  <input type=color name=markedpointcirclecolor value="#13b739">
+  <input type=range name=time>
+  <input type=number name=zoom value=12>
+  <input type=number name=terrain value=1.8 step=0.1>
+  <input type=number name=pitch value=40>
+  <input type=number name=timefactor value=600 step=10>
+  <button type=button name=start>Start</button>
+  <button type=button name=stop>Stop</button>
+</div>
+
+<script>
+  let mapURL = new URL ("inner1.html", location); // XXX
+  
+  function reopen () {
+    let url = new URL (document.querySelector ('input[name=url]').value) || {};
+    let m = (url.pathname || '').match (/\/ev\/([0-9]+)/);
+    if (!m) return;
+    let ibukiURL = new URL ('/ev/' + m[1] + '/', url);
+    
+    let e = document.createElement ('iframe');
+    e.className = 'map';
+    e.src = mapURL + "#ibuki=" + encodeURIComponent (ibukiURL + '#route')
+        + '&routecolor=' + encodeURIComponent (document.querySelector ('input[name=routecolor]').value)
+        + '&markedpointcirclecolor=' + encodeURIComponent (document.querySelector ('input[name=markedpointcirclecolor]').value);
+    e.onload = () => {
+      let p = new MessageChannel;
+      e.contentWindow.postMessage ({}, mapURL.origin, [p.port1]);
+      initCommandPort (p.port2);
+    };
+    document.querySelector ('#container').textContent = '';
+    document.querySelector ('#container').appendChild (e);
+    history.replaceState (null, null, '#ibuki=' + encodeURIComponent (ibukiURL));
+  }
+
+  let commandPort;
+  function initCommandPort (port) {
+    commandPort = port;
+    commandPort.onmessage = ev => {
+      let data = ev.data;
+      if (data.command === 'info') {
+        let time = document.querySelector ('input[name=time]');
+        time.min = data.args.startTime;
+        time.max = data.args.endTime;
+        time.value = data.args.time;
+        time.step = 1;
+      }
+    };
+  }
+
+  function sendCommand (type, args) {
+    commandPort.postMessage ({
+      command: type,
+      args,
+    });
+  }
+
+  function init () {
+    let sp = new URLSearchParams (location.hash.replace (/^#/, ''));
+    let ibukiURL = sp.get ('ibuki');
+    document.querySelector ('input[name=url]').value = ibukiURL;
+    document.querySelector ('input[name=url]').onchange = reopen;
+    document.querySelector ('input[name=routecolor]').onchange = reopen;
+    document.querySelector ('input[name=markedpointcirclecolor]').onchange = reopen;
+    ['time', 'zoom', 'terrain', 'pitch', 'timefactor'].forEach (key => {
+      document.querySelector ('input[name='+key+']').oninput = (ev) => {
+        sendCommand ('set'+key, {
+          [key]: ev.target.valueAsNumber,
+        });
+      };
+      reopen ();
+    });
+    document.querySelector ('button[name=start]').onclick = () => sendCommand ('start');
+    document.querySelector ('button[name=stop]').onclick = () => sendCommand ('stop');
+  }
+
+  init ();
+</script>
