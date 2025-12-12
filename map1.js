@@ -908,6 +908,247 @@ let step;
   }
 }
 
+function computeBase2 (pointsList, radius, computed) {
+  let start = performance.now ();
+
+  let threshold = 0.000001;
+    if (pointsList[0].length) {
+      let distancePerLat = distanceH84 (pointsList[0][0],
+                                        {lat: pointsList[0][0].lat + 1,
+                                         lon: pointsList[0][0].lon});
+      let distancePerLon = distanceH84 (pointsList[0][0],
+                                        {lat: pointsList[0][0].lat,
+                                         lon: pointsList[0][0].lon + 1});
+      threshold = radius / distancePerLat;
+      threshold = threshold * threshold;
+    }
+  threshold *= 400;
+    let thresholdC = threshold * 3*3;
+    let thresholdCP = thresholdC;
+  computed.thresholdMInput = radius;
+  computed.threshold = threshold;
+  computed.thresholdC = thresholdC;
+
+    {
+      let rdp = (points, start, end, list, depth) => {
+        if (end - start <= 2 || depth > 100000) {
+          for (let i = start + 1; i <= end - 1; i++) {
+            list.push (i);
+          }
+          return;
+        }
+      
+        let max = 0;
+        let maxI = start + 1;
+        for (let i = start + 1; i <= end - 1; i++) {
+          let d = lineDistance (points[i], points[start], points[end]);
+          if (d > max) {
+            max = d;
+            maxI = i;
+          }
+        }
+        list.push (maxI);
+        let l1 = rdp (points, start, maxI, list, depth+1);
+        let l2 = rdp (points, maxI, end, list, depth+1);
+      }; // rdp
+
+      let list = [];
+      if (pointsList[0].length >= 1) {
+        list.push (0);
+        if (pointsList[0].length >= 2) {
+          list.push (pointsList[0].length-1);
+          rdp (pointsList[0], 0, pointsList[0].length-1, list, 0);
+        }
+      }
+      
+      let max = list.length - 1;
+      for (let i = 0; i <= max; i++) {
+        pointsList[0][list[i]].origIndex = list[i];
+        pointsList[0][list[i]].pointImportance = (max - i) / max;
+      }
+    }
+    let basePoints;
+    {
+      let rdp = (points, start, end, th, needMore) => {
+        if (end - start <= 2) return points.slice (start, end + 1);
+
+        let maxImportance = -1;
+        let maxImportanceI = start + 1;
+        let thD = false;
+        for (let i = start + 1; i <= end - 1; i++) {
+          if (points[i].confluential) {
+            maxImportance = Infinity;
+            maxImportanceI = i;
+            thD = true;
+            break;
+          }
+          if (thD ||
+              lineDistance (points[i], points[start], points[end]) > th) {
+            thD = true;
+          }
+
+          if (maxImportance < points[i].pointImportance) {
+            maxImportance = points[i].pointImportance;
+            maxImportanceI = i;
+          }
+        }
+        if (thD ||
+            (end - start > 1 ? needMore (points[start], points[end]) : 0)) {
+          let l1 = rdp (points, start, maxImportanceI, th, needMore);
+          let l2 = rdp (points, maxImportanceI, end, th, needMore);
+          return l1.concat (l2.slice (1));
+        } else {
+          return [points[start], points[end]];
+        }
+      }; // rdp
+
+      let t1 = threshold /2/2;
+      let t = threshold;
+      basePoints = rdp (pointsList[0], 0, pointsList[0].length-1, t1, (p1, p2) => {
+        return distance2 (p1, p2) > t;
+      });
+    }
+    
+    let augPoints = [];
+    let confluentialPoints = [];
+    if (basePoints.length) {
+      basePoints[0].index = 0;
+      augPoints.push (basePoints[0]);
+      if (basePoints[0].confluential) {
+        confluentialPoints.push (0);
+      }
+    }
+  for (let i = 1; i < basePoints.length; i++) {
+    if (Number.isFinite (basePoints[i].to_distance)) {
+      let d = distance2 (basePoints[i-1], basePoints[i]);
+      if (d > threshold) {
+        let n = Math.floor (Math.pow (d, 0.5) / Math.pow (threshold, 0.5)) + 1;
+        for (let j = 1; j < n; j++) {
+          let p = {lat: (basePoints[i].lat*j+(basePoints[i-1].lat*(n-j)))/n,
+                   lon: (basePoints[i].lon*j+(basePoints[i-1].lon*(n-j)))/n,
+                   additional: true};
+          p.index = augPoints.length;
+          augPoints.push (p);
+        }
+      }
+    }
+    basePoints[i].index = augPoints.length;
+    augPoints.push (basePoints[i]);
+    if (basePoints[i].confluential) {
+      confluentialPoints.push (augPoints.length-1);
+    }
+  }
+
+    if (augPoints.length && !confluentialPoints.length) {
+      confluentialPoints.push (0);
+      if (augPoints.length > 1) {
+        confluentialPoints.push (augPoints.length-1);
+      }
+    }
+
+    let distances = [];
+    for (let i = 0; i < augPoints.length; i++) {
+      distances[i] = [];
+      distances[i][i] = 0;
+      for (let j = 0; j < i; j++) {
+        distances[i][j] = /*distances[j][i] =*/ distance2 (augPoints[i], augPoints[j]);
+      }
+    }
+
+    let useThC = [];
+    confluentialPoints.forEach (i => {
+      useThC[i] = true;
+      for (let k = 0; k < i; k++) {
+        if (distances[i][k] < thresholdCP) {
+          useThC[k] = true;
+        }
+      }
+      for (let k = i + 1; k < augPoints.length; k++) {
+        if (distances[k][i] < thresholdCP) {
+          useThC[k] = true;
+        }
+      }
+    });
+    
+    let nears = [];
+    for (let i = 0; i < augPoints.length; i++) {
+      nears[i] = findNears (augPoints, distances, i, 0, augPoints.length-1, useThC[i] ? thresholdC : threshold);
+      if (nears[i].length === 0) {
+        nears[i].push ([i, i, i]);
+      }
+    }
+
+    let phases = [];
+    let i2p = [];
+    {
+      let size = 0;
+      let seg;
+      for (let i = 0; i < augPoints.length; i++) {
+        let s = nears[i].length;
+        if (s === size) {
+          let matched = true;
+          let change = [];
+          for (let k = 0; k < s; k++) {
+            if (seg[2][k] === +1 && nears[i-1][k][2] >= nears[i][k][0]) {
+              //
+            } else if (seg[2][k] === -1 && nears[i][k][2] >= nears[i-1][k][0]) {
+              //
+            } else if (seg[2][k] === 0) {
+              if (nears[i-1][k][2] >= nears[i][k][0] &&
+                  (nears[i-1][k][0] <= nears[i][k][0] ||
+                   nears[i-1][k][2] <= nears[i][k][2])) {
+                if (nears[i-1][k][0] < nears[i][k][0] ||
+                    nears[i-1][k][2] < nears[i][k][2]) change[k] = +1;
+                //
+              } else if (nears[i][k][2] >= nears[i-1][k][0] &&
+                         (nears[i][k][0] <= nears[i-1][k][0] ||
+                          nears[i][k][2] <= nears[i-1][k][2])) {
+                if (nears[i][k][0] < nears[i-1][k][0] ||
+                    nears[i][k][2] < nears[i-1][k][2]) change[k] = -1;
+                //
+              } else {
+                matched = false;
+                break;
+              }
+            } else {
+              matched = false;
+              break;
+            }
+          } // k
+          if (matched) {
+            seg[1] = i;
+            i2p[i] = seg.index;
+            for (let k in change) {
+              seg[2][k] = change[k];
+            }
+          } else {
+            seg = [i, i, nears[i].map (_ => 0)];
+            seg.index = phases.length;
+            i2p[i] = seg.index;
+            phases.unshift (seg);
+            //size = s;
+          }
+        } else { // size boundary
+          seg = [i, i, nears[i].map (_ => 0)];
+          seg.index = phases.length;
+          i2p[i] = seg.index;
+          phases.unshift (seg);
+          size = s;
+        }
+      }
+    }
+    phases = phases.reverse ();
+
+  computed.elapsed.base = performance.now () - start;
+  computed._distances = distances;
+  computed.confluentialPoints = confluentialPoints;
+  computed.useThresholdC = useThC;
+  computed.basePoints = augPoints;
+  computed.baseNears = nears;
+  computed.basePhases = phases;
+  computed._i2p = i2p;
+} // computeBase
+
 
       let timeSetter;
       let timeSetterMain = () => {};
@@ -1023,9 +1264,11 @@ function showIbukiEvent (url, opts) {
           teamStatuses = {};
           let loadTeam = async (url, td) => {
             if (td.dk === ',,route') {
-              let ts = {dk: td.dk};
-              ts.routes = [{points: computed.basePoints}];
-              attachTimestamps (ts.routes[0].points, info.start_date);
+              let ts = {dk: td.dk, showHistory: true};
+              let computed2 = {elapsed: {}};
+              computeBase2 ([baseRoute], 100, computed2);
+              ts.routes = [{points: computed2.basePoints}];
+              attachTimestamps (computed2.basePoints, info.start_date);
               teamStatuses[td.dk] = ts;
               notifyMapControllerChannel ({
                 endTime: ts.routes.at (-1).points.at (-1).timestamp,
