@@ -1264,7 +1264,7 @@ function showIbukiEvent (url, opts) {
           teamStatuses = {};
           let loadTeam = async (url, td) => {
             if (td.dk === ',,route') {
-              let ts = {dk: td.dk, showHistory: true};
+              let ts = {dk: td.dk, showHistory: false};
               let computed2 = {elapsed: {}};
               computeBase2 ([baseRoute], 100, computed2);
               ts.routes = [{points: computed2.basePoints}];
