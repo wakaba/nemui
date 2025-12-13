@@ -69,8 +69,9 @@ function attachTimestamps (route, startTime) {
           maxFontShrinkIterations = 10
         } = opts;
 
-        const dpr = window.devicePixelRatio || 1;
-
+        //let dpr = window.devicePixelRatio || 1;
+        let dpr = 1;
+        
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(width * dpr);
         canvas.height = Math.round(height * dpr);
@@ -393,9 +394,30 @@ async function showMarkedPoints (map, mps, opts) {
           if (!hasHandlers['teamClick-' + opts.id]) {
             hasHandlers['teamClick-' + opts.id] = true;
             map.on ('click', 'team-locations-' + opts.id, (e) => {
-              let feature = e.features[0];
+              //let feature = e.features[0];
+
+              let features = e.features;
+              if (!features.length) return;
+
+  let minDist = Infinity;
+  let closest = null;
+  for (let f of features) {
+    const dx = f.geometry.coordinates[0] - e.lngLat.lng;
+    const dy = f.geometry.coordinates[1] - e.lngLat.lat;
+    const dist = dx*dx + dy*dy;
+    if (dist < minDist) {
+      minDist = dist;
+      closest = f;
+    }
+  }
+              let feature = closest;
               console.log (feature.properties.td);
+              
               trackedTeamDk = JSON.parse (feature.properties.td).dk;
+              reframe ({
+                noRelocate: true,
+                userActivated: true,
+              });
             });
           }
         }
@@ -550,9 +572,10 @@ function showRoutes (map, routes, opts) {
       let prevTimer2;
       let prevNow = 0;
       let prevTime = 0;
-      let time = 0;
+let time = 0;
+let reframe = () => {};
       function showByTime (mani, map, info, teamData, teamStatuses, time, opts) {
-        if (time) {
+        if (time || opts.userActivated) {
           clearTimeout (prevTimer2);
           cancelAnimationFrame (prevTimer1);
         } else {
@@ -568,6 +591,9 @@ function showRoutes (map, routes, opts) {
             _showByTime (mani, map, info, teamData, teamStatuses, opts);
           }, 500);
         } else {
+          reframe = (opts) => {
+            showByTime (mani, map, info, teamData, teamStatuses, null, opts);
+          };
           prevTimer1 = requestAnimationFrame (() => {
             if (time) {
               prevTime = time;
@@ -699,16 +725,18 @@ let prevDuration = 0;
           } // tx
         }
 
-        if (newCameraPoint || newBearing) {
-          mani.update ({
-            cameraPoint: newCameraPoint,
-            bearing: newBearing,
-            soon: ! opts.animated,
-          });
-        } // opts.ease
+        if (!opts.noRelocate) {
+          if (newCameraPoint || newBearing) {
+            mani.update ({
+              cameraPoint: newCameraPoint,
+              bearing: newBearing,
+              soon: ! opts.animated,
+            });
+          }
+        }
 
         if (document.querySelector ('input[name=animated]:checked')) {
-          showByTime (mani, map, info, teamData, teamStatuses, null, {
+          reframe ({
             animated: true,
           });
         }
