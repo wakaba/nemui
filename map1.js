@@ -648,11 +648,12 @@ let prevDuration = 0;
             t = 1;
           }
           txes[ts.dk] = {path, i, p0, p1, computedBaseIndex: 0,
-                         td, dk: ts.dk, hidden: ! ts.showCurrent};
+                         td, ts, dk: ts.dk, hidden: ! ts.showCurrent};
           for (let j = p0.index; j >= 0; j--) {
-            let x = ts.computed.dataToBase[j]?.effectiveIndex;
+            let x = ts.computed?.dataToBase[j]?.effectiveIndex;
             if (Number.isFinite (x)) {
               txes[ts.dk].computedBaseIndex = x;
+              txes[ts.dk]._computedBaseIndexPIndex = j; // for devs only
               break;
             }
           }
@@ -667,8 +668,10 @@ let prevDuration = 0;
           let tdk = trackedTeamDk;
           if (document.querySelector ('input[name=track_by_rank]:checked')) {
             let rank = document.querySelector ('input[name=tracked_rank]').valueAsNumber;
-            let tx = Object.values (txes).sort ((a, b) => b.computedBaseIndex - a.computedBaseIndex)[rank - 1];
+            let ranked = Object.values (txes).sort ((a, b) => b.computedBaseIndex - a.computedBaseIndex);
+            let tx = ranked[rank - 1];
             if (tx) tdk = tx.dk;
+            console.log("XXXXX", txes, ranked, rank, rank-1, tdk, tx)
           }
 
           locItems = {};
@@ -696,7 +699,7 @@ let prevDuration = 0;
             let ts = teamStatuses[tdk];
             
             let p0 = tx.p0;
-              let p1 = tx.p1;
+            let p1 = tx.p1;
               let deltaLon = (p1.lon - p0.lon) * Math.PI/180;
               let y = Math.sin(deltaLon) * Math.cos(p1.lat*Math.PI/180);
               let x = Math.cos(p0.lat*Math.PI/180)*Math.sin(p1.lat*Math.PI/180) - Math.sin(p0.lat*Math.PI/180)*Math.cos(p1.lat*Math.PI/180)*Math.cos(deltaLon);
@@ -1232,20 +1235,24 @@ function showIbukiEvent (url, opts) {
       showMarkedPoints (map, info.marked_points, {
         circleColor: opts.markedPointCircleColor,
       });
-            return info;
-          }),
-          fetch (new URL ('teams.json', url)).then (res => {
-            if (res.status !== 200) throw res;
-            return res.json ();
-          }),
-          /*fetch (new URL ('teamlocations.json', url)).then (res => {
-            if (res.status !== 200) throw res;
-            return res.json ();
-          }),*/
-        ]).then (([info, teams/*, locs*/]) => {
-          let teamData = {};
-          teams.items.forEach (t => {
-            t.dk = 'tt,,' + t.id;
+      return info;
+    }),
+    fetch (new URL ('teams.json', url)).then (res => {
+      if (res.status !== 200) throw res;
+      return res.json ();
+    }),
+    fetch (new URL ('results.json', url)).then (res => {
+      if (res.status !== 200) throw res;
+      return res.json ();
+    }).then (json => json.items),
+    /*fetch (new URL ('teamlocations.json', url)).then (res => {
+      if (res.status !== 200) throw res;
+      return res.json ();
+    }),*/
+  ]).then (([info, teams, results/*, locs*/]) => {
+    let teamData = {};
+    teams.items.forEach (t => {
+      t.dk = 'tt,,' + t.id;
             teamData[t.dk] = t;
           });
 
@@ -1257,10 +1264,10 @@ function showIbukiEvent (url, opts) {
           });
           */
 
-          let now = new Date () . valueOf () / 1000;
-          //if (hist) {
-          //  now = hist?.[0]?.points.at (-1).timestamp;
-          //}
+    let now = new Date () . valueOf () / 1000;
+    //if (hist) {
+    //  now = hist?.[0]?.points.at (-1).timestamp;
+    //}
           if (info.end_date < now) now = info.end_date
           if (now < info.start_date) now = info.start_date;
           document.querySelectorAll ('input[name=event-time-range]').forEach (e => {
@@ -1281,17 +1288,17 @@ function showIbukiEvent (url, opts) {
               center: info.marked_points.at (-1) || undefined,
             });
           }
-                              
-          let baseRoute = info.routes.map (_ => _.points).flat ();
+    
+    let baseRoute = info.routes.map (_ => _.points).flat ();
           let computed = {elapsed: {}};
           {
             let radius = 100;
             computeBase ([baseRoute], radius, computed);
           }
           
-          teamStatuses = {};
-          let loadTeam = async (url, td) => {
-            if (td.dk === ',,route') {
+    teamStatuses = {};
+    let loadTeam = async (url, td) => {
+      if (td.dk === ',,route') {
               let ts = {dk: td.dk, showHistory: false};
               let computed2 = {elapsed: {}};
               computeBase2 ([baseRoute], 100, computed2);
@@ -1301,21 +1308,47 @@ function showIbukiEvent (url, opts) {
               notifyMapControllerChannel ({
                 endTime: ts.routes.at (-1).points.at (-1).timestamp,
               });
-            } else {
-              return fetch (new URL ('t/' + td.id + '/locationhistory.json', url)).then (res => {
-                if (res.status !== 200) throw res;
-                return res.json ();
-              }).then (json => {
-                return parseEncodedRoutes (json.encoded_routes);
-              }).then (hist => {
-                teamStatuses[td.dk] = {dk: td.dk, routes: hist,
-                                       showHistory: true,
-                                       showCurrent: true};
-              });
+      } else {
+        return fetch (new URL ('t/' + td.id + '/locationhistory.json', url)).then (res => {
+          if (res.status !== 200) throw res;
+          return res.json ();
+        }).then (json => {
+          return parseEncodedRoutes (json.encoded_routes);
+        }).then (hist => {
+          let ts = teamStatuses[td.dk] = {
+            dk: td.dk, routes: hist,
+            showHistory: true, showCurrent: true,
+          };
+
+
+          let teamResultItems = [];
+          results.forEach (_ => {
+            if (_.t == td.id) {
+              teamResultItems[_.p] = _;
             }
-          }; // loadTeam
-          let tds = [];
-          if (opts.routeOnly) {
+          });
+          let forced = [];
+          info.marked_points.forEach (mp => {
+            let tr = teamResultItems[mp.id];
+            if (tr && tr.n) {
+              forced.push ({timestamp: tr.c, lat: mp.lat, lon: mp.lon,
+                            baseOrigIndex: mp.index,
+                            source: 'mp' + mp.type});
+            }
+          });
+          (((teamResultItems[0] || {}).d || {}).m || []).forEach (_ => {
+            forced.push ({timestamp: _.t, lat: 0, lon: 0, source: 'marker'});
+          });
+          
+          let cp = {...computed};
+          let pointsList = [baseRoute, (ts.routes || []).map (_ => _.points).flat (), forced];
+          computeData (pointsList, cp);
+          ts.computed = cp;
+        });
+      }
+    }; // loadTeam
+    let tds = [];
+    if (opts.routeOnly) {
             let td = teamData[',,route'] = {dk: ',,route'};
             tds.push (td);
           } else if (opts.teamId) {
@@ -1346,28 +1379,6 @@ function showIbukiEvent (url, opts) {
                   };
                 }
 
-                let ts = teamStatuses[td.dk] || {};
-
-                let forced = [];
-              /*XXX
-              info.marked_points.forEach (mp => {
-                let tr = teamResultItems[mp.id];
-                if (tr && tr.n) {
-                  forced.push ({timestamp: tr.c, lat: mp.lat, lon: mp.lon,
-                                baseOrigIndex: mp.index,
-                                source: 'mp' + mp.type});
-                }
-              });
-              (((teamResultItems[0] || {}).d || {}).m || []).forEach (_ => {
-                forced.push ({timestamp: _.t, lat: 0, lon: 0, source: 'marker'});
-              });
-              */
-
-                let cp = {...computed};
-                let pointsList = [baseRoute, (ts.routes || []).map (_ => _.points).flat (), forced];
-                computeData (pointsList, cp);
-                ts.computed = cp;
-                
                 progress.value++;
                 showByTime (mani, map, info, teamData, teamStatuses, null, {});
               });
