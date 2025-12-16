@@ -574,43 +574,32 @@ function showRoutes (map, routes, opts) {
       let prevTime = 0;
 let time = 0;
 let reframe = () => {};
-      function showByTime (mani, map, info, teamData, teamStatuses, time, opts) {
-        if (time || opts.userActivated) {
-          clearTimeout (prevTimer2);
-          cancelAnimationFrame (prevTimer1);
-        } else {
-          if (prevTimer1 || prevTimer2) return;
-        }
-        if (false && map.XXXdragging) {
-          prevTimer2 = setTimeout (() => {
-            if (time) {
-              prevTime = time;
-              prevNow = performance.now ();
-            }
-            prevTimer1 = prevTimer2 = null;
-            _showByTime (mani, map, info, teamData, teamStatuses, opts);
-          }, 500);
-        } else {
-          reframe = (opts) => {
-            showByTime (mani, map, info, teamData, teamStatuses, null, opts);
-          };
-          prevTimer1 = requestAnimationFrame (() => {
-            if (time) {
-              prevTime = time;
-              prevNow = performance.now ();
-            }
-            prevTimer1 = prevTimer2 = null;
-            _showByTime (mani, map, info, teamData, teamStatuses, opts);
-          });
-        }
-      } // showByTime
-      let prevEased = 0;
+function showByTime (viewOpts, time, opts) {
+  if (time || opts.userActivated) {
+    clearTimeout (prevTimer2);
+    cancelAnimationFrame (prevTimer1);
+  } else {
+    if (prevTimer1 || prevTimer2) return;
+  }
+  reframe = (opts) => {
+    showByTime (viewOpts, null, opts);
+  };
+  prevTimer1 = requestAnimationFrame (() => {
+    if (time) {
+      prevTime = time;
+      prevNow = performance.now ();
+    }
+    prevTimer1 = prevTimer2 = null;
+    _showByTime (viewOpts, opts);
+  });
+} // showByTime
+let prevEased = 0;
 let prevTeamDk = null;
 let prevDuration = 0;
       let locItems = {};
       let trackedLocItems = {};
       let timeFactor = 600;
-      function _showByTime (mani, map, info, teamData, teamStatuses, opts) {
+function _showByTime (viewOpts, opts) {
 
         let now = performance.now ();
         if (opts.animated) {
@@ -622,16 +611,16 @@ let prevDuration = 0;
           time = prevTime;
         }
 
-        let container = map.getContainer ();
-        let rect = container.getBoundingClientRect ();
-        let width = rect.width;
-        let height = rect.height;
+  let container = viewOpts.map.getContainer ();
+  let rect = container.getBoundingClientRect ();
+  let width = rect.width;
+  let height = rect.height;
 
-        let txes = {};
-        let newCameraPoint = undefined;
-        let newBearing = undefined;
-        for (let ts of Object.values (teamStatuses)) {
-          let td = teamData[ts.dk];
+  let txes = {};
+  let newCameraPoint = undefined;
+  let newBearing = undefined;
+  for (let ts of Object.values (viewOpts.teamStatuses)) {
+    let td = viewOpts.teamData[ts.dk];
 
           let path = ts.computed.dataPoints;
           if (path.length < 2) continue;
@@ -650,7 +639,7 @@ let prevDuration = 0;
           txes[ts.dk] = {path, i, p0, p1, computedBaseIndex: 0,
                          td, ts, dk: ts.dk, hidden: ! ts.showCurrent};
           for (let j = p0.index; j >= 0; j--) {
-            let x = ts.computed?.dataToBase[j]?.effectiveIndex;
+            let x = ts.computed?.dataToBase?.[j]?.effectiveIndex;
             if (Number.isFinite (x)) {
               txes[ts.dk].computedBaseIndex = x;
               txes[ts.dk]._computedBaseIndexPIndex = j; // for devs only
@@ -664,14 +653,13 @@ let prevDuration = 0;
           };
         } // ts
 
-        {
-          let tdk = trackedTeamDk;
+  {
+    let tdk = trackedTeamDk;
           if (document.querySelector ('input[name=track_by_rank]:checked')) {
             let rank = document.querySelector ('input[name=tracked_rank]').valueAsNumber;
             let ranked = Object.values (txes).sort ((a, b) => b.computedBaseIndex - a.computedBaseIndex);
             let tx = ranked[rank - 1];
             if (tx) tdk = tx.dk;
-            console.log("XXXXX", txes, ranked, rank, rank-1, tdk, tx)
           }
 
           locItems = {};
@@ -685,18 +673,18 @@ let prevDuration = 0;
               locItems[tx.dk] = {td: tx.td, point: tx.point};
             }
           });
-          showTeamLocations (map, Object.values (locItems), {
-            id: 'history-current',
-          });
-          showTeamLocations (map, Object.values (trackedLocItems), {
+    showTeamLocations (viewOpts.map, Object.values (locItems), {
+      id: 'history-current',
+    });
+    showTeamLocations (viewOpts.map, Object.values (trackedLocItems), {
             id: 'history-current-tracked',
             tracked: true,
           });
           
-          let tx = txes[tdk];
-          if (tx) {
-            let td = teamData[tdk];
-            let ts = teamStatuses[tdk];
+    let tx = txes[tdk];
+    if (tx) {
+      let td = viewOpts.teamData[tdk];
+      let ts = viewOpts.teamStatuses[tdk];
             
             let p0 = tx.p0;
             let p1 = tx.p1;
@@ -710,14 +698,14 @@ let prevDuration = 0;
               newBearing = targetBearing;
               newCameraPoint = tx.point
               
-              if (prevTeamDk !== tdk) {
-                if (ts.showHistory) showTeamHistory (map, td, ts.routes, {
-                  layerBeforeId: 'markedpoints',
-                });
-                prevTeamDk = tdk;
-              }
+      if (prevTeamDk !== tdk) {
+        if (ts.showHistory) showTeamHistory (viewOpts.map, td, ts.routes, {
+          layerBeforeId: 'markedpoints',
+        });
+        prevTeamDk = tdk;
+      }
             
-            document.querySelectorAll ('.tracked-team-info').forEach (e => {
+      document.querySelectorAll ('.tracked-team-info').forEach (e => {
               let rank = Object.values (txes).filter (_ => _.computedBaseIndex > tx.computedBaseIndex).length + 1;
               $fill (e, {
                 td,
@@ -726,17 +714,19 @@ let prevDuration = 0;
               });
             });
           } // tx
-        }
-
-        if (!opts.noRelocate) {
-          if (newCameraPoint || newBearing) {
-            mani.update ({
-              cameraPoint: newCameraPoint,
-              bearing: newBearing,
-              soon: ! opts.animated,
-            });
-          }
-        }
+  }
+  
+  if (!opts.noRelocate) {
+    if (newCameraPoint || newBearing) {
+      viewOpts.mani.update ({
+        cameraPoint: newCameraPoint,
+        cameraFixedArea: viewOpts.fixedArea ? 0.6 : 0,
+        bearing: newBearing,
+        soon: ! opts.animated,
+        width, height,
+      });
+    }
+  }
 
         if (document.querySelector ('input[name=animated]:checked')) {
           reframe ({
@@ -764,7 +754,8 @@ class MapAnimator {
     this.running = false;
   } // constructor
 
-  update ({ cameraPoint, bearing, soon }) {
+  update ({ cameraPoint, bearing, soon, cameraFixedArea = 0,
+            width, height }) {
     if (soon) {
       let ease = {};
       if (cameraPoint) ease.center = cameraPoint;
@@ -781,25 +772,47 @@ class MapAnimator {
       let center = this.map.getCenter ();
       let logicalCenterPx = this.map.project (center);
       let targetPx = this.map.project (cameraPoint);
-      let screenCenterPx = {
-        x: this.map._canvas.width/2,
-        y: this.map._canvas.height/2, // XXX
-      };
-      let screenCenter = this.map.unproject (screenCenterPx);
-      let dx = logicalCenterPx.x - screenCenterPx.x;
-      let dy = logicalCenterPx.y - screenCenterPx.y;
-      let correctedCenterPx = {
-        x: targetPx.x + dx,
-        y: targetPx.y + dy,
-      };
-      let cCenter = this.map.unproject (correctedCenterPx);
-      cCenter.lon = cCenter.lng;
-      this.anim.camera.rawTarget = cCenter;
-      if (!this.anim.camera.smooth) {
-        this.anim.camera.smooth = cCenter;
+      let screenCenterPx = { x: width/2, y: height/2 };
+      if (cameraFixedArea > 0) {
+        let allowedX = width * cameraFixedArea / 2;
+        let allowedY = height * cameraFixedArea / 2;
+        let dx = targetPx.x - logicalCenterPx.x;
+        let dy = targetPx.y - logicalCenterPx.y;
+        let overX = 0;
+        let overY = 0;
+        if (dx >  allowedX) overX = +1;
+        if (dx < -allowedX) overX = -1;
+        if (dy >  allowedY) overY = +1;
+        if (dy < -allowedY) overY = -1;
+        if (Math.abs (dx) < allowedX) overX = 0;
+        if (Math.abs (dy) < allowedY) overY = 0;
+        let biasAmountX = width * 0.20;
+        let biasAmountY = height * 0.20;
+        let offsetX = (screenCenterPx.x - logicalCenterPx.x) + -overX * biasAmountX;
+        let offsetY = (screenCenterPx.y - logicalCenterPx.y) + -overY * biasAmountY;
+        if (overX || overY) {
+          //
+        } else {
+          cameraPoint = null;
+        }
       }
-      this.anim.camera.vel = this.anim.camera.vel || {x: 0, y: 0};
-    }
+      if (cameraPoint) {
+        let screenCenter = this.map.unproject (screenCenterPx);
+        let dx = logicalCenterPx.x - screenCenterPx.x;
+        let dy = logicalCenterPx.y - screenCenterPx.y;
+        let correctedCenterPx = {
+          x: targetPx.x + dx,
+          y: targetPx.y + dy,
+        };
+        let cCenter = this.map.unproject (correctedCenterPx);
+        cCenter.lon = cCenter.lng;
+        this.anim.camera.rawTarget = cCenter;
+        if (!this.anim.camera.smooth) {
+          this.anim.camera.smooth = cCenter;
+        }
+        this.anim.camera.vel = this.anim.camera.vel || {x: 0, y: 0};
+      }
+    } // cameraPoint
 
     if (bearing != null) {
       this.anim.bearing.start = this.map.getBearing ();
@@ -1184,7 +1197,6 @@ function computeBase2 (pointsList, radius, computed) {
       let timeSetter;
       let timeSetterMain = () => {};
 
-      let teamStatuses = {};
 function showIbukiEvent (url, opts) {
   let ma = document.querySelector ('map-area');
   let map = ma.pc_MLMap;
@@ -1253,8 +1265,11 @@ function showIbukiEvent (url, opts) {
     let teamData = {};
     teams.items.forEach (t => {
       t.dk = 'tt,,' + t.id;
-            teamData[t.dk] = t;
-          });
+      teamData[t.dk] = t;
+    });
+    let teamStatuses = {};
+    let viewOpts = {mani, map, info, teamData, teamStatuses,
+                    fixedArea: ! opts.routeOnly};
 
           /*
           showTeamLocations (map, Object.keys (locs.items).map (dk => {
@@ -1295,19 +1310,19 @@ function showIbukiEvent (url, opts) {
             let radius = 100;
             computeBase ([baseRoute], radius, computed);
           }
-          
-    teamStatuses = {};
+    
     let loadTeam = async (url, td) => {
       if (td.dk === ',,route') {
-              let ts = {dk: td.dk, showHistory: false};
-              let computed2 = {elapsed: {}};
-              computeBase2 ([baseRoute], 100, computed2);
-              ts.routes = [{points: computed2.basePoints}];
-              attachTimestamps (computed2.basePoints, info.start_date);
-              teamStatuses[td.dk] = ts;
-              notifyMapControllerChannel ({
-                endTime: ts.routes.at (-1).points.at (-1).timestamp,
-              });
+        let ts = {dk: td.dk, showHistory: false};
+        ts.computed = {elapsed: {}};
+        computeBase2 ([baseRoute], 100, ts.computed);
+        ts.computed.dataPoints = ts.computed.basePoints;
+        ts.routes = [{points: ts.computed.basePoints}];
+        attachTimestamps (ts.computed.basePoints, info.start_date);
+        teamStatuses[td.dk] = ts;
+        notifyMapControllerChannel ({
+          endTime: ts.routes.at (-1).points.at (-1).timestamp,
+        });
       } else {
         return fetch (new URL ('t/' + td.id + '/locationhistory.json', url)).then (res => {
           if (res.status !== 200) throw res;
@@ -1349,9 +1364,9 @@ function showIbukiEvent (url, opts) {
     }; // loadTeam
     let tds = [];
     if (opts.routeOnly) {
-            let td = teamData[',,route'] = {dk: ',,route'};
-            tds.push (td);
-          } else if (opts.teamId) {
+      let td = teamData[',,route'] = {dk: ',,route'};
+      tds.push (td);
+    } else if (opts.teamId) {
             let td = teamData['tt,,' + opts.teamId];
             if (!td) throw new Error ("Bad team: " + opts.teamId);
             tds.push (td);
@@ -1373,14 +1388,14 @@ function showIbukiEvent (url, opts) {
 
                   timeSetterMain = (time) => {
                     if (!time) return;
-                    showByTime (mani, map, info, teamData, teamStatuses, time, {
+                    showByTime (viewOpts, time, {
                       animated: true, // XXX for "play" button only
                     });
                   };
                 }
 
                 progress.value++;
-                showByTime (mani, map, info, teamData, teamStatuses, null, {});
+                showByTime (viewOpts, null, {});
               });
             })).then (() => {
               if (opts.start) {
