@@ -1270,6 +1270,7 @@ function showIbukiEvent (url, opts) {
     let teamStatuses = {};
     let viewOpts = {mani, map, info, teamData, teamStatuses,
                     fixedArea: ! opts.routeOnly};
+    console.log (viewOpts);
 
           /*
           showTeamLocations (map, Object.keys (locs.items).map (dk => {
@@ -1305,11 +1306,14 @@ function showIbukiEvent (url, opts) {
           }
     
     let baseRoute = info.routes.map (_ => _.points).flat ();
-          let computed = {elapsed: {}};
-          {
-            let radius = 100;
-            computeBase ([baseRoute], radius, computed);
-          }
+    let computed = {elapsed: {}};
+    {
+      let radius = 100;
+      info.marked_points.forEach (mp => {
+        baseRoute[mp.index].confluential = true;
+      });
+      computeBase ([baseRoute], radius, computed);
+    }
     
     let loadTeam = async (url, td) => {
       if (td.dk === ',,route') {
@@ -1373,15 +1377,15 @@ function showIbukiEvent (url, opts) {
           } else {
             tds = Object.values (teamData);
           }
-          {
+    {
             let first = true;
             let progress = document.querySelector ('progress') || {};
-            progress.hidden = false;
-            progress.min = 0;
-            progress.max = tds.length;
-            progress.value = 0;
-            Promise.all (tds.map ((td) => {
-              return loadTeam (url, td).then (() => {
+      progress.hidden = false;
+      progress.min = 0;
+      progress.max = tds.length;
+      progress.value = 0;
+      Promise.all (tds.map ((td) => {
+        return loadTeam (url, td).then (() => {
                 if (first) {
                   trackedTeamDk = td.dk;
                   first = false;
@@ -1394,11 +1398,11 @@ function showIbukiEvent (url, opts) {
                   };
                 }
 
-                progress.value++;
-                showByTime (viewOpts, null, {});
-              });
-            })).then (() => {
-              if (opts.start) {
+          progress.value++;
+          showByTime (viewOpts, null, {});
+        });
+      })).then (() => {
+        if (opts.start) {
                 ma.explicitTime = info.start_date;
               }
             }).then (() => progress.hidden = true);

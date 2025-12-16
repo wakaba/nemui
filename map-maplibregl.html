@@ -40,7 +40,7 @@
 <script src=https://wiki.suikawiki.org/scripts/time async data-time-selector=time></script>
 <script src=https://pawjy.github.io/html-unit-number/src/unit-number.js async></script>
 <script src=https://raw.githack.com/wakaba/js-geo-encodedpolyline/master/encodedpolyline.js></script>
-<script src=https://raw.githack.com/geocol/js-routes/refs/heads/master/src/routes.js></script>
+<script src=../js-routes/src/routes.js onerror='let s = document.createElement("script");s.src="https://raw.githack.com/geocol/js-routes/refs/heads/master/src/routes.js";document.head.appendChild(s)' async></script>
 <script src=https://raw.githack.com/geocol/js-routes/refs/heads/master/src/routepoints.js></script>
 
   <section id=map-section-1 lang=ja>
@@ -304,6 +304,20 @@
         time.dispatchEvent (new Event ('input', {bubbles: true}));
         }, 1000);
       ">A2</button>
+      <button type=button onclick="
+        let map = document.querySelector ('map-area');
+        map.setAttribute ('maptype', 'osm-gsi-hillshade+gsi-optimal_bvmap-label');
+        setTimeout (() => {
+        map.setAttribute ('zoom', 12);
+        map.setAttribute ('pitch', 40);
+        document.querySelector ('[name=animated]').checked = true;
+        document.querySelector ('[name=track_by_rank]').checked = true;
+        document.querySelector ('[name=tracked_rank]').value = 1;
+        let time = document.querySelector ('[name=event-time-range]');
+        time.value = parseFloat (time.min);
+        time.dispatchEvent (new Event ('input', {bubbles: true}));
+        }, 1000);
+      ">A3</button>
     <p>
       <input type=url name=ibukiURL onchange="
         setURL (value, {initiator: 'input'});
