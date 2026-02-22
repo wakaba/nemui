@@ -115,7 +115,7 @@ async function processSingleItem (id, item) {
 
   if (!annotationItem) {
     console.error (`--> Annotation item not found for ${id}. Skipping.`);
-    console.error({item, parsed});
+    console.error({item, parsed, annotationItem});
     return null;
   }
 
@@ -126,7 +126,7 @@ async function processSingleItem (id, item) {
   });
   if (!parsed) {
     console.error (`--> Bad input after annotation for ${id}. Skipping.`);
-    console.error({item, originalParsed});
+    console.error({item, originalParsed, annotationItem});
     return null;
   }
   
