@@ -61,7 +61,17 @@ async function fetchIdentifierItems () {
   }
   const json = await response.json ();
   console.error (`--> Found ${Object.keys (json.items).length} identifiers.`);
-  return Object.values (json.groups).map (_ => _.region_refs).flat ();
+
+  const refs = Object.values (json.groups).map (_ => _.region_refs).flat ();
+  const items = {};
+  for (const ref of refs) {
+    if (json.items[ref]) {
+      items[ref] = json.items[ref];
+    }
+  }
+  console.error (`--> Found ${Object.keys (items).length} identifiers.`);
+  return items;
+  
 } // fetchIdentifierItems
 
 function getDirectorySize (dirPath) {
