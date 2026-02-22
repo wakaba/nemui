@@ -37,7 +37,7 @@ swir-batch:
 	@$(MAKE) deps
 
 	@echo "Recording pre-run remote state..."
-	PRE_RUN_MAIN_DIGEST=$$(docker manifest inspect $(DOCKER_IMAGE)main 2>/dev/null | grep 'Digest:' || echo "Digest: nonexistent" | awk '{print $$2}')
+	PRE_RUN_MAIN_DIGEST=$$( { docker manifest inspect $(DOCKER_IMAGE)main 2>/dev/null | grep 'Digest:' || echo 'Digest: nonexistent'; } | awk '{print $$2}' )
 	@echo "--> Pre-run main digest: $${PRE_RUN_MAIN_DIGEST}"
 
 	@echo "Fetching main index..."
