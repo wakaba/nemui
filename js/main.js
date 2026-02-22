@@ -137,7 +137,7 @@ async function processSingleItem (id, item) {
     return { buffer, objectFile };
   } catch (e) {
     console.error (`--> Failed to generate image for ${id}: Skipping.`);
-    console.error({item, parsed});
+    console.error({item, parsed, annotationItem});
     console.error(e);
     return { failed: true };
   }
