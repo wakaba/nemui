@@ -31,8 +31,8 @@ PQ.env.createImg = async url => {
 
 const __filename = fileURLToPath (import.meta.url);
 const __dirname = path.dirname (__filename);
-const indexesDir = path.join (__dirname, '..', 'local', 'indexes');
-const objectsDir = path.join (__dirname, '..', 'local', 'objects');
+const indexesDir = path.join (__dirname, 'local', 'indexes');
+const objectsDir = path.join (__dirname, 'local', 'objects');
 const missingFile = path.join (indexesDir, 'missing.txt');
 
 const isLive = process.env.LIVE;
@@ -60,8 +60,6 @@ async function fetchIdentifierItems () {
     throw new Error (`Failed to fetch identifiers: ${response.statusText}`);
   }
   const json = await response.json ();
-  console.error (`--> Found ${Object.keys (json.items).length} identifiers.`);
-
   const refs = Object.values (json.groups).map (_ => _.region_refs).flat ();
   const items = {};
   for (const ref of refs) {
@@ -71,7 +69,6 @@ async function fetchIdentifierItems () {
   }
   console.error (`--> Found ${Object.keys (items).length} identifiers.`);
   return items;
-  
 } // fetchIdentifierItems
 
 function getDirectorySize (dirPath) {
@@ -126,7 +123,7 @@ async function processSingleItem (id, item) {
   });
   if (!parsed) {
     console.error (`--> Bad input after annotation for ${id}. Skipping.`);
-    console.error({item, originalParsed});
+    console.error({item, originalParsed, annotationItem });
     return null;
   }
   
@@ -137,7 +134,7 @@ async function processSingleItem (id, item) {
     return { buffer, objectFile };
   } catch (e) {
     console.error (`--> Failed to generate image for ${id}: Skipping.`);
-    console.error({item, parsed});
+    console.error({item, parsed, annotationItem });
     console.error(e);
     return { failed: true };
   }
@@ -145,6 +142,9 @@ async function processSingleItem (id, item) {
 
 async function processMirrorSet (mirrorSet) {
   console.error (`--> Processing mirror set ${mirrorSet}...`);
+  const startTime = Date.now();
+  const timeout = 10 * 60 * 1000; // 10 minutes
+  const progressInterval = 15 * 1000; // 15 seconds
 
   const existingObjects = new Set ();
   console.error ('--> Reading all existing index files to build a comprehensive list of objects...');
@@ -187,7 +187,16 @@ async function processMirrorSet (mirrorSet) {
   let newItemsAdded = false;
   let consecutiveErrors = 0;
   const errorThreshold = 10;
+  let processedCount = 0;
+  let lastProgressTime = Date.now();
+
   for (const [id, item] of Object.entries (incomingItems)) {
+    processedCount++;
+    if (Date.now() - startTime > timeout) {
+      console.error('--> Time limit of 10 minutes exceeded. Stopping current batch.');
+      break;
+    }
+
     if (existingObjects.has (id)) {
       continue;
     } // if existing
@@ -218,6 +227,13 @@ async function processMirrorSet (mirrorSet) {
     existingObjects.add (id);
     missingIdentifiers.delete(id);
     newItemsAdded = true;
+
+    const now = Date.now();
+    if (now - lastProgressTime > progressInterval) {
+      const elapsedSeconds = Math.round((now - startTime) / 1000);
+      console.error(`--> Progress: ${processedCount} items checked in ${elapsedSeconds} seconds.`);
+      lastProgressTime = now;
+    }
   } // for [id, item]
 
   fs.writeFileSync(missingFile, Array.from(missingIdentifiers).join('\n'), 'utf8');
