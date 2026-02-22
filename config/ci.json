@@ -1,116 +1,19 @@
-
 {
-  "circleci": {
-    "heroku": 1,
-    "build": [
-      "ip route",
-      "docker run -d -it quay.io/wakaba/base:stable bash",
-      "ip route",
-      "ip route | awk '/docker0/ { print $NF }' > docker0-ip.txt",
-      "cat docker0-ip.txt",
-      "sleep 60",
-      "ip route",
-      
-      "perl pmbp.pl --install-awscli",
-        "aws --version",
-      "python3 --version",
-      "curl https://bootstrap.pypa.io/get-pip.py | python3",
-        "sudo apt-get install -y pip",
-        "sudo pip install awscli --upgrade",
-        "aws --version"
-    ]
-  },
-  "github": {
-    "env_matrix": {
-      "FOO": [1, 2, 3],
-      "BAR": [10, 11]
-    },
-    "matrix_allow_failure": [
-      {"env_FOO": 2, "env_BAR": 11}
-    ],
-    "build": [
-    ],
-    "tests": {},
-    "macos": true,
-    "pages": true
-  },
-  "droneci": {
-    "pmbp": true,
-    "build": {
-      "": [
-        "perl aaa.pl",
-        "perl tesica",
-        
-        "perl pmbp.pl --install-awscli",
-        "aws --version",
-        "pwd",
-        "cat local/ciconfig/dockershareddir",
-        "ls `cat local/ciconfig/dockershareddir`",
-        "sudo apt-get install -y pip",
-        "sudo pip install awscli --upgrade",
-        "aws --version"
+    "github": {
+      "build": [
+        {"run": "make swir-batch DOCKER_IMAGE=$SWIR_DOCKER_IMAGE",
+         "secrets": ["SWIR_DOCKER_IMAGE",
+                     "DOCKER_USER", "DOCKER_PASS", "BWALLER_URL"],
+         "branch": "foo1"}
       ],
-      "_": [
-        "cp -R . `cat local/ciconfig/dockershareddir`/app",
-        {
-          "command": "cd app && ls && pwd",
-          "nested": true,
-          "shared_dir": true
-        },
-        {
-          "command": "echo $DRONE_COMMIT_SHA",
-          "nested": {
-            "envs": ["CI", "DRONE_COMMIT_SHA"]
-          }
-        },
-        {
-          "command": "make pmbp-install",
-          "shared_dir": true,
-          "wd": "app",
-          "nested": {
-            "envs": ["CI", "DRONE_COMMIT_SHA"]
-          }
-        },
-        {
-          "command": "./perl local/bin/pmbp.pl --install-module IO::Interface::Simple",
-          "nested": true,
-          "shared_dir": true,
-          "wd": "app"
-        },
-        {
-          "command": "./perl -MIO::Interface::Simple -e 'print IO::Interface::Simple->new (q{eth0})->address' > ipaddr",
-          "nested": true,
-          "shared_dir": true,
-          "wd": "app"
-        },
-        {
-          "command": "cat ipaddr",
-          "nested": true,
-          "shared_dir": true,
-          "wd": "app"
-        },
-        {
-          "command": "make deps",
-          "shared_dir": true,
-          "wd": "app",
-          "nested": {
-            "envs": ["CI", "DRONE_COMMIT_SHA"]
-          }
-        },
-        "echo foo > bar"
-      ]
-    },
-    "tests": {
-      "test1": [
-        "cat bar",
-        "ls"
+      "tests": [
+        "make test"
       ],
-      "test2": [
-        "docker version"
-      ]
-    },
-    "docker": {
-      "nested": true
+      "pages": {
+        "build_secrets": ["SWIR_DOCKER_IMAGE"]
+      },
+      "gaa": true,
+      "autobuild": {"per_day": 3},
+      "merger": true
     }
   }
-}

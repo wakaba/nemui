@@ -1,124 +1,135 @@
+## Makefile for Swir process
+
 all:
 
-WGET = wget
-CURL = curl
+## --- Config ---
+DOCKER_IMAGE ?= my-docker-image
+BASE_IMAGE = quay.io/wakaba/base:sid
+JS_RUNNER_IMAGE = $(DOCKER_IMAGE)-js-runner
 GIT = git
+CURL = curl
+DOCKER_REGISTRY := $(shell echo '$(DOCKER_IMAGE)' | awk -F/ '{if (NF>1) print $$1}')
 
-
-updatenightly: local/bin/pmbp.pl
-	$(CURL) -s -S -L https://gist.githubusercontent.com/wakaba/34a71d3137a52abb562d/raw/gistfile1.txt | sh
-	$(GIT) add modules t_deps/modules
-	perl local/bin/pmbp.pl --update
-	$(GIT) add config
-
-updatenightlywp:
-	date > wp
-	echo $(WP_DATA_DIR) >> wp
-	$(GIT) add wp
-
-
+updatenightly:
 ciconfig:
 	$(CURL) -sSLf https://raw.githubusercontent.com/wakaba/ciconfig/master/ciconfig | RUN_GIT=1 REMOVE_UNUSED=1 perl
 
+##
+## --- Main Target ---
+##
+## This target orchestrates the entire batch process. It uses an optimistic locking
+## mechanism to prevent race conditions in a distributed environment.
+##
+## make variables:
+##   DOCKER_IMAGE: Docker image name prefix. (Default: my-docker-image)
+##
+## Environment variables:
+##   DOCKER_USER: Username for Docker registry.
+##   DOCKER_PASS: Password for Docker registry.
+##   BWALLER_URL: URL for bwaller notification.
+##
+swir-batch:
+	@echo "--- Starting swir-batch process ---"
+	@mkdir -p local
+	@rm -f local/.image_pushed
+
+	@echo "Ensuring dependencies are met..."
+	@$(MAKE) deps
+
+	@echo "Recording pre-run remote state..."
+	PRE_RUN_MAIN_DIGEST=$$(docker manifest inspect $(DOCKER_IMAGE)main 2>/dev/null | grep 'Digest:' | awk '{print $$2}' || echo "nonexistent")
+	@echo "--> Pre-run main digest: $${PRE_RUN_MAIN_DIGEST}"
+
+	@echo "Fetching main index..."
+	@if [ "$${PRE_RUN_MAIN_DIGEST}" != "nonexistent" ]; then \
+		docker pull $(DOCKER_IMAGE)main; \
+		mkdir -p local/indexes; \
+		ID=$$(docker create $(DOCKER_IMAGE)main) && docker cp $$ID:/app/indexes/. ./local/indexes && docker rm -v $$ID; \
+	else \
+		echo "--> Main image not found. Starting fresh."; \
+		mkdir -p local/indexes; \
+	fi
+
+	MIRROR_SET=$$(cat local/indexes/set.txt 2>/dev/null || echo 1)
+	@echo "Using MIRROR_SET: $${MIRROR_SET}. Fetching data..."
+	@if docker manifest inspect $(DOCKER_IMAGE)$${MIRROR_SET} >/dev/null 2>&1; then \
+		docker pull $(DOCKER_IMAGE)$${MIRROR_SET}; \
+		mkdir -p local/objects; \
+		ID=$$(docker create $(DOCKER_IMAGE)$${MIRROR_SET}) && docker cp $$ID:/app/objects/. ./local/objects && docker rm -v $$ID; \
+	else \
+		echo "--> Data image not found. Starting fresh."; \
+		mkdir -p local/objects; \
+	fi
+
+	@echo "Capturing pre-run local state..."
+	@find local/objects -type f -exec sha256sum {} + | sort -k 2 > local/.pre_run_data_state.txt
+	@find local/indexes -type f -exec sha256sum {} + | sort -k 2 > local/.pre_run_index_state.txt
+
+	@echo "Building and running the main script..."
+	docker build -t $(JS_RUNNER_IMAGE) -f js/Dockerfile.runner js/ > /dev/null
+	docker run --rm -v $$(pwd)/local:/app/local $(JS_RUNNER_IMAGE) $${MIRROR_SET}
+
+	@echo "Authenticating with Docker registry..."
+	@if [ -n "$$DOCKER_USER" ] && [ -n "$$DOCKER_PASS" ]; then \
+		if [ -n "$(DOCKER_REGISTRY)" ]; then \
+			docker login -u "$$DOCKER_USER" -p "$$DOCKER_PASS" $(DOCKER_REGISTRY); \
+		else \
+			docker login -u "$$DOCKER_USER" -p "$$DOCKER_PASS"; \
+		fi; \
+	else \
+		echo "--> Skipping Docker login."; \
+	fi
+
+	@echo "Checking for remote changes before push..."
+	POST_RUN_MAIN_DIGEST=$$(docker manifest inspect $(DOCKER_IMAGE)main 2>/dev/null | grep 'Digest:' | awk '{print $$2}' || echo "nonexistent")
+	@echo "--> Post-run main digest: $${POST_RUN_MAIN_DIGEST}"
+	@if [ "$${PRE_RUN_MAIN_DIGEST}" != "$${POST_RUN_MAIN_DIGEST}" ]; then \
+		echo "ERROR: Concurrent modification detected. Remote 'main' image changed during process. Aborting to prevent inconsistency."; \
+		exit 1; \
+	fi
+
+	@echo "No concurrent modification detected. Proceeding with potential push."
+
+	@echo "Checking for data changes...";
+	@find local/objects -type f -exec sha256sum {} + | sort -k 2 > local/.post_run_data_state.txt
+	@if ! diff -q local/.pre_run_data_state.txt local/.post_run_data_state.txt >/dev/null 2>&1; then \
+		echo "--> Data changes detected. Pushing data image..."; \
+		NEW_MIRROR_SET=$$(cat local/indexes/set.txt 2>/dev/null || echo $$MIRROR_SET); \
+		printf "FROM $(BASE_IMAGE)\nCOPY objects /app/objects" | docker build -f - -t $(DOCKER_IMAGE)$${NEW_MIRROR_SET} local; \
+		docker push $(DOCKER_IMAGE)$${NEW_MIRROR_SET} || { echo "ERROR: Failed to push data image. Aborting."; exit 1; }; \
+		touch local/.image_pushed; \
+	fi
+
+	@echo "Checking for index changes...";
+	@find local/indexes -type f -exec sha256sum {} + | sort -k 2 > local/.post_run_index_state.txt
+	@if ! diff -q local/.pre_run_index_state.txt local/.post_run_index_state.txt >/dev/null 2>&1; then \
+		echo "--> Index changes detected. Pushing main image..."; \
+		printf "FROM $(BASE_IMAGE)\nCOPY indexes /app/indexes" | docker build -f - -t $(DOCKER_IMAGE)main local; \
+		docker push $(DOCKER_IMAGE)main || { echo "ERROR: Failed to push main image. Data image might be orphaned."; exit 1; }; \
+		touch local/.image_pushed; \
+	fi
+
+	@echo "Finalizing process..."
+	@rm -f local/.pre_run_data_state.txt local/.post_run_data_state.txt local/.pre_run_index_state.txt local/.post_run_index_state.txt
+	@if [ -f local/.image_pushed ]; then \
+		echo "--> Notifying bwaller..."; \
+		bash -o pipefail -c "$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME='$(DOCKER_IMAGE)' bash"; \
+		rm -f local/.image_pushed; \
+	fi
+
+	@echo "--- Swir-batch process finished ---"
+
 ## ------ Setup ------
-
-deps:  local/bin/pmbp.pl
-	echo "make deps executed"
-	perl local/bin/pmbp.pl --install-commands "mysqld wget"
-	apt-cache search gnuplot
-	sudo apt-get install -y gnuplot
-#	$(MAKE) local/bin/pmbp.pl
-#	perl local/bin/pmbp.pl --update-pmbp-pl-staging
-#	perl local/bin/pmbp.pl --install-openssl
-
-a:
-	which sed
-	brew uninstall libtool && brew install libtool 
-	$(MAKE) local/bin/pmbp.pl
-	perl local/bin/pmbp.pl --install-openssl
-	$(MAKE) pmbp-install
-	readlink -f . || (brew install coreutils && greadlink -f .)
-
-PMBP_OPTIONS=
-
-local/bin/pmbp.pl:
-	mkdir -p local/bin
-	$(CURL) -s -S -L https://raw.githubusercontent.com/wakaba/perl-setupenv/master/bin/pmbp.pl > $@
-pmbp-upgrade: local/bin/pmbp.pl
-	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update-pmbp-pl
-pmbp-update: git-submodules pmbp-upgrade
-	perl local/bin/pmbp.pl $(PMBP_OPTIONS) --update
-pmbp-install: git-submodules pmbp-upgrade
-	perl local/bin/pmbp.pl $(PMBP_OPTIONS) \
-	    --install \
-	    --install-module Encode~2.86 \
-	    --create-perl-command-shortcut perl
-#	    --install-perl --perl-version 5.24.0 \
+deps: git-submodules
 
 git-submodules:
-	git submodule update --init
+	$(GIT) submodule update --init
+
 
 ## ------ Tests ------
+test:
+	@echo "Tests not implemented."
 
-PROVE = ./prove
+.PHONY: all swir-batch deps git-submodules test
 
-test: test-deps
-	echo "FOO=$$FOO BAR=$$BAR"
-	echo "make test executed!"
-#test-1 test-main test-https
-
-test-deps: test-deps-0 deps
-
-test-deps-0:
-	perl aaa.pl
-	echo "FOO=$$FOO BAR=$$BAR"
-
-test-1:
-	./perl test1.pl
-
-test-main:
-	#$(PROVE) t/*.t
-	which sed
-	diff --help
-
-test-https:
-	curl https://gist.githubusercontent.com/wakaba/f89aa0ba4042d2a227f1/raw/checkhttps.pl > check.pl
-	perl check.pl > check.html
-	perl -e 'print int rand 10000000' > a.txt
-	cat a.txt
-	wget https://raw.githubusercontent.com/wakaba/perl-setupenv/staging/bin/pmbp.pl
-	perl pmbp.pl --install-openssl-if-mac
-
-external-test-or-rollback:
-	$(MAKE) external-test || $(MAKE) heroku-rollback failed
-
-external-test: test-deps external-test-main
-
-HEROKU_APP_NAME=fuga1
-
-external-test-main:
-	XTEST_ORIGIN=https://$(HEROKU_APP_NAME).herokuapp.com $(PROVE) t_ext/*.t
-
-heroku-save-current-release:
-	mkdir -p local/lib/JSON
-	curl -s -S -L https://raw.githubusercontent.com/wakaba/perl-json-ps/master/lib/JSON/PS.pm > local/lib/JSON/PS.pm
-	perl -Ilocal/lib -MJSON::PS -e '$$json = `curl -f https://api.heroku.com/apps/$(HEROKU_APP_NAME)/dynos -H "Accept: application/vnd.heroku+json; version=3" --user ":$$ENV{HEROKU_API_KEY}"`; print [grep { $$_->{type} eq 'web' } @{json_bytes2perl ($$json)}]->[0]->{release}->{id} || die "Cannot get release.id";' > local/.heroku-current-release
-
-heroku-rollback:
-	perl -e '(system qq(curl -X POST -f https://api.heroku.com/apps/$(HEROKU_APP_NAME)/releases -H "Accept: application/vnd.heroku+json; version=3" --user ":$$ENV{HEROKU_API_KEY}" -H "Content-Type: application/json" -d "{\\\"release\\\":\\\"$$ARGV[0]\\\"}")) == 0 or die $$?' `cat local/.heroku-current-release`
-
-failed:
-	false
-
-create-commit-for-heroku: git-submodules
-	git remote rm origin
-	rm -fr deps/pmtar/.git deps/pmpp/.git modules/*/.git
-	#git add -f deps/pmtar/* #deps/pmpp/*
-	#rm -fr ./t_deps/modules
-	#git rm -r t_deps/modules
-	git rm .gitmodules
-	git rm modules/* --cached
-	git add -f modules/*/*
-	git commit -m "for heroku"
-
-build-github-pages:
+## License: Public Domain.

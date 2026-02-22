@@ -1,0 +1,42 @@
+##
+## Dockerfile for the JavaScript Runner
+##
+## This Dockerfile sets up an environment to run the Node.js script (main.js).
+## It installs system dependencies required by the 'canvas' npm package,
+## then installs the Node.js dependencies, copies the source code, and
+## sets the default command.
+##
+
+## --- Base Image ---
+## Use an official Node.js 20 slim image for a smaller footprint.
+FROM node:20-slim
+
+## --- System Dependencies ---
+## Install native libraries required for the 'canvas' package.
+## We clean up apt cache to keep the image size down.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+## --- Application Setup ---
+## Set the working directory for subsequent commands.
+WORKDIR /app
+
+## Install Node.js dependencies.
+## Copying package.json separately leverages Docker's layer caching.
+COPY package.json .
+RUN npm install
+
+## Copy the application source code into the container.
+COPY . .
+
+## --- Entrypoint ---
+## The container will execute this command by default when it is started.
+ENTRYPOINT ["node", "main.js"]
+
+## License: Public Domain.
