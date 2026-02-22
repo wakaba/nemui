@@ -6,6 +6,7 @@ import { createCanvas, loadImage } from "canvas";
 import { PQ } from './pq.js';
 import * as AIS from './ais.js';
 
+const IDENTIFIERS_URL = 'https://suikawiki.github.io/swcf/current/swir/list.json';
 
 let Config = {
   image_proxy_url_prefix: "",
@@ -13,13 +14,6 @@ let Config = {
 };
 let dataSource = new AIS.ImageDataSource (Config);
 let annotationStorage = new AIS.ClassicAnnotationStorage (Config);
-
-const IDENTIFIERS_URL = 'https://suikawiki.github.io/swcf/current/swir/list.json';
-const __filename = fileURLToPath (import.meta.url);
-const __dirname = path.dirname (__filename);
-const indexesDir = path.join (__dirname, '..', 'local', 'indexes');
-const objectsDir = path.join (__dirname, '..', 'local', 'objects');
-
 
 
 PQ.env.createCanvas = createCanvas;
@@ -32,6 +26,14 @@ PQ.env.createImg = async url => {
   //img.naturalHeight = img.height;
   return img;
 };
+
+
+
+const __filename = fileURLToPath (import.meta.url);
+const __dirname = path.dirname (__filename);
+const indexesDir = path.join (__dirname, '..', 'local', 'indexes');
+const objectsDir = path.join (__dirname, '..', 'local', 'objects');
+const missingFile = path.join (indexesDir, 'missing.txt');
 
 const isLive = process.env.LIVE;
 const sizeLimit = isLive ? 1 * 1024 * 1024 * 1024 : 100 * 1024 * 1024;
@@ -116,8 +118,9 @@ async function processSingleItem (id, item) {
     const objectFile = getObjectPath (id);
     return { buffer, objectFile };
   } catch (e) {
-    console.error (`--> Failed to generate image for ${id}: ${e.message}. Skipping.`);
-    return null;
+    console.error (`--> Failed to generate image for ${id}: Skipping.`);
+    console.error(e);
+    return { failed: true };
   }
 } // processSingleItem
 
@@ -144,10 +147,27 @@ async function processMirrorSet (mirrorSet) {
     } // no ENOENT
   }
 
+  const missingIdentifiers = new Set();
+  try {
+    const lines = fs.readFileSync(missingFile, 'utf8').split('\n').filter(Boolean);
+    for (const line of lines) {
+      missingIdentifiers.add(line);
+    }
+    console.error(`--> Found ${missingIdentifiers.size} missing identifiers.`);
+  } catch (e) {
+    if (e.code !== 'ENOENT') {
+      console.error(`--> Error reading missing identifiers file: ${e.message}`);
+    } else {
+      console.error('--> No missing identifiers file found.');
+    }
+  }
+
   const currentIndexFile = path.join (indexesDir, `list-${mirrorSet}.txt`);
   const incomingItems = await fetchIdentifierItems ();
 
   let newItemsAdded = false;
+  let consecutiveErrors = 0;
+  const errorThreshold = 10;
   for (const [id, item] of Object.entries (incomingItems)) {
     if (existingObjects.has (id)) {
       continue;
@@ -155,16 +175,33 @@ async function processMirrorSet (mirrorSet) {
 
     const result = await processSingleItem (id, item);
     if (!result) {
+      consecutiveErrors = 0;
       continue;
     }
+
+    if (result.failed) {
+      missingIdentifiers.add(id);
+      consecutiveErrors++;
+      if (consecutiveErrors >= errorThreshold) {
+          console.error(`--> Aborting after ${consecutiveErrors} consecutive errors.`);
+          fs.writeFileSync(missingFile, Array.from(missingIdentifiers).join('\n'), 'utf8');
+          throw new Error(`Aborting due to ${consecutiveErrors} consecutive processing errors.`);
+      }
+      continue;
+    }
+    
+    consecutiveErrors = 0;
 
     fs.mkdirSync (path.dirname (result.objectFile), { recursive: true });
     fs.writeFileSync (result.objectFile, result.buffer);
 
     fs.appendFileSync (currentIndexFile, `${id}\n`, 'utf8');
     existingObjects.add (id);
+    missingIdentifiers.delete(id);
     newItemsAdded = true;
   } // for [id, item]
+
+  fs.writeFileSync(missingFile, Array.from(missingIdentifiers).join('\n'), 'utf8');
 
   if (!newItemsAdded) {
     console.error ('--> No new items to process.');
@@ -196,6 +233,7 @@ async function main () {
     console.error (`-> Batch process for mirror set ${mirrorSet} completed successfully.`);
   } catch (error) {
     console.error (`FATAL: ${error.message}`);
+    console.error (error);
     process.exit (1);
   }
 } // main
