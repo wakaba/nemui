@@ -61,7 +61,7 @@ async function fetchIdentifierItems () {
   }
   const json = await response.json ();
   console.error (`--> Found ${Object.keys (json.items).length} identifiers.`);
-  return json.items;
+  return Object.values (json.groups).map (_ => _.region_refs).flat ();
 } // fetchIdentifierItems
 
 function getDirectorySize (dirPath) {
@@ -116,7 +116,7 @@ async function processSingleItem (id, item) {
   });
   if (!parsed) {
     console.error (`--> Bad input after annotation for ${id}. Skipping.`);
-    console.error({item, originalParsed, annotationItem});
+    console.error({item, originalParsed});
     return null;
   }
   
@@ -127,7 +127,7 @@ async function processSingleItem (id, item) {
     return { buffer, objectFile };
   } catch (e) {
     console.error (`--> Failed to generate image for ${id}: Skipping.`);
-    console.error({item, parsed, annotationItem});
+    console.error({item, parsed});
     console.error(e);
     return { failed: true };
   }
