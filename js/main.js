@@ -110,6 +110,8 @@ async function processSingleItem (id, item) {
       console.error (`--> Bad input after annotation for ${id}. Skipping.`);
       return null;
     } // if not parsed after annotation
+  } else {
+    return null;
   } // if annotationItem
   
   try {
