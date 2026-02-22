@@ -6,14 +6,29 @@ import { createCanvas, loadImage } from "canvas";
 import { PQ } from './pq.js';
 import * as AIS from './ais.js';
 
-const IDENTIFIERS_URL = 'https://suikawiki.github.io/swcf/current/swir/list.json';
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const isLive = process.env.LIVE;
 
+// Configuration for the batch process
+const BatchConfig = {
+  identifiersUrl: 'https://suikawiki.github.io/swcf/current/swir/list.json',
+  timeoutMs: 10 * 60 * 1000, // 10 minutes
+  progressIntervalMs: 15 * 1000, // 15 seconds
+  errorThreshold: 10,
+  // 1 GiB for live, 100 MiB for dev
+  sizeLimitBytes: isLive ? 1 * 1024 * 1024 * 1024 : 100 * 1024 * 1024,
+  // Rate limiting (429) handling
+  consecutive429Threshold: 5,
+  sleepMsOn429: 1500, // 1.5 seconds
+};
+
+// Original configuration for AIS library - left untouched as requested
 let Config = {
   image_proxy_url_prefix: "",
   sw_storage_url_prefix: 'https://wiki.suikawiki.org/n/',
 };
-let dataSource = new AIS.ImageDataSource (Config);
-let annotationStorage = new AIS.ClassicAnnotationStorage (Config);
+let dataSource = new AIS.ImageDataSource(Config);
+let annotationStorage = new AIS.ClassicAnnotationStorage(Config);
 
 
 PQ.env.createCanvas = createCanvas;
@@ -35,9 +50,6 @@ const indexesDir = path.join (__dirname, 'local', 'indexes');
 const objectsDir = path.join (__dirname, 'local', 'objects');
 const missingFile = path.join (indexesDir, 'missing.txt');
 
-const isLive = process.env.LIVE;
-const sizeLimit = isLive ? 1 * 1024 * 1024 * 1024 : 100 * 1024 * 1024;
-
 function getObjectPath (id) {
   const epRegex = /^:ep-(x[A-Za-z0-9]+-[A-Za-z0-9_-]+)-([0-9a-f]+)$/;
   const match = id.match (epRegex);
@@ -54,8 +66,8 @@ function getObjectPath (id) {
 } // getObjectPath
 
 async function fetchIdentifierItems () {
-  console.error (`--> Fetching identifiers from ${IDENTIFIERS_URL}...`);
-  const response = await fetch (IDENTIFIERS_URL);
+  console.error (`--> Fetching identifiers from ${BatchConfig.identifiersUrl}...`);
+  const response = await fetch (BatchConfig.identifiersUrl);
   if (!response.ok) {
     throw new Error (`Failed to fetch identifiers: ${response.statusText}`);
   }
@@ -107,7 +119,19 @@ async function processSingleItem (id, item) {
     return null;
   } // if not parsed
 
-  const json = await annotationStorage.getAnnotationData ({ imageSource: parsed.imageSource });
+  let json;
+  try {
+    json = await annotationStorage.getAnnotationData ({ imageSource: parsed.imageSource });
+  } catch (e) {
+    if (e.status === 429) {
+      console.warn(`--> Rate limited (429) while fetching annotation for ${id}.`);
+      return { rateLimited: true };
+    }
+    console.error (`--> Error fetching annotation data for ${id}: Skipping.`);
+    console.error({item, parsed, e});
+    return { failed: true };
+  }
+
   const annotationItem = json?.items?.find (_ => _.regionKey === parsed.imageRegion.regionKey);
 
   if (!annotationItem) {
@@ -143,8 +167,6 @@ async function processSingleItem (id, item) {
 async function processMirrorSet (mirrorSet) {
   console.error (`--> Processing mirror set ${mirrorSet}...`);
   const startTime = Date.now();
-  const timeout = 10 * 60 * 1000; // 10 minutes
-  const progressInterval = 15 * 1000; // 15 seconds
 
   const existingObjects = new Set ();
   console.error ('--> Reading all existing index files to build a comprehensive list of objects...');
@@ -186,14 +208,14 @@ async function processMirrorSet (mirrorSet) {
 
   let newItemsAdded = false;
   let consecutiveErrors = 0;
-  const errorThreshold = 10;
+  let consecutive429Errors = 0;
   let processedCount = 0;
   let lastProgressTime = Date.now();
 
   for (const [id, item] of Object.entries (incomingItems)) {
     processedCount++;
-    if (Date.now() - startTime > timeout) {
-      console.error('--> Time limit of 10 minutes exceeded. Stopping current batch.');
+    if (Date.now() - startTime > BatchConfig.timeoutMs) {
+      console.error(`--> Time limit of ${BatchConfig.timeoutMs / 1000 / 60} minutes exceeded. Stopping current batch.`);
       break;
     }
 
@@ -202,7 +224,21 @@ async function processMirrorSet (mirrorSet) {
     } // if existing
 
     const result = await processSingleItem (id, item);
-    if (!result) {
+
+    if (result?.rateLimited) {
+      consecutiveErrors = 0; // Reset general error counter
+      consecutive429Errors++;
+      if (consecutive429Errors >= BatchConfig.consecutive429Threshold) {
+        console.warn(`--> Aborting due to ${consecutive429Errors} consecutive 429 errors. This is considered a normal stop.`);
+        break; // Stop the batch normally
+      }
+      console.warn(`--> Sleeping for ${BatchConfig.sleepMsOn429}ms due to 429 error...`);
+      await sleep(BatchConfig.sleepMsOn429);
+      continue; // Ignore item and move to the next
+    }
+    consecutive429Errors = 0; // Reset 429 counter on any other result
+
+    if (!result) { // Null result, item skipped intentionally
       consecutiveErrors = 0;
       continue;
     }
@@ -210,7 +246,7 @@ async function processMirrorSet (mirrorSet) {
     if (result.failed) {
       missingIdentifiers.add(id);
       consecutiveErrors++;
-      if (consecutiveErrors >= errorThreshold) {
+      if (consecutiveErrors >= BatchConfig.errorThreshold) {
           console.error(`--> Aborting after ${consecutiveErrors} consecutive errors.`);
           fs.writeFileSync(missingFile, Array.from(missingIdentifiers).join('\n'), 'utf8');
           throw new Error(`Aborting due to ${consecutiveErrors} consecutive processing errors.`);
@@ -218,7 +254,7 @@ async function processMirrorSet (mirrorSet) {
       continue;
     }
     
-    consecutiveErrors = 0;
+    consecutiveErrors = 0; // Reset general error counter on success
 
     fs.mkdirSync (path.dirname (result.objectFile), { recursive: true });
     fs.writeFileSync (result.objectFile, result.buffer);
@@ -229,7 +265,7 @@ async function processMirrorSet (mirrorSet) {
     newItemsAdded = true;
 
     const now = Date.now();
-    if (now - lastProgressTime > progressInterval) {
+    if (now - lastProgressTime > BatchConfig.progressIntervalMs) {
       const elapsedSeconds = Math.round((now - startTime) / 1000);
       console.error(`--> Progress: ${processedCount} items checked in ${elapsedSeconds} seconds.`);
       lastProgressTime = now;
@@ -246,8 +282,8 @@ async function processMirrorSet (mirrorSet) {
   const totalSize = getDirectorySize (objectsDir);
   console.error (`--> Total objects size: ${totalSize} bytes.`);
 
-  if (totalSize > sizeLimit) {
-    console.error (`--> Size limit (${sizeLimit} bytes) exceeded.`);
+  if (totalSize > BatchConfig.sizeLimitBytes) {
+    console.error (`--> Size limit (${BatchConfig.sizeLimitBytes} bytes) exceeded.`);
     const nextMirrorSet = parseInt (mirrorSet, 10) + 1;
     fs.writeFileSync (path.join (indexesDir, 'set.txt'), String (nextMirrorSet), 'utf8');
     console.error (`-> Set next mirror set to: ${nextMirrorSet}`);
