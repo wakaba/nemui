@@ -481,6 +481,7 @@ export class ClassicAnnotationStorage {
   async getAnnotationData ({imageSource}) {
     if (this.config.sw_storage_url_prefix) {
       let pageName = 'SWIR//' + imageSource.key + '//' + imageSource.transformKey;
+      console.log(this.config.sw_storage_url_prefix + encodeURIComponent (pageName) + '?format=text');
       let json = await fetch (this.config.sw_storage_url_prefix + encodeURIComponent (pageName) + '?format=text', {
         cache: 'reload',
       }).then (res => {
@@ -488,6 +489,7 @@ export class ClassicAnnotationStorage {
         if (res.status !== 200) throw res;
         return res.json ();
       });
+      console.log(json)
       if (json !== null) return json;
     }
 

@@ -116,7 +116,7 @@ async function processSingleItem (id, item) {
   });
   if (!parsed) {
     console.error (`--> Bad input after annotation for ${id}. Skipping.`);
-    console.error({item, originalParsed});
+    console.error({item, originalParsed, annotationItem});
     return null;
   }
   
@@ -127,7 +127,7 @@ async function processSingleItem (id, item) {
     return { buffer, objectFile };
   } catch (e) {
     console.error (`--> Failed to generate image for ${id}: Skipping.`);
-    console.error({item, parsed});
+    console.error({item, parsed, annotationItem});
     console.error(e);
     return { failed: true };
   }
