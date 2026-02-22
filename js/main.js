@@ -96,23 +96,29 @@ async function processSingleItem (id, item) {
   let parsed = dataSource.parseImageInput (item);
   if (!parsed) {
     console.error (`--> Bad image input for ${id}. Skipping.`);
+    console.error({item});
     return null;
   } // if not parsed
 
   const json = await annotationStorage.getAnnotationData ({ imageSource: parsed.imageSource });
   const annotationItem = json?.items?.find (_ => _.regionKey === parsed.imageRegion.key);
-  if (annotationItem) {
-    parsed = dataSource.parseImageInput ({
-      image_source: json.image,
-      image_region: { region_boundary: annotationItem.regionBoundary },
-    });
-    if (!parsed) {
-      console.error (`--> Bad input after annotation for ${id}. Skipping.`);
-      return null;
-    } // if not parsed after annotation
-  } else {
+
+  if (!annotationItem) {
+    console.error (`--> Annotation item not found for ${id}. Skipping.`);
+    console.error({item, parsed});
     return null;
-  } // if annotationItem
+  }
+
+  const originalParsed = parsed;
+  parsed = dataSource.parseImageInput ({
+    image_source: json.image,
+    image_region: { region_boundary: annotationItem.regionBoundary },
+  });
+  if (!parsed) {
+    console.error (`--> Bad input after annotation for ${id}. Skipping.`);
+    console.error({item, originalParsed});
+    return null;
+  }
   
   try {
     const image = await dataSource.getClippedImageCanvas (parsed, { useCache: true });
@@ -121,6 +127,7 @@ async function processSingleItem (id, item) {
     return { buffer, objectFile };
   } catch (e) {
     console.error (`--> Failed to generate image for ${id}: Skipping.`);
+    console.error({item, parsed});
     console.error(e);
     return { failed: true };
   }
