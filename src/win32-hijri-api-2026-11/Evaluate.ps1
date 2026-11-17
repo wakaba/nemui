@@ -1,20 +1,19 @@
-# WinRT Calendar（Windows.Globalization.Calendar）によるイスラム暦評価器
+# WinRT Calendar (Windows.Globalization.Calendar) evaluator for the Hijri calendars.
 #
 # usage:
-#   .\Evaluate.ps1 -Mode probe                              … 対応範囲と識別子を出力
-#   .\Evaluate.ps1 -Mode golden                             … G 2026-11-17 → 1448-06-07 などを確認（0 終了で正常）
-#   .\Evaluate.ps1 -Mode g2h  -Variant hijri|uaq -OutFile F … G -> H 全域（G 1601-01-01..G 9999-12-31）
-#   .\Evaluate.ps1 -Mode h2g  -Variant hijri|uaq -OutFile F … H -> G 全域（H 0001-01-01..H 9666-04-03）
+#   .\Evaluate.ps1 -Mode probe                              ... print supported ranges and G(2026-11-17) for both calendars
+#   .\Evaluate.ps1 -Mode golden                             ... G 2026-11-17 -> 1448-06-07 / anchor H 1-01-01 -> G 622-07-18 (exit 0 on match)
+#   .\Evaluate.ps1 -Mode g2h  -Variant hijri|uaq -OutFile F  ... G -> H, full domain (G 1601-01-01..G 9999-12-31)
+#   .\Evaluate.ps1 -Mode h2g  -Variant hijri|uaq -OutFile F  ... H -> G, full domain (H 0001-01-01..H 9666-04-03)
 #
-# 対象（Windows.Globalization.CalendarIdentifiers）:
-#   hijri = Hijri     （イスラム暦）
-#   uaq   = UmAlQura  （ウム・アル＝クラー暦）
+# CalendarIdentifiers:
+#   hijri = Hijri     (Hijri calendar)
+#   uaq   = UmAlQura  (Umm al-Qura calendar)
 #
-# 出力行: g2h: "<g>,<m>,<d>\t<h>,<m>,<d>"   h2g: "<h>,<m>,<d>\t<g>,<m>,<d>"
-#   API が例外を投げた行は `<tuple>\t!<例外クラス名>`
+# Output lines: g2h: "<g>,<m>,<d>\t<h>,<m>,<d>"   h2g: "<h>,<m>,<d>\t<g>,<m>,<d>"
+#   Lines where the API throws an exception are printed as "<tuple>\t!<exception-type-name>"
 #
-# このスクリプトは Windows PowerShell 5.1（WinRT 直インターフェースあり）でのみ動く。
-# pwsh（PowerShell 7）では WinRT プロジェクションが外れているため動作しない。
+# Requires Windows PowerShell 5.1 (WinRT interop built in). NOT compatible with pwsh (PowerShell 7).
 
 param(
   [Parameter(Mandatory=$true)][ValidateSet('probe','golden','g2h','h2g')][string]$Mode,
@@ -34,7 +33,7 @@ function Get-VariantId([string]$v) {
   switch ($v) {
     'hijri' { return 'Hijri' }
     'uaq'   { return 'UmAlQura' }
-    default { throw "Variant は hijri | uaq のみ: $v" }
+    default { throw "Variant must be hijri or uaq (got: $v)" }
   }
 }
 
@@ -66,8 +65,8 @@ if ($Mode -eq 'golden') {
   if ($ok1 -and $ok2) { exit 0 } else { exit 2 }
 }
 
-if ($Variant -eq '') { throw "-Variant hijri|uaq が必要です" }
-if ($OutFile -eq '') { throw "-OutFile が必要です" }
+if ($Variant -eq '') { throw '-Variant hijri|uaq is required' }
+if ($OutFile -eq '') { throw '-OutFile is required' }
 $id = Get-VariantId $Variant
 $cal = New-Cal $id
 

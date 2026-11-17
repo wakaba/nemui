@@ -1,18 +1,17 @@
 name: win32-hijri-api-eval
 
-# Windows の Win32 / WinRT イスラム暦 API を windows-latest runner で全域評価するワークフロー。
+# Evaluate the Windows Hijri calendar APIs on a windows-latest runner.
 #
-# 評価対象:
-#   (A) Kernel32 の deprecated 変換 API（P/Invoke で動的取得。ヘッダ・lib なし）
+# Targets:
+#   (A) Kernel32 deprecated conversion APIs via LoadLibrary/GetProcAddress (P/Invoke)
 #       ConvertSystemTimeToCalDateTime / ConvertCalDateTimeToSystemTime / GetCalendarSupportedDateRange
-#   (B) WinRT Windows.Globalization.Calendar（Windows PowerShell 5.1 経由）
+#   (B) WinRT Windows.Globalization.Calendar (Windows PowerShell 5.1 only; pwsh drops WinRT)
 #       CalendarIdentifiers.Hijri / CalendarIdentifiers.UmAlQura
 #
-# - ネットワークは actions/checkout と actions/upload-artifact のみ
-# - 月日・暦の情報は一切手で書かない（OS の API のみを使う）
-# - (A) golden が不一致の場合、fail-fast で job を止める（それ自体が発見）
-# - (B) WinRT フェーズは失敗しても artifacts まで進む（status.txt に結果を記録）
-
+# - Network: actions/checkout and actions/upload-artifact only
+# - No NLS names or calendar data are hardcoded; everything comes from the OS APIs
+# - (A) golden mismatch fails fast (that itself is a finding)
+# - (B) WinRT phase failures still produce the artifact (status.txt records the outcome)
 on:
   push:
 
@@ -28,7 +27,7 @@ jobs:
           fetch-depth: 1
 
       - name: Probe environment
-        shell: powershell
+        shell: pwsh
         run: |
           $PSVersionTable.PSVersion | Write-Output
           [System.Environment]::OSVersion.VersionString | Write-Output
@@ -60,13 +59,13 @@ jobs:
             $fx = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
             if (Test-Path $fx) { $csc = $fx; $mode = 'fx' }
           }
-          if (-not $csc) { Write-Error 'csc.exe が見つかりません'; exit 1 }
+          if (-not $csc) { Write-Error 'csc.exe not found (neither VS Roslyn nor Framework64 fallback)'; exit 1 }
           Write-Output ("csc.exe: " + $csc + " (mode=" + $mode + ")")
           "CSC=$csc" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
           "CSC_MODE=$mode" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: Probe Win32 APIs (availability + supported ranges)
-        shell: powershell
+        shell: pwsh
         run: |
           $outDir = 'outputs\win32-hijri-api-2026-11'
           New-Item -ItemType Directory -Force $outDir | Out-Null
@@ -78,24 +77,24 @@ jobs:
           & $outDir\Evaluate.exe probe
 
       - name: Golden test (deprecated conversion API, fail-fast)
-        shell: powershell
+        shell: pwsh
         run: |
           $outDir = 'outputs\win32-hijri-api-2026-11'
           & $outDir\Evaluate.exe golden
           if ($LASTEXITCODE -ne 0) {
-            Write-Error 'golden 不一致: Win32 の CAL_HIJRI が dotnet/runtime と異なります（これ自体が重要な発見）'
+            Write-Error 'golden mismatch: Win32 CAL_HIJRI differs from dotnet/runtime (this itself is a finding)'
             exit $LASTEXITCODE
           }
 
-      - name: Sweep (A) deprecated conversion API — 4 operations
-        shell: powershell
+      - name: Sweep (A) deprecated conversion API - 4 operations
+        shell: pwsh
         run: |
           $outDir = 'outputs\win32-hijri-api-2026-11'
           foreach ($cal in @('hijri','uaq')) {
             foreach ($op in @('g2h','h2g')) {
               Write-Host "[api] $op $cal"
               cmd /c "$outDir\Evaluate.exe $op $cal > $outDir\api-${cal}_${op}.tsv"
-              if ($LASTEXITCODE -ne 0) { Write-Error "失敗: $op $cal"; exit $LASTEXITCODE }
+              if ($LASTEXITCODE -ne 0) { Write-Error "sweep failed: $op $cal"; exit $LASTEXITCODE }
             }
           }
 
@@ -110,11 +109,11 @@ jobs:
           if ($c1 -eq 0 -and $c2 -eq 0) {
             'WINRT_STATUS=ok' | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
           } else {
-            Write-Warning "WinRT 評価に失敗 (probe=$c1 golden=$c2)"
+            Write-Warning "WinRT evaluation failed (probe=$c1 golden=$c2)"
             'WINRT_STATUS=failed' | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
           }
 
-      - name: Sweep (B) WinRT Calendar — 4 operations (best-effort)
+      - name: Sweep (B) WinRT Calendar - 4 operations (best-effort)
         if: env.WINRT_STATUS == 'ok'
         shell: powershell
         run: |
@@ -123,12 +122,12 @@ jobs:
             foreach ($op in @('g2h','h2g')) {
               Write-Host "[winrt] $op $cal"
               & powershell.exe -NoProfile -File src\win32-hijri-api-2026-11\Evaluate.ps1 -Mode $op -Variant $cal -OutFile "$outDir\winrt-${cal}_${op}.tsv"
-              if ($LASTEXITCODE -ne 0) { Write-Warning "winrt $op $cal 失敗（継続）" }
+              if ($LASTEXITCODE -ne 0) { Write-Warning "winrt $op $cal failed (continuing)" }
             }
           }
 
       - name: Finalize (status, LF normalize, gzip)
-        shell: powershell
+        shell: pwsh
         run: |
           $outDir = 'outputs\win32-hijri-api-2026-11'
           @(
@@ -155,7 +154,7 @@ jobs:
           Remove-Item $outDir\Evaluate.exe
 
       - name: Write probe.json + checksums.txt
-        shell: powershell
+        shell: pwsh
         run: |
           $outDir = 'outputs\win32-hijri-api-2026-11'
           $fw = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Release

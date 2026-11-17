@@ -1,24 +1,24 @@
-// win32-hijri-api-2026-11 評価器（Kernel32 の deprecated 変換 API）
+// win32-hijri-api-2026-11 evaluator (Kernel32 deprecated conversion APIs)
 //
-// 使い方（image は windows-latest。このファイルはツールであって評価対象ではない）:
-//   Evaluate.exe probe              … 関数の存在確認 + 対応年月日範囲（GetCalendarSupportedDateRange）
-//   Evaluate.exe golden             … G 2026-11-17 -> H 1448-06-07 / H 1-01-01 -> G 622-07-18（hijri のみ・0終了で正常）
-//   Evaluate.exe g2h <hijri|uaq>    … G -> H 全域（G 1601-01-01..G 9999-12-31）を変換
-//   Evaluate.exe h2g <hijri|uaq>    … H -> G 全域（H 0001-01-01..H 9666-04-03、日 grid 1..32）
+// usage (image is windows-latest; this file is the evaluation tool, NOT the target):
+//   Evaluate.exe probe              ... function availability + supported range (GetCalendarSupportedDateRange)
+//   Evaluate.exe golden             ... G 2026-11-17 -> H 1448-06-07 / anchor H 1-01-01 -> G 622-07-18 (hijri only)
+//   Evaluate.exe g2h <hijri|uaq>    ... G -> H full domain (G 1601-01-01..G 9999-12-31)
+//   Evaluate.exe h2g <hijri|uaq>    ... H -> G full domain (H 0001-01-01..H 9666-04-03, day grid 1..32)
 //
-// 対象 calendar ID（Microsoft `Calendar Identifiers` ドキュメント）:
-//   hijri = 6  （CAL_HIJRI  「Arabic Lunar」）
-//   uaq   = 23 （CAL_UMALQURA 「Um Al Qura」。Windows Vista 以降）
+// Calendar IDs (see MS docs "Calendar Identifiers"):
+//   hijri = 6  (CAL_HIJRI, "Arabic Lunar")
+//   uaq   = 23 (CAL_UMALQURA, Um Al Qura, Vista+)
 //
-// API 構成（ドキュメント「API-MS-Win-Core-calendar-l1-1-0.dll」「Kernel32.dll」「kernel32legacy.dll」）:
+// API set (documented in "API-MS-Win-Core-calendar-l1-1-0.dll" / "Kernel32.dll" / "kernel32legacy.dll"):
 //   ConvertSystemTimeToCalDateTime / ConvertCalDateTimeToSystemTime / GetCalendarSupportedDateRange
-//   いずれも deprecated でヘッダ・lib が無いため、LoadLibrary + GetProcAddress で動的取得する。
+//   All are deprecated and lack headers/libs, so we resolve them dynamically with LoadLibrary + GetProcAddress.
 //
-// 出力:
+// output:
 //   g2h: <g>,<m>,<d>\t<h>,<m>,<d>
-//   h2g: <h>,<m>,<d>\t<g>,<m>,<d>（API が失敗した入力は `<h-tuple>\t!<GetLastError の数値>`）
+//   h2g: <h>,<m>,<d>\t<g>,<m>,<d>  (failing inputs are printed as "<h-tuple>\t!<absolute-error>")
 //
-// 本プログラムは Win32 API のみを使い、公開プロパティ等の OS 設定には依存しない。
+// This program uses only Win32 APIs and never depends on OS settings.
 
 
 using System;
@@ -52,7 +52,7 @@ internal struct CALDATETIME
 
 internal class Program
 {
-    // Win32 の CALLBACK 規約（x86 で必要、x64 では統一されているが明示）
+    // Win32 CALLBACK convention (required on x86, explicit on x64)
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     private delegate bool ConvertSystemTimeToCalDateTimeDelegate(ref SYSTEMTIME lpSysTime, uint calId, out CALDATETIME lpCalDateTime);
 
@@ -83,7 +83,7 @@ internal class Program
     {
         if (_probed) return;
         var lib = LoadLibrary("kernel32.dll");
-        if (lib == IntPtr.Zero) // 念のため legacy に落とす（ドキュメントの別 DLL）
+        if (lib == IntPtr.Zero) // fall back to the legacy DLL documented alongside the primary one
         {
             lib = LoadLibrary("kernel32legacy.dll");
         }
@@ -136,7 +136,7 @@ internal class Program
             case "hijri": return CAL_HIJRI;
             case "uaq": return CAL_UMALQURA;
             default:
-                throw new ArgumentException("calendar は hijri | uaq のみ");
+                throw new ArgumentException("calendar must be hijri or uaq");
         }
     }
 
@@ -155,7 +155,7 @@ internal class Program
         if (mode == "golden")
         {
             Probe();
-            if (_cvtGCal == null) { Console.WriteLine("probe で委譲取得失敗"); return 3; }
+            if (_cvtGCal == null) { Console.WriteLine("probe: failed to resolve delegates"); return 3; }
             var g = new SYSTEMTIME { Year = 2026, Month = 11, Day = 17 };
             CALDATETIME c;
             if (!ConvertGToCal(ref g, CAL_HIJRI, out c)) { Console.WriteLine("golden: CONVERT FAILED"); return 2; }
