@@ -34,6 +34,21 @@ jobs:
           Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsBuildNumber | Format-List | Out-String | Write-Output
           $fw = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Release
           Write-Output (".NET Framework RELEASE: " + $fw)
+          $mc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll"
+          if (Test-Path $mc) {
+            $fi = Get-Item $mc
+            $fi | Format-List FullName, Length, LastWriteTime | Out-String | Write-Output
+            (Get-FileHash $mc -Algorithm SHA256).Hash | Write-Output
+            Write-Output ("mscorlib FileVersion: " + $fi.VersionInfo.FileVersion + " ProductVersion: " + $fi.VersionInfo.ProductVersion)
+          }
+          $kern = "$env:WINDIR\System32\kernel32.dll"
+          $kfi = Get-Item $kern
+          $kfi | Format-List FullName, Length, LastWriteTime | Out-String | Write-Output
+          (Get-FileHash $kern -Algorithm SHA256).Hash | Write-Output
+          Write-Output ("kernel32 FileVersion: " + $kfi.VersionInfo.FileVersion + " ProductVersion: " + $kfi.VersionInfo.ProductVersion)
+          Write-Output ("is64BitOS: " + [Environment]::Is64BitOperatingSystem + " Is64BitProcess: " + [Environment]::Is64BitProcess)
+          Write-Output ("CurrentCulture: " + [Globalization.CultureInfo]::CurrentCulture.Name)
+          Write-Output ("PSVersion: " + $PSVersionTable.PSVersion)
           $csc = $null
           $mode = 'fx'
           $vsMatches = Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\*\*\MSBuild\Current\Bin\Roslyn\csc.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -46,7 +61,7 @@ jobs:
           }
           if (-not $csc) { Write-Error 'csc.exe が見つかりません（VS Roslyn も Framework64 も無し）'; exit 1 }
           Write-Output ("csc.exe: " + $csc + " (mode=" + $mode + ")")
-          if ($mode -eq 'vs') { & $csc /? 2>&1 | Select-Object -First 2 | Write-Output }
+          if ($mode -eq 'vs') { & $csc /version | Write-Output } else { & $csc 2>&1 | Select-Object -First 2 | Write-Output }
           "CSC=$csc" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
           "CSC_MODE=$mode" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
 
@@ -110,6 +125,15 @@ jobs:
             os_windows      = (Get-ComputerInfo).WindowsProductName
             os_build        = [System.Environment]::OSVersion.Version.Build
             dotnet_framework_release = [int]$fw
+            mscorlib_sha256 = (Get-FileHash "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll" -Algorithm SHA256).Hash.ToLower()
+            mscorlib_fileversion = (Get-Item "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll").VersionInfo.FileVersion
+            mscorlib_length = (Get-Item "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll").Length
+            kernel32_sha256 = (Get-FileHash "$env:WINDIR\System32\kernel32.dll" -Algorithm SHA256).Hash.ToLower()
+            kernel32_fileversion = (Get-Item "$env:WINDIR\System32\kernel32.dll").VersionInfo.FileVersion
+            mscorlib_full_name = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll"
+            is64BitOS      = [Environment]::Is64BitOperatingSystem
+            is64BitProcess = [Environment]::Is64BitProcess
+            currentCulture = [Globalization.CultureInfo]::CurrentCulture.Name
             csc             = $env:CSC
             csc_mode        = $env:CSC_MODE
             variants        = @('adj2n','adj1n','adj0','adj1p','adj2p')
