@@ -77,9 +77,9 @@ if ($Mode -eq 'g2h') {
   while ($g -le $end) {
     try {
       $cal.SetDateTime($g)
-      $lines.Add("{0},{1},{2}`t{3},{4},{5}" -f $g.Year, $g.Month, $g.Day, $cal.Year, $cal.Month, $cal.Day)
+      $lines.Add("$($g.Year),$($g.Month),$($g.Day)`t$($cal.Year),$($cal.Month),$($cal.Day)")
     } catch {
-      $lines.Add("{0},{1},{2}`t!{3}" -f $g.Year, $g.Month, $g.Day, $_.Exception.GetType().Name)
+      $err = ($_.Exception.GetType().Name); $lines.Add("$($g.Year),$($g.Month),$($g.Day)`t!$err")
     }
     $g = $g.AddDays(1)
   }
@@ -97,9 +97,9 @@ if ($Mode -eq 'h2g') {
           $cal.Month = [uint32]$m
           $cal.Day = [uint32]$d
           $dt = $cal.GetDateTime().DateTime
-          $lines.Add("{0},{1},{2}`t{3},{4},{5}" -f $y, $m, $d, $dt.Year, $dt.Month, $dt.Day)
+          $lines.Add("$y,$m,$d`t$($dt.Year),$($dt.Month),$($dt.Day)")
         } catch {
-          $lines.Add("{0},{1},{2}`t!{3}" -f $y, $m, $d, $_.Exception.GetType().Name)
+          $err = ($_.Exception.GetType().Name); $lines.Add("$y,$m,$d`t!$err")
         }
       }
     }
