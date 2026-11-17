@@ -125,13 +125,23 @@ jobs:
         shell: powershell
         run: |
           $outDir = 'outputs\win32-hijri-api-2026-11'
+          $summary = @()
           foreach ($cal in @('hijri','uaq')) {
             foreach ($op in @('g2h','h2g')) {
+              $soLog = "$outDir\winrt-${cal}_${op}.stdout.log"
+              $seLog = "$outDir\winrt-${cal}_${op}.stderr.log"
               Write-Host "[winrt] $op $cal"
-              & powershell.exe -NoProfile -File src\win32-hijri-api-2026-11\Evaluate.ps1 -Mode $op -Variant $cal -OutFile "$outDir\winrt-${cal}_${op}.tsv"
-              if ($LASTEXITCODE -ne 0) { Write-Warning "winrt $op $cal failed (continuing)" }
+              $p = Start-Process -FilePath powershell.exe `
+                -ArgumentList @('-NoProfile','-File','src\win32-hijri-api-2026-11\Evaluate.ps1','-Mode',$op,'-Variant',$cal,'-OutFile',"$outDir\winrt-${cal}_${op}.tsv") `
+                -Wait -PassThru -NoNewWindow `
+                -RedirectStandardOutput $soLog -RedirectStandardError $seLog
+              $ec = $p.ExitCode
+              $summary += ("{0} {1} exit={2}" -f $op, $cal, $ec)
+              Write-Host ("[winrt] {0} {1} exit={2}" -f $op, $cal, $ec)
+              if ($ec -ne 0) { Write-Warning ("winrt {0} {1} failed exit={2}" -f $op, $cal, $ec) }
             }
           }
+          $summary | Set-Content "$outDir\sweep-summary.txt" -Encoding ascii
 
       - name: Finalize (status, LF normalize, gzip)
         shell: pwsh

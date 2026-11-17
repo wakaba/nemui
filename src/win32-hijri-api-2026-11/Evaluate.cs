@@ -227,6 +227,7 @@ internal class Program
             var t0 = new SYSTEMTIME { Year = 1601, Month = 1, Day = 1 };
             var t1 = new SYSTEMTIME { Year = 9999, Month = 12, Day = 31 };
             var g = t0;
+            g.DayOfWeek = (ushort)(new DateTime(1601, 1, 1).DayOfWeek);
             while (true)
             {
                 CALDATETIME c;
@@ -241,6 +242,7 @@ internal class Program
                 if (g.Year == t1.Year && g.Month == t1.Month && g.Day == t1.Day) break;
                 var next = new DateTime(g.Year, g.Month, g.Day).AddDays(1);
                 g.Year = (ushort)next.Year; g.Month = (ushort)next.Month; g.Day = (ushort)next.Day;
+                g.DayOfWeek = (ushort)next.DayOfWeek;
             }
             return 0;
         }
@@ -257,15 +259,25 @@ internal class Program
                 {
                     for (var d = 1u; d <= 32u; d++)
                     {
-                        var h = new CALDATETIME { CalId = calId, Era = era, Year = y, Month = m, Day = d };
-                        SYSTEMTIME g;
-                        if (ConvertCalToG(ref h, out g))
+                        // CALDATETIME.DayOfWeek is validated strictly: the call only succeeds
+                        // when it equals the actual weekday of the (out) SYSTEMTIME. The weekday
+                        // is calendar-independent, but unknown before conversion, so try all 7.
+                        bool ok = false;
+                        uint lastErr = 0;
+                        SYSTEMTIME g = new SYSTEMTIME();
+                        for (uint dow = 0u; dow <= 6u && !ok; dow++)
+                        {
+                            var h = new CALDATETIME { CalId = calId, Era = era, Year = y, Month = m, Day = d, DayOfWeek = dow };
+                            if (ConvertCalToG(ref h, out g)) { ok = true; }
+                            else { lastErr = GetLastError(); }
+                        }
+                        if (ok)
                         {
                             Console.WriteLine("{0},{1},{2}\t{3},{4},{5}", y, m, d, g.Year, g.Month, g.Day);
                         }
                         else
                         {
-                            Console.WriteLine("{0},{1},{2}\t!{3}", y, m, d, GetLastError());
+                            Console.WriteLine("{0},{1},{2}\t!{3}", y, m, d, lastErr);
                         }
                     }
                 }

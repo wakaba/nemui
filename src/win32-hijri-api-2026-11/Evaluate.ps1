@@ -71,39 +71,73 @@ $id = Get-VariantId $Variant
 $cal = New-Cal $id
 
 if ($Mode -eq 'g2h') {
-  $lines = New-Object System.Collections.Generic.List[string]
+  # Stream results to disk so a mid-run failure still yields a (partial) file with a !FATAL trailer.
+  $fs = [System.IO.File]::Open($OutFile, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+  $sw = New-Object System.IO.StreamWriter($fs, (New-Object System.Text.UTF8Encoding($false)))
   $g = [datetime]::new(1601,1,1)
   $end = [datetime]::new(9999,12,31)
-  while ($g -le $end) {
-    try {
-      $cal.SetDateTime($g)
-      $lines.Add("$($g.Year),$($g.Month),$($g.Day)`t$($cal.Year),$($cal.Month),$($cal.Day)")
-    } catch {
-      $err = ($_.Exception.GetType().Name); $lines.Add("$($g.Year),$($g.Month),$($g.Day)`t!$err")
+  $i = 0
+  try {
+    while ($g -le $end) {
+      $err = $null
+      try {
+        $cal.SetDateTime($g)
+      } catch {
+        $err = ($_.Exception.GetType().Name)
+        try {
+          # Fallback: explicit Windows.Foundation.DateTime wrapper (some hosts refuse plain [datetime])
+          $wfdt = [Windows.Foundation.DateTime,Windows,ContentType=WindowsRuntime]::new($g.Ticks)
+          $cal.SetDateTime($wfdt)
+          $err = $null
+        } catch { }
+      }
+      if ($err -eq $null) {
+        $sw.WriteLine("$($g.Year),$($g.Month),$($g.Day)`t$($cal.Year),$($cal.Month),$($cal.Day)")
+      } else {
+        $sw.WriteLine("$($g.Year),$($g.Month),$($g.Day)`t!$err")
+      }
+      $g = $g.AddDays(1)
+      $i++
+      if ($i % 250000 -eq 0) { Write-Host "[g2h] wrote $i rows (now at $($g.Year)-$($g.Month)-$($g.Day))" }
     }
-    $g = $g.AddDays(1)
+    $sw.Close()
+    exit 0
+  } catch {
+    Write-Host "[g2h] FATAL: $($_.Exception.GetType().FullName): $($_.Exception.Message)"
+    $sw.WriteLine("!FATAL`t$($_.Exception.GetType().FullName): $($_.Exception.Message)")
+    $sw.Close()
+    exit 1
   }
-  [System.IO.File]::WriteAllText($OutFile, (($lines -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
-  exit 0
 }
 
 if ($Mode -eq 'h2g') {
-  $lines = New-Object System.Collections.Generic.List[string]
-  for ($y = 1; $y -le 9666; $y++) {
-    for ($m = 1; $m -le 12; $m++) {
-      for ($d = 1; $d -le 32; $d++) {
-        try {
-          $cal.Year = [uint32]$y
-          $cal.Month = [uint32]$m
-          $cal.Day = [uint32]$d
-          $dt = $cal.GetDateTime().DateTime
-          $lines.Add("$y,$m,$d`t$($dt.Year),$($dt.Month),$($dt.Day)")
-        } catch {
-          $err = ($_.Exception.GetType().Name); $lines.Add("$y,$m,$d`t!$err")
+  $fs = [System.IO.File]::Open($OutFile, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+  $sw = New-Object System.IO.StreamWriter($fs, (New-Object System.Text.UTF8Encoding($false)))
+  $i = 0
+  try {
+    for ($y = 1; $y -le 9666; $y++) {
+      for ($m = 1; $m -le 12; $m++) {
+        for ($d = 1; $d -le 32; $d++) {
+          try {
+            $cal.Year = [uint32]$y
+            $cal.Month = [uint32]$m
+            $cal.Day = [uint32]$d
+            $dt = $cal.GetDateTime().DateTime
+            $sw.WriteLine("$y,$m,$d`t$($dt.Year),$($dt.Month),$($dt.Day)")
+          } catch {
+            $err = ($_.Exception.GetType().Name); $sw.WriteLine("$y,$m,$d`t!$err")
+          }
+          $i++
         }
       }
+      if ($y % 500 -eq 0) { Write-Host "[h2g] wrote $i rows (H $y done)" }
     }
+    $sw.Close()
+    exit 0
+  } catch {
+    Write-Host "[h2g] FATAL: $($_.Exception.GetType().FullName): $($_.Exception.Message)"
+    $sw.WriteLine("!FATAL`t$($_.Exception.GetType().FullName): $($_.Exception.Message)")
+    $sw.Close()
+    exit 1
   }
-  [System.IO.File]::WriteAllText($OutFile, (($lines -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
-  exit 0
 }
