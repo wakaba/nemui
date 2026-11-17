@@ -2,7 +2,7 @@
 //
 // usage (image is windows-latest; this file is the evaluation tool, NOT the target):
 //   Evaluate.exe probe              ... function availability + supported range (GetCalendarSupportedDateRange)
-//   Evaluate.exe golden             ... G 2026-11-17 -> H 1448-06-07 / anchor H 1-01-01 -> G 622-07-18 (hijri only)
+//   Evaluate.exe golden             ... G 2026-11-17 -> H 1448-06-07 and H->G roundtrip (hijri only)
 //   Evaluate.exe g2h <hijri|uaq>    ... G -> H full domain (G 1601-01-01..G 9999-12-31)
 //   Evaluate.exe h2g <hijri|uaq>    ... H -> G full domain (H 0001-01-01..H 9666-04-03, day grid 1..32)
 //
@@ -160,10 +160,13 @@ internal class Program
             CALDATETIME c;
             if (!ConvertGToCal(ref g, CAL_HIJRI, out c)) { Console.WriteLine("golden: CONVERT FAILED"); return 2; }
             Console.WriteLine("golden: G(2026-11-17) -> hijri {0}-{1}-{2} (expect 1448-06-07)", c.Year, c.Month, c.Day);
-            var h = new CALDATETIME { CalId = CAL_HIJRI, Era = 1, Year = 1, Month = 1, Day = 1 };
-            if (!ConvertCalToG(ref h, out g)) { Console.WriteLine("golden anchor: CONVERT FAILED"); return 2; }
-            Console.WriteLine("golden anchor: hijri 1-01-01 -> G {0}-{1:00}-{2:00} (expect 622-07-18)", g.Year, g.Month, g.Day);
-            return (c.Year == 1448 && c.Month == 6 && c.Day == 7 && g.Year == 622 && g.Month == 7 && g.Day == 18) ? 0 : 2;
+            // Roundtrip anchor: H 1448-06-07 must map back to G 2026-11-17.
+            // (Note: H 1-01-01 = G 622-07-18 is below this API's documented floor of 1601-01-01,
+            //  so it is out of the supported range by design.)
+            var h = new CALDATETIME { CalId = CAL_HIJRI, Era = 1, Year = c.Year, Month = c.Month, Day = c.Day };
+            if (!ConvertCalToG(ref h, out g)) { Console.WriteLine("golden anchor: CONVERT FAILED (H2G roundtrip)"); return 2; }
+            Console.WriteLine("golden anchor: hijri {0}-{1}-{2} -> G {3}-{4:00}-{5:00} (expect 2026-11-17)", c.Year, c.Month, c.Day, g.Year, g.Month, g.Day);
+            return (c.Year == 1448 && c.Month == 6 && c.Day == 7 && g.Year == 2026 && g.Month == 11 && g.Day == 17) ? 0 : 2;
         }
 
         if (mode == "g2h" && args.Length == 2)
