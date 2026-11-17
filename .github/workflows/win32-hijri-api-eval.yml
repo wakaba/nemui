@@ -86,6 +86,13 @@ jobs:
             exit $LASTEXITCODE
           }
 
+      - name: Diagnostic dump (report-only)
+        shell: pwsh
+        run: |
+          $outDir = 'outputs\win32-hijri-api-2026-11'
+          & $outDir\Evaluate.exe diag
+          Write-Output "diag finished (exit=$LASTEXITCODE)"
+
       - name: Sweep (A) deprecated conversion API - 4 operations
         shell: pwsh
         run: |

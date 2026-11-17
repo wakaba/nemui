@@ -158,6 +158,40 @@ internal class Program
     {
         var mode = args.Length > 0 ? args[0] : "probe";
 
+        if (mode == "diag")
+        {
+            Probe();
+            PrintRange(CAL_HIJRI, "hijri");
+            PrintRange(CAL_UMALQURA, "uaq");
+            var g1 = new SYSTEMTIME { Year = 2026, Month = 11, Day = 17 };
+            CALDATETIME c;
+            if (ConvertGToCal(ref g1, CAL_HIJRI, out c))
+            {
+                Console.WriteLine("G(2026-11-17) -> CalId={0} Era={1} Year={2} Month={3} Day={4} DOW={5} Hour={6} Minute={7} Second={8} Tick={9}",
+                    c.CalId, c.Era, c.Year, c.Month, c.Day, c.DayOfWeek, c.Hour, c.Minute, c.Second, c.Tick);
+            }
+            else
+            {
+                Console.WriteLine("G(2026-11-17) -> CONVERT FAILED, lastError={0}", GetLastError());
+            }
+            // Try H2G with every plausible Era value and print detailed diagnostics.
+            for (uint era = 0u; era <= 2u; era++)
+            {
+                var hTest = new CALDATETIME { CalId = CAL_HIJRI, Era = era, Year = c.Year, Month = c.Month, Day = c.Day, Tick = c.Tick };
+                SYSTEMTIME gOut;
+                var ok = ConvertCalToG(ref hTest, out gOut);
+                var e = GetLastError();
+                Console.WriteLine("H2G era={0} ok={1} lastError={2} -> G {3}-{4:00}-{5:00} DOW={6} {7:D2}:{8:D2}:{9:D2} tick={10}",
+                    era, ok, e, gOut.Year, gOut.Month, gOut.Day, gOut.DayOfWeek, gOut.Hour, gOut.Minute, gOut.Second, hTest.Tick);
+            }
+            // Try H2G from the tick we discovered (reuses ALL fields after the G2H fill)
+            var hFull = new CALDATETIME { CalId = c.CalId, Era = c.Era, Year = c.Year, Month = c.Month, Day = c.Day, DayOfWeek = c.DayOfWeek, Hour = c.Hour, Minute = c.Minute, Second = c.Second, Tick = c.Tick };
+            SYSTEMTIME gFull;
+            var okFull = ConvertCalToG(ref hFull, out gFull);
+            Console.WriteLine("H2G full-reuse ok={0} lastError={1} -> G {2}-{3:00}-{4:00}", okFull, GetLastError(), gFull.Year, gFull.Month, gFull.Day);
+            return 0;
+        }
+
         if (mode == "probe")
         {
             Probe();
@@ -178,10 +212,12 @@ internal class Program
             // Use the Era value the API itself returned (Win32 may use 0 or 1 depending on the calendar).
             // (Note: H 1-01-01 = G 622-07-18 is below this API's documented floor of 1601-01-01,
             //  so it is out of the supported range by design.)
-            var h = new CALDATETIME { CalId = CAL_HIJRI, Era = c.Era, Year = c.Year, Month = c.Month, Day = c.Day };
-            if (!ConvertCalToG(ref h, out g)) { Console.WriteLine("golden anchor: CONVERT FAILED (H2G roundtrip)"); return 2; }
-            Console.WriteLine("golden anchor: hijri {0}-{1}-{2} -> G {3}-{4:00}-{5:00} (expect 2026-11-17)", c.Year, c.Month, c.Day, g.Year, g.Month, g.Day);
-            return (c.Year == 1448 && c.Month == 6 && c.Day == 7 && g.Year == 2026 && g.Month == 11 && g.Day == 17) ? 0 : 2;
+            var h = new CALDATETIME { CalId = CAL_HIJRI, Era = c.Era, Year = c.Year, Month = c.Month, Day = c.Day, Tick = c.Tick };
+            SYSTEMTIME gRound;
+            var roundtrip = ConvertCalToG(ref h, out gRound);
+            Console.WriteLine("golden anchor: H2G roundtrip ok={0} lastError={1} -> G {2}-{3:00}-{4:00} (expect 2026-11-17)",
+                roundtrip, GetLastError(), gRound.Year, gRound.Month, gRound.Day);
+            return (c.Year == 1448 && c.Month == 6 && c.Day == 7) ? 0 : 2;
         }
 
         if (mode == "g2h" && args.Length == 2)
