@@ -1,0 +1,131 @@
+name: referencesource-eval
+
+# .NET Framework 4.8 の HijriCalendar（referencesource が対応する出荷バイナリ）を
+# windows-latest runner で全域評価する専用ワークフロー。
+#
+# - ネットワークは actions/checkout と actions/upload-artifact のみ（評価自体は --network none 相当、
+#   依存パッケージは不要・NuGet にも触れない）
+# - リポジトリのルートにこのディレクトリをそのまま置いて push すれば動く
+#
+# 出力 artifact: `referencesource-windows-4.8-outputs`
+#   outputs/referencesource-windows-4.8/*.tsv.gz  … 生データ（g2h/h2g × adj2n..adj2p、LF、gzip 圧縮）
+#   probe.json                                    … runner の OS / .NET Framework 版 / csc 情報
+#   checksums.txt                                 … 各ファイルの SHA-256
+
+on:
+  workflow_dispatch:
+
+jobs:
+  evaluate:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Probe environment
+        id: probe
+        shell: pwsh
+        run: |
+          [System.Environment]::OSVersion.VersionString | Write-Output
+          Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsBuildNumber | Format-List | Out-String | Write-Output
+          $fw = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Release
+          Write-Output (".NET Framework RELEASE: " + $fw)
+          $cscCandidates = @(
+            "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe",
+            "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\Roslyn\csc.exe",
+            "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\Roslyn\csc.exe",
+            "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          )
+          $csc = $cscCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $csc) {
+            $found = Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\MSBuild\Current\Bin\Roslyn\csc.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($found) { $csc = $found.FullName }
+          }
+          if (-not $csc) { Write-Error 'csc.exe が見つかりません'; exit 1 }
+          Write-Output ("csc.exe: " + $csc)
+          "CSC=$csc" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
+          & $csc /version
+
+      - name: Golden test (fail fast)
+        shell: pwsh
+        run: |
+          $outDir = 'outputs\referencesource-windows-4.8'
+          New-Item -ItemType Directory -Force $outDir | Out-Null
+          $csc = $env:CSC
+          & $csc /nologo /langversion:latest /out:$outDir\Evaluate.exe src\referencesource-windows-4.8\Evaluate.cs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $outDir\Evaluate.exe golden
+          if ($LASTEXITCODE -ne 0) { Write-Error 'golden 不一致: .NET Framework 側の挙動が dotnet/runtime と異なります（これ自体が重要な発見）'; exit $LASTEXITCODE }
+
+      - name: Run evaluator (5 HijriAdjustment variants x 2 directions, full domain)
+        shell: pwsh
+        run: |
+          $outDir = 'outputs\referencesource-windows-4.8'
+          foreach ($variant in @('adj2n','adj1n','adj0','adj1p','adj2p')) {
+            foreach ($mode in @('g2h','h2g')) {
+              Write-Host "[run] $mode $variant"
+              cmd /c "$outDir\Evaluate.exe $mode $variant > $outDir\${variant}_${mode}.tsv"
+              if ($LASTEXITCODE -ne 0) { Write-Error "失敗: $mode $variant"; exit $LASTEXITCODE }
+            }
+          }
+          Remove-Item $outDir\Evaluate.exe
+
+      - name: Normalize line endings to LF + gzip
+        shell: pwsh
+        run: |
+          $outDir = 'outputs\referencesource-windows-4.8'
+          Add-Type -AssemblyName System.IO.Compression
+          Get-ChildItem $outDir -Filter '*.tsv' | ForEach-Object {
+            $text = [System.IO.File]::ReadAllText($_.FullName)
+            $text = $text -replace "`r`n", "`n"
+            [System.IO.File]::WriteAllText($_.FullName, $text, (New-Object System.Text.UTF8Encoding($false)))
+            $input = [System.IO.File]::OpenRead($_.FullName)
+            try {
+              $output = [System.IO.File]::Create($_.FullName + '.gz')
+              try {
+                $gz = [System.IO.Compression.GzipStream]::new($output, [System.IO.Compression.CompressionMode]::Compress)
+                try { $input.CopyTo($gz) } finally { $gz.Dispose() }
+              } finally { $output.Dispose() }
+            } finally { $input.Dispose() }
+            Remove-Item $_.FullName
+          }
+
+      - name: Write probe.json + checksums.txt
+        shell: pwsh
+        run: |
+          $outDir = 'outputs\referencesource-windows-4.8'
+          $fw = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Release
+          $probe = [ordered]@{
+            evaluated_at    = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+            runner          = $env:RUNNER_NAME
+            os              = [System.Environment]::OSVersion.VersionString
+            os_windows      = (Get-ComputerInfo).WindowsProductName
+            os_build        = [System.Environment]::OSVersion.Version.Build
+            dotnet_framework_release = [int]$fw
+            csc             = $env:CSC
+            csc_version     = (& $env:CSC /version)
+            variants        = @('adj2n','adj1n','adj0','adj1p','adj2p')
+            directions      = @('g2h','h2g')
+            target_runtime  = '.NET Framework (mscorlib.dll, referencesource lineage)'
+          }
+          $probe | ConvertTo-Json | Set-Content "$outDir\probe.json" -Encoding ascii
+          $lines = @()
+          Get-ChildItem $outDir -File | ForEach-Object {
+            $h = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            $lines += "$h  $($_.Name)"
+          }
+          $lines | Set-Content "$outDir\checksums.txt" -Encoding ascii
+          Write-Output '---- checksums ----'
+          $lines | Write-Output
+
+      - name: Upload outputs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: referencesource-windows-4.8-outputs
+          path: outputs/referencesource-windows-4.8/
+          retention-days: 90
+          if-no-files-found: error
