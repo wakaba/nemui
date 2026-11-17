@@ -34,21 +34,21 @@ jobs:
           Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsBuildNumber | Format-List | Out-String | Write-Output
           $fw = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Release
           Write-Output (".NET Framework RELEASE: " + $fw)
-          $cscCandidates = @(
-            "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe",
-            "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\Roslyn\csc.exe",
-            "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\Roslyn\csc.exe",
-            "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-          )
-          $csc = $cscCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $csc) {
-            $found = Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\MSBuild\Current\Bin\Roslyn\csc.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($found) { $csc = $found.FullName }
+          $csc = $null
+          $mode = 'fx'
+          $vsMatches = Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\*\*\MSBuild\Current\Bin\Roslyn\csc.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($vsMatches) {
+            $csc = $vsMatches.FullName
+            $mode = 'vs'
+          } else {
+            $fx = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+            if (Test-Path $fx) { $csc = $fx; $mode = 'fx' }
           }
-          if (-not $csc) { Write-Error 'csc.exe が見つかりません'; exit 1 }
-          Write-Output ("csc.exe: " + $csc)
+          if (-not $csc) { Write-Error 'csc.exe が見つかりません（VS Roslyn も Framework64 も無し）'; exit 1 }
+          Write-Output ("csc.exe: " + $csc + " (mode=" + $mode + ")")
+          if ($mode -eq 'vs') { & $csc /? 2>&1 | Select-Object -First 2 | Write-Output }
           "CSC=$csc" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          & $csc /version
+          "CSC_MODE=$mode" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: Golden test (fail fast)
         shell: pwsh
@@ -56,7 +56,11 @@ jobs:
           $outDir = 'outputs\referencesource-windows-4.8'
           New-Item -ItemType Directory -Force $outDir | Out-Null
           $csc = $env:CSC
-          & $csc /nologo /langversion:latest /out:$outDir\Evaluate.exe src\referencesource-windows-4.8\Evaluate.cs
+          $cscArgs = @('/nologo', "/out:$outDir\Evaluate.exe", 'src\referencesource-windows-4.8\Evaluate.cs')
+          if ($env:CSC_MODE -eq 'vs') {
+            $cscArgs = @('/nologo', '/langversion:latest', "/out:$outDir\Evaluate.exe", 'src\referencesource-windows-4.8\Evaluate.cs')
+          }
+          & $csc @cscArgs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & $outDir\Evaluate.exe golden
           if ($LASTEXITCODE -ne 0) { Write-Error 'golden 不一致: .NET Framework 側の挙動が dotnet/runtime と異なります（これ自体が重要な発見）'; exit $LASTEXITCODE }
@@ -107,7 +111,7 @@ jobs:
             os_build        = [System.Environment]::OSVersion.Version.Build
             dotnet_framework_release = [int]$fw
             csc             = $env:CSC
-            csc_version     = (& $env:CSC /version)
+            csc_mode        = $env:CSC_MODE
             variants        = @('adj2n','adj1n','adj0','adj1p','adj2p')
             directions      = @('g2h','h2g')
             target_runtime  = '.NET Framework (mscorlib.dll, referencesource lineage)'
