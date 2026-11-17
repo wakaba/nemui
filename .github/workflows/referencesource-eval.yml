@@ -1,16 +1,17 @@
-name: referencesource-eval
+name: win32-hijri-api-eval
 
-# .NET Framework 4.8 の HijriCalendar（referencesource が対応する出荷バイナリ）を
-# windows-latest runner で全域評価する専用ワークフロー。
+# Windows の Win32 / WinRT イスラム暦 API を windows-latest runner で全域評価するワークフロー。
 #
-# - ネットワークは actions/checkout と actions/upload-artifact のみ（評価自体は --network none 相当、
-#   依存パッケージは不要・NuGet にも触れない）
-# - リポジトリのルートにこのディレクトリをそのまま置いて push すれば動く
+# 評価対象:
+#   (A) Kernel32 の deprecated 変換 API（P/Invoke で動的取得。ヘッダ・lib なし）
+#       ConvertSystemTimeToCalDateTime / ConvertCalDateTimeToSystemTime / GetCalendarSupportedDateRange
+#   (B) WinRT Windows.Globalization.Calendar（Windows PowerShell 5.1 経由）
+#       CalendarIdentifiers.Hijri / CalendarIdentifiers.UmAlQura
 #
-# 出力 artifact: `referencesource-windows-4.8-outputs`
-#   outputs/referencesource-windows-4.8/*.tsv.gz  … 生データ（g2h/h2g × adj2n..adj2p、LF、gzip 圧縮）
-#   probe.json                                    … runner の OS / .NET Framework 版 / csc 情報
-#   checksums.txt                                 … 各ファイルの SHA-256
+# - ネットワークは actions/checkout と actions/upload-artifact のみ
+# - 月日・暦の情報は一切手で書かない（OS の API のみを使う）
+# - (A) golden が不一致の場合、fail-fast で job を止める（それ自体が発見）
+# - (B) WinRT フェーズは失敗しても artifacts まで進む（status.txt に結果を記録）
 
 on:
   push:
@@ -27,76 +28,115 @@ jobs:
           fetch-depth: 1
 
       - name: Probe environment
-        id: probe
-        shell: pwsh
+        shell: powershell
         run: |
+          $PSVersionTable.PSVersion | Write-Output
           [System.Environment]::OSVersion.VersionString | Write-Output
           Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsBuildNumber | Format-List | Out-String | Write-Output
           $fw = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Release
           Write-Output (".NET Framework RELEASE: " + $fw)
           $mc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll"
+          Write-Output ("mscorlib.dll present: " + (Test-Path $mc))
           if (Test-Path $mc) {
             $fi = Get-Item $mc
             $fi | Format-List FullName, Length, LastWriteTime | Out-String | Write-Output
             (Get-FileHash $mc -Algorithm SHA256).Hash | Write-Output
-            Write-Output ("mscorlib FileVersion: " + $fi.VersionInfo.FileVersion + " ProductVersion: " + $fi.VersionInfo.ProductVersion)
+            $fv = $fi.VersionInfo
+            Write-Output ("mscorlib FileVersion: " + $fv.FileVersion + " ProductVersion: " + $fv.ProductVersion)
           }
           $kern = "$env:WINDIR\System32\kernel32.dll"
           $kfi = Get-Item $kern
           $kfi | Format-List FullName, Length, LastWriteTime | Out-String | Write-Output
           (Get-FileHash $kern -Algorithm SHA256).Hash | Write-Output
-          Write-Output ("kernel32 FileVersion: " + $kfi.VersionInfo.FileVersion + " ProductVersion: " + $kfi.VersionInfo.ProductVersion)
+          $kfv = $kfi.VersionInfo
+          Write-Output ("kernel32 FileVersion: " + $kfv.FileVersion + " ProductVersion: " + $kfv.ProductVersion)
           Write-Output ("is64BitOS: " + [Environment]::Is64BitOperatingSystem + " Is64BitProcess: " + [Environment]::Is64BitProcess)
           Write-Output ("CurrentCulture: " + [Globalization.CultureInfo]::CurrentCulture.Name)
           Write-Output ("PSVersion: " + $PSVersionTable.PSVersion)
           $csc = $null
           $mode = 'fx'
           $vsMatches = Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\*\*\MSBuild\Current\Bin\Roslyn\csc.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($vsMatches) {
-            $csc = $vsMatches.FullName
-            $mode = 'vs'
-          } else {
+          if ($vsMatches) { $csc = $vsMatches.FullName; $mode = 'vs' } else {
             $fx = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
             if (Test-Path $fx) { $csc = $fx; $mode = 'fx' }
           }
-          if (-not $csc) { Write-Error 'csc.exe が見つかりません（VS Roslyn も Framework64 も無し）'; exit 1 }
+          if (-not $csc) { Write-Error 'csc.exe が見つかりません'; exit 1 }
           Write-Output ("csc.exe: " + $csc + " (mode=" + $mode + ")")
-          if ($mode -eq 'vs') { & $csc /version | Write-Output } else { & $csc 2>&1 | Select-Object -First 2 | Write-Output }
           "CSC=$csc" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
           "CSC_MODE=$mode" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
 
-      - name: Golden test (fail fast)
-        shell: pwsh
+      - name: Probe Win32 APIs (availability + supported ranges)
+        shell: powershell
         run: |
-          $outDir = 'outputs\referencesource-windows-4.8'
+          $outDir = 'outputs\win32-hijri-api-2026-11'
           New-Item -ItemType Directory -Force $outDir | Out-Null
           $csc = $env:CSC
-          $cscArgs = @('/nologo', "/out:$outDir\Evaluate.exe", 'src\referencesource-windows-4.8\Evaluate.cs')
-          if ($env:CSC_MODE -eq 'vs') {
-            $cscArgs = @('/nologo', '/langversion:latest', "/out:$outDir\Evaluate.exe", 'src\referencesource-windows-4.8\Evaluate.cs')
-          }
+          $cscArgs = @('/nologo', "/out:$outDir\Evaluate.exe", 'src\win32-hijri-api-2026-11\Evaluate.cs')
+          if ($env:CSC_MODE -eq 'vs') { $cscArgs = @('/nologo', '/langversion:latest', "/out:$outDir\Evaluate.exe", 'src\win32-hijri-api-2026-11\Evaluate.cs') }
           & $csc @cscArgs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & $outDir\Evaluate.exe golden
-          if ($LASTEXITCODE -ne 0) { Write-Error 'golden 不一致: .NET Framework 側の挙動が dotnet/runtime と異なります（これ自体が重要な発見）'; exit $LASTEXITCODE }
+          & $outDir\Evaluate.exe probe
 
-      - name: Run evaluator (5 HijriAdjustment variants x 2 directions, full domain)
-        shell: pwsh
+      - name: Golden test (deprecated conversion API, fail-fast)
+        shell: powershell
         run: |
-          $outDir = 'outputs\referencesource-windows-4.8'
-          foreach ($variant in @('adj2n','adj1n','adj0','adj1p','adj2p')) {
-            foreach ($mode in @('g2h','h2g')) {
-              Write-Host "[run] $mode $variant"
-              cmd /c "$outDir\Evaluate.exe $mode $variant > $outDir\${variant}_${mode}.tsv"
-              if ($LASTEXITCODE -ne 0) { Write-Error "失敗: $mode $variant"; exit $LASTEXITCODE }
+          $outDir = 'outputs\win32-hijri-api-2026-11'
+          & $outDir\Evaluate.exe golden
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error 'golden 不一致: Win32 の CAL_HIJRI が dotnet/runtime と異なります（これ自体が重要な発見）'
+            exit $LASTEXITCODE
+          }
+
+      - name: Sweep (A) deprecated conversion API — 4 operations
+        shell: powershell
+        run: |
+          $outDir = 'outputs\win32-hijri-api-2026-11'
+          foreach ($cal in @('hijri','uaq')) {
+            foreach ($op in @('g2h','h2g')) {
+              Write-Host "[api] $op $cal"
+              cmd /c "$outDir\Evaluate.exe $op $cal > $outDir\api-${cal}_${op}.tsv"
+              if ($LASTEXITCODE -ne 0) { Write-Error "失敗: $op $cal"; exit $LASTEXITCODE }
             }
           }
-          Remove-Item $outDir\Evaluate.exe
 
-      - name: Normalize line endings to LF + gzip
-        shell: pwsh
+      - name: Golden test (WinRT Calendar, report-only)
+        shell: powershell
         run: |
-          $outDir = 'outputs\referencesource-windows-4.8'
+          $outDir = 'outputs\win32-hijri-api-2026-11'
+          & powershell.exe -NoProfile -File src\win32-hijri-api-2026-11\Evaluate.ps1 -Mode probe
+          $c1 = $LASTEXITCODE
+          & powershell.exe -NoProfile -File src\win32-hijri-api-2026-11\Evaluate.ps1 -Mode golden
+          $c2 = $LASTEXITCODE
+          if ($c1 -eq 0 -and $c2 -eq 0) {
+            'WINRT_STATUS=ok' | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
+          } else {
+            Write-Warning "WinRT 評価に失敗 (probe=$c1 golden=$c2)"
+            'WINRT_STATUS=failed' | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
+          }
+
+      - name: Sweep (B) WinRT Calendar — 4 operations (best-effort)
+        if: env.WINRT_STATUS == 'ok'
+        shell: powershell
+        run: |
+          $outDir = 'outputs\win32-hijri-api-2026-11'
+          foreach ($cal in @('hijri','uaq')) {
+            foreach ($op in @('g2h','h2g')) {
+              Write-Host "[winrt] $op $cal"
+              & powershell.exe -NoProfile -File src\win32-hijri-api-2026-11\Evaluate.ps1 -Mode $op -Variant $cal -OutFile "$outDir\winrt-${cal}_${op}.tsv"
+              if ($LASTEXITCODE -ne 0) { Write-Warning "winrt $op $cal 失敗（継続）" }
+            }
+          }
+
+      - name: Finalize (status, LF normalize, gzip)
+        shell: powershell
+        run: |
+          $outDir = 'outputs\win32-hijri-api-2026-11'
+          @(
+            "winrt_status=$env:WINRT_STATUS"
+            "ps=$($PSVersionTable.PSVersion)"
+            "os=$([System.Environment]::OSVersion.VersionString)"
+            "framework_release=$((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Release)"
+          ) | Set-Content "$outDir\status.txt" -Encoding ascii
           Add-Type -AssemblyName System.IO.Compression
           Get-ChildItem $outDir -Filter '*.tsv' | ForEach-Object {
             $text = [System.IO.File]::ReadAllText($_.FullName)
@@ -112,11 +152,12 @@ jobs:
             } finally { $input.Dispose() }
             Remove-Item $_.FullName
           }
+          Remove-Item $outDir\Evaluate.exe
 
       - name: Write probe.json + checksums.txt
-        shell: pwsh
+        shell: powershell
         run: |
-          $outDir = 'outputs\referencesource-windows-4.8'
+          $outDir = 'outputs\win32-hijri-api-2026-11'
           $fw = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Release
           $probe = [ordered]@{
             evaluated_at    = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
@@ -127,18 +168,16 @@ jobs:
             dotnet_framework_release = [int]$fw
             mscorlib_sha256 = (Get-FileHash "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll" -Algorithm SHA256).Hash.ToLower()
             mscorlib_fileversion = (Get-Item "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll").VersionInfo.FileVersion
-            mscorlib_length = (Get-Item "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll").Length
             kernel32_sha256 = (Get-FileHash "$env:WINDIR\System32\kernel32.dll" -Algorithm SHA256).Hash.ToLower()
             kernel32_fileversion = (Get-Item "$env:WINDIR\System32\kernel32.dll").VersionInfo.FileVersion
-            mscorlib_full_name = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll"
             is64BitOS      = [Environment]::Is64BitOperatingSystem
-            is64BitProcess = [Environment]::Is64BitProcess
             currentCulture = [Globalization.CultureInfo]::CurrentCulture.Name
+            ps              = $PSVersionTable.PSVersion.ToString()
             csc             = $env:CSC
             csc_mode        = $env:CSC_MODE
-            variants        = @('adj2n','adj1n','adj0','adj1p','adj2p')
-            directions      = @('g2h','h2g')
-            target_runtime  = '.NET Framework (mscorlib.dll, referencesource lineage)'
+            variants_deprecated_api = @('api-hijri','api-uaq')
+            variants_winrt          = @('winrt-hijri','winrt-uaq')
+            target_runtime  = 'Windows (Win32 NLS deprecated conversion API / WinRT Windows.Globalization.Calendar)'
           }
           $probe | ConvertTo-Json | Set-Content "$outDir\probe.json" -Encoding ascii
           $lines = @()
@@ -153,7 +192,7 @@ jobs:
       - name: Upload outputs artifact
         uses: actions/upload-artifact@v4
         with:
-          name: referencesource-windows-4.8-outputs
-          path: outputs/referencesource-windows-4.8/
+          name: win32-hijri-api-2026-11-outputs
+          path: outputs/win32-hijri-api-2026-11/
           retention-days: 90
           if-no-files-found: error
