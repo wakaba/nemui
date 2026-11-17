@@ -129,6 +129,20 @@ internal class Program
         }
     }
 
+    // Ask the API for the Era it uses for this calendar (single-era calendars differ:
+    // .NET reports 1 for Hijri while Win32 may report 0 or 1).
+    private static uint GetRefEra(uint calId)
+    {
+        Probe();
+        if (_cvtGCal != null)
+        {
+            var g = new SYSTEMTIME { Year = 2026, Month = 11, Day = 17 };
+            CALDATETIME c;
+            if (ConvertGToCal(ref g, calId, out c)) return c.Era;
+        }
+        return 1; // fallback: assume 1 if the probe fails
+    }
+
     private static uint CalIdOf(string name)
     {
         switch (name)
@@ -159,11 +173,12 @@ internal class Program
             var g = new SYSTEMTIME { Year = 2026, Month = 11, Day = 17 };
             CALDATETIME c;
             if (!ConvertGToCal(ref g, CAL_HIJRI, out c)) { Console.WriteLine("golden: CONVERT FAILED"); return 2; }
-            Console.WriteLine("golden: G(2026-11-17) -> hijri {0}-{1}-{2} (expect 1448-06-07)", c.Year, c.Month, c.Day);
-            // Roundtrip anchor: H 1448-06-07 must map back to G 2026-11-17.
+            Console.WriteLine("golden: G(2026-11-17) -> hijri {0}-{1}-{2} era {3} (expect 1448-06-07)", c.Year, c.Month, c.Day, c.Era);
+            // Roundtrip anchor: the H date we just converted must map back to G 2026-11-17.
+            // Use the Era value the API itself returned (Win32 may use 0 or 1 depending on the calendar).
             // (Note: H 1-01-01 = G 622-07-18 is below this API's documented floor of 1601-01-01,
             //  so it is out of the supported range by design.)
-            var h = new CALDATETIME { CalId = CAL_HIJRI, Era = 1, Year = c.Year, Month = c.Month, Day = c.Day };
+            var h = new CALDATETIME { CalId = CAL_HIJRI, Era = c.Era, Year = c.Year, Month = c.Month, Day = c.Day };
             if (!ConvertCalToG(ref h, out g)) { Console.WriteLine("golden anchor: CONVERT FAILED (H2G roundtrip)"); return 2; }
             Console.WriteLine("golden anchor: hijri {0}-{1}-{2} -> G {3}-{4:00}-{5:00} (expect 2026-11-17)", c.Year, c.Month, c.Day, g.Year, g.Month, g.Day);
             return (c.Year == 1448 && c.Month == 6 && c.Day == 7 && g.Year == 2026 && g.Month == 11 && g.Day == 17) ? 0 : 2;
@@ -198,13 +213,15 @@ internal class Program
         {
             var calId = CalIdOf(args[1]);
             Probe();
+            var era = GetRefEra(calId);
+            Console.WriteLine("reference era for {0}: {1}", args[1], era);
             for (var y = 1u; y <= 9666u; y++)
             {
                 for (var m = 1u; m <= 12u; m++)
                 {
                     for (var d = 1u; d <= 32u; d++)
                     {
-                        var h = new CALDATETIME { CalId = calId, Era = 1, Year = y, Month = m, Day = d };
+                        var h = new CALDATETIME { CalId = calId, Era = era, Year = y, Month = m, Day = d };
                         SYSTEMTIME g;
                         if (ConvertCalToG(ref h, out g))
                         {
