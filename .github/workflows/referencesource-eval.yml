@@ -13,7 +13,7 @@ name: referencesource-eval
 #   checksums.txt                                 … 各ファイルの SHA-256
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
   evaluate:
