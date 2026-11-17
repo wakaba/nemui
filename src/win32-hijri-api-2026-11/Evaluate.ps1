@@ -31,8 +31,8 @@ function New-Cal([string]$Id) {
 
 function Get-VariantId([string]$v) {
   switch ($v) {
-    'hijri' { return 'Hijri' }
-    'uaq'   { return 'UmAlQura' }
+    'hijri' { return 'HijriCalendar' }      # exact WinRT identifier ("CalendarIdentifiers.Hijri" = "HijriCalendar")
+    'uaq'   { return 'UmAlQuraCalendar' }   # exact WinRT identifier ("CalendarIdentifiers.UmAlQura" = "UmAlQuraCalendar")
     default { throw "Variant must be hijri or uaq (got: $v)" }
   }
 }
