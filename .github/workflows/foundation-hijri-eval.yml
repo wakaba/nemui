@@ -48,8 +48,10 @@ jobs:
             echo "=== LANG / LC_ALL ==="
             echo "LANG=$LANG LC_ALL=$LC_ALL"
             echo "=== framework hashes ==="
-            shasum -a 256 /System/Library/Frameworks/Foundation.framework/Versions/A/Foundation || true
-            shasum -a 256 /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation || true
+            FND=$(find /System/Library/Frameworks/Foundation.framework -type f -name Foundation 2>/dev/null | head -1)
+            CFND=$(find /System/Library/Frameworks/CoreFoundation.framework -type f -name CoreFoundation 2>/dev/null | head -1)
+            [ -n "$FND" ] && shasum -a 256 "$FND" || true
+            [ -n "$CFND" ] && shasum -a 256 "$CFND" || true
             shasum -a 256 /usr/lib/libicucore.dylib || true
           } | tee "$OUT_DIR/probe.log"
 

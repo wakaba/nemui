@@ -188,12 +188,12 @@ func golden() -> Int32 {
 }
 
 let args = CommandLine.arguments
-guard args.count >= 3 else {
-    FileHandle.standardError.write("usage: evaluate <golden|g2h|h2g> <cal>\n".data(using: .utf8)!)
+guard args.count >= 2 else {
+    FileHandle.standardError.write("usage: evaluate <golden|g2h|h2g> [cal]\n".data(using: .utf8)!)
     exit(2)
 }
 let op = args[1]
-let name = args[2]
+let name = args.count >= 3 ? args[2] : "islamicCivil"
 
 switch op {
 case "golden":
