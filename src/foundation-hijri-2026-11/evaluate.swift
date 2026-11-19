@@ -129,7 +129,8 @@ func monthLength(_ cal: Calendar, _ y: Int64, _ m: Int64) -> Int64 {
 }
 
 func h2gMain(_ cal: Calendar) {
-    for y in stride(from: Int64(-1), through: Int64(9666), by: Int64(1)) {
+    for y0 in -1...9666 {
+        let y = Int64(y0)
         for m in Int64(1)...Int64(12) {
             let len = monthLength(cal, y, m)
             for d in Int64(1)...Int64(32) {
