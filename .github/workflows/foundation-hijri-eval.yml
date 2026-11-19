@@ -1,0 +1,121 @@
+name: foundation-hijri-eval
+
+# Evaluate Apple Foundation Calendar Islamic identifiers on a macOS runner.
+#
+# Targets (all via Calendar(identifier:)):
+#   .islamic / .islamicCivil / .islamicTabular / .islamicUmmAlQura
+#
+# - Network: actions/checkout and actions/upload-artifact only
+# - No tables are hardcoded; all results come from the OS Foundation/CFCalendar (ICU-backed)
+# - Golden mismatch for islamicCivil fails fast (that itself is a finding)
+# - Other calendars print results and continue on failure (status.txt records the outcome)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  evaluate:
+    runs-on: macos-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Probe environment
+        shell: bash
+        run: |
+          set -e
+          OUT_DIR=outputs/macos-foundation-2026-11
+          mkdir -p "$OUT_DIR"
+          {
+            echo "=== macOS version ==="
+            sw_vers
+            echo "=== uname ==="
+            uname -a
+            echo "arch: $(uname -m)"
+            echo "=== CPU ==="
+            sysctl -n machdep.cpu.brand_string || true
+            echo "=== Xcode ==="
+            xcodebuild -version
+            echo "=== Swift ==="
+            swift --version
+            echo "=== date (UTC) ==="
+            date -u
+            echo "=== LANG / LC_ALL ==="
+            echo "LANG=$LANG LC_ALL=$LC_ALL"
+            echo "=== framework hashes ==="
+            shasum -a 256 /System/Library/Frameworks/Foundation.framework/Versions/A/Foundation || true
+            shasum -a 256 /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation || true
+            shasum -a 256 /usr/lib/libicucore.dylib || true
+          } | tee "$OUT_DIR/probe.log"
+
+      - name: Compile evaluate.swift
+        shell: bash
+        run: |
+          set -e
+          OUT_DIR=outputs/macos-foundation-2026-11
+          swiftc -O -o "$OUT_DIR/evaluate" src/foundation-hijri-2026-11/evaluate.swift
+
+      - name: Golden test (islamicCivil, non-fatal)
+        shell: bash
+        run: |
+          OUT_DIR=outputs/macos-foundation-2026-11
+          if "$OUT_DIR/evaluate" golden | tee "$OUT_DIR/golden-results.txt"; then
+            echo "golden_status=ok" > "$OUT_DIR/golden.status"
+          else
+            echo "golden_status=failed" > "$OUT_DIR/golden.status"
+          fi
+
+      - name: Evaluate (g2h)
+        shell: bash
+        run: |
+          set -e
+          OUT_DIR=outputs/macos-foundation-2026-11
+          for cal in islamic islamicCivil islamicTabular islamicUmmAlQura; do
+            echo "=== g2h $cal $(date -u +%H:%M:%S)"
+            "$OUT_DIR/evaluate" g2h "$cal" > "$OUT_DIR/${cal}_g2h.tsv"
+            echo "rows=$(wc -l < "$OUT_DIR/${cal}_g2h.tsv")" | tee "$OUT_DIR/${cal}_g2h.rows"
+          done
+
+      - name: Evaluate (h2g)
+        shell: bash
+        run: |
+          set -e
+          OUT_DIR=outputs/macos-foundation-2026-11
+          for cal in islamic islamicCivil islamicTabular islamicUmmAlQura; do
+            echo "=== h2g $cal $(date -u +%H:%M:%S)"
+            "$OUT_DIR/evaluate" h2g "$cal" > "$OUT_DIR/${cal}_h2g.tsv"
+            echo "rows=$(wc -l < "$OUT_DIR/${cal}_h2g.tsv")" | tee "$OUT_DIR/${cal}_h2g.rows"
+          done
+
+      - name: Gzip TSVs
+        shell: bash
+        run: |
+          set -e
+          OUT_DIR=outputs/macos-foundation-2026-11
+          cd "$OUT_DIR"
+          gzip -9 -f ./*.tsv
+
+      - name: Build checksums and status
+        shell: bash
+        run: |
+          set -e
+          OUT_DIR=outputs/macos-foundation-2026-11
+          cd "$OUT_DIR"
+          shasum -a 256 ./*.tsv.gz > checksums.txt
+          {
+            echo "runner=$RUNNER_OS $RUNNER_ARCH"
+            echo "artifact=macos-foundation-2026-11-outputs"
+            sw_vers
+          } > status.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-foundation-2026-11-outputs
+          path: outputs/macos-foundation-2026-11/
+          retention-days: 90
