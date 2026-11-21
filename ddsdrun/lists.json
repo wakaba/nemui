@@ -1,5 +1,8 @@
 {
   "items": [
+    ["https://dataset.address-br.digital.go.jp/api/feed/dcat-us/1.1.json", "dcatus", "abr", {
+      "tags": ["abr"]
+    }],
     ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/legal/packref.json", "packref", "legal", {
       "tags": ["legal"]
     }],

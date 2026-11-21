@@ -56,8 +56,8 @@ sub ddsd ($@) {
   });
 } # ddsd
 
-sub pull_remote_index ($$) {
-  my ($site_name, $root_url) = @_;
+sub pull_remote_index ($$;%) {
+  my ($site_name, $root_url, %args) = @_;
   my $esite_name = escape $site_name;
   my $base_path = $DataRootPath;
   my $base_file = Promised::File->new_from_path ($base_path);
@@ -67,6 +67,7 @@ sub pull_remote_index ($$) {
       'add',
       $root_url,
       '--name', $esite_name,
+      ($args{single} ? '--single-file' : ()),
     )->catch (sub { })->then (sub {
       return ddsd (
         {wd => $base_path},
@@ -415,6 +416,18 @@ sub process_remote_index ($$$$$$$) {
           [$_, (Web::URL->parse_string ($_, $base_url) // die "Bad URL |$_| in <$root_url>")->stringify];
         } @$json];
       }
+    } elsif ($site_type eq 'dcatus') {
+      if (defined $json and ref $json eq 'HASH' and
+          defined $json->{dataset} and ref $json->{dataset} eq 'ARRAY') {
+        my $base_url = Web::URL->parse_string ($opts->{base_url} // $root_url);
+        $results = [map {
+          unless (defined $_ and ref $_ eq 'HASH' and
+                  defined $_->{landingPage}) {
+            die "Bad item in <$root_url>";
+          }
+          [$_->{landingPage}, (Web::URL->parse_string ($_->{landingPage}, $base_url) // die "Bad URL |$_| in <$root_url>")->stringify];
+        } @$json];
+      }
     }
     die "Bad JSON file |$path| (site_type |$site_type|)" unless defined $results;
 
@@ -569,7 +582,9 @@ sub process_remote_index ($$$$$$$) {
 sub run ($$$$$$$) {
   my ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop, $p_list) = @_;
   return Promise->resolve->then (sub {
-    return pull_remote_index ($site_name, $root_url);
+    return pull_remote_index ($site_name, $root_url, single => {
+      dcatus => 1,
+    }->{$site_type});
   })->then (sub {
     return process_remote_index ($site_type, $site_name, $root_url, $opts,
                                  $states_sets, $need_stop, $p_list);
