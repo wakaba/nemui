@@ -5,16 +5,16 @@
     }],
     ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/legal/packref.json", "packref", "legal", {
       "tags": ["legal"]
-    }],
+    }]
+  ],
+  "XXX": [
     ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/fragments/packref.json", "packref", "fragments", {
       "base_url": "https://raw.githubusercontent.com/geocol/ddsd-snapshots/refs/heads/master/data/fragments/list.json",
       "tags": ["ddsd fragment packrefs"]
     }],
     ["https://data.city.ikoma.lg.jp/data/dataset", "ckan", "data.city.ikoma.lg.jp", {
       "tags": ["生駒市"]
-    }]
-  ],
-  "XXX": [
+    }],
     ["https://catalog.registries.digital.go.jp/rc/dataset", "ckan", "catalog.registries.digital.go.jp", {
       "tags": ["デジタル庁"]
     }],
