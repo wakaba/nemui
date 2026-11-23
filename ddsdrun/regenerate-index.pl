@@ -236,7 +236,7 @@ sub regenerate_computed_index ($$$$$$) {
       my $file = Promised::File->new_from_path ($mirror_index_path);
       my $lock = AbortController->new;
       warn "XXX lock";
-      return $file->lock_new_file (signal => $lock->signal)->then (sub {
+      return $file->lock_new_file (signal => $lock->signal, timeout => 60)->then (sub {
                                                                      warn "read";
         return $file->read_byte_string;
       })->then (sub {
