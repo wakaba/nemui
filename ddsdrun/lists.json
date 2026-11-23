@@ -2,13 +2,13 @@
   "items": [
     ["https://dataset.address-br.digital.go.jp/api/feed/dcat-us/1.1.json", "dcatus", "dataset.address-br.digital.go.jp", {
       "tags": ["abr"]
-    }],
-    ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/legal/packref.json", "packref", "legal", {
-      "tags": ["legal"]
     }]
   ],
-  "XXX": [
-    ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/fragments/packref.json", "packref", "fragments", {
+  "XXX": [ 
+    ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/legal/packref.json", "packref", "legal", {
+      "tags": ["legal"]
+    }],
+   ["https://raw.githubusercontent.com/geocol/ddsd-data/master/packref/fragments/packref.json", "packref", "fragments", {
       "base_url": "https://raw.githubusercontent.com/geocol/ddsd-snapshots/refs/heads/master/data/fragments/list.json",
       "tags": ["ddsd fragment packrefs"]
     }],

@@ -235,7 +235,9 @@ sub regenerate_computed_index ($$$$$$) {
       warn "re3 $mirror_index_path...";
       my $file = Promised::File->new_from_path ($mirror_index_path);
       my $lock = AbortController->new;
+      warn "XXX lock";
       return $file->lock_new_file (signal => $lock->signal)->then (sub {
+                                                                     warn "read";
         return $file->read_byte_string;
       })->then (sub {
         my $json = length $_[0] ? json_bytes2perl $_[0] : {};
@@ -243,6 +245,7 @@ sub regenerate_computed_index ($$$$$$) {
         $json->{type} //= "packref";
         $json->{source}->{type} //= "files";
         $json->{source}->{files}->{"file:r:$site_type-$esite_name"}->{url} = "mirror-$site_type-$esite_name.jsonl";
+        warn "XXXX write ";
         return $file->write_byte_string (perl2json_bytes_for_record $json);
       });
     } [keys %$mirrorzip_files];
