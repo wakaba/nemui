@@ -257,6 +257,7 @@ sub regenerate_computed () {
   my $file = Promised::File->new_from_path ($snapshot_index_path);
   return $file->read_byte_string->then (sub {
     my $json = json_bytes2perl $_[0];
+    use Data::Dumper;warn Dumper $json;
     return promised_for {
       return promised_for {
         my $data = shift;
