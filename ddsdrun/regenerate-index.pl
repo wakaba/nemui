@@ -41,6 +41,7 @@ sub regenerate_computed_index ($$$$$$) {
       ("indexes/$site_type/$esite_name/all.jsonl");
   my $states_sets_path = $base_path->child ("states/mirrorsets.json");
   my $mirrorzip_files = {};
+  my $index_all_file;
   my $get_mirrorzip_file = sub ($) {
     my $mirror_set = $_[0];
     return Promise->resolve ($mirrorzip_files->{$mirror_set})
@@ -60,7 +61,7 @@ sub regenerate_computed_index ($$$$$$) {
   ])->then (sub {
     my $names = [grep { /^index-[0-9a-f]{2}\.jsonl$/ } @{$_[0]->[0]}];
     my $states_sets = json_bytes2perl $_[0]->[1];
-    my $index_all_file = $index_all_path->openw;
+    $index_all_file = $index_all_path->openw;
     return promised_for {
       my $path = $index_parent_path->child ($_[0]);
       my $file = Promised::File->new_from_path ($path);
@@ -221,9 +222,9 @@ sub regenerate_computed_index ($$$$$$) {
       });
     } $names;
   })->then (sub {
-    close $index_all_file;
+    close $index_all_file if defined $index_all_file;
     for (values %$mirrorzip_files) {
-      close $_;
+      close $_ if defined $_;
     }
     return promised_for {
       my $mirror_set = $_[0];
