@@ -247,11 +247,13 @@ sub regenerate_computed_index ($$$$$$) {
         $json->{source}->{files}->{"file:r:$site_type-$esite_name"}->{url} = "mirror-$site_type-$esite_name.jsonl";
         warn "XXXX write ";
         return $file->write_byte_string (perl2json_bytes_for_record $json);
-      });
+      })->finally (sub {
+        undef $lock;
+                   });
     } [keys %$mirrorzip_files];
   })->catch (sub {
-               warn "XXX $@";
-               die $@;
+               warn "XXX $_[0]";
+               die $_[0];
              })->finally (sub {
 warn "XX re4 ";
                });
