@@ -65,6 +65,7 @@ sub regenerate_computed_index ($$$$$$) {
     return promised_for {
       my $path = $index_parent_path->child ($_[0]);
       my $file = Promised::File->new_from_path ($path);
+      warn "re $path...";
       my $any_packs = {};
       my $full_packs = {};
       my $packs = {};
@@ -88,6 +89,7 @@ sub regenerate_computed_index ($$$$$$) {
         my %pack_name = (%$packs, %$full_packs, %$any_packs);
         return promised_for {
           my $pack_name = $_[0];
+          warn "re2 $pack_name...";
           my $current = $packs->{$pack_name} // $full_packs->{$pack_name} // $any_packs->{$pack_name};
           my $current_is_latest = $current->[1] eq $any_packs->{$pack_name}->[1];
 
@@ -230,6 +232,7 @@ sub regenerate_computed_index ($$$$$$) {
       my $mirror_set = $_[0];
       my $mirror_index_path = $base_path->child
           ("mirror/$mirror_set/index/packref.json");
+      warn "re3 $mirror_index_path...";
       my $file = Promised::File->new_from_path ($mirror_index_path);
       my $lock = AbortController->new;
       return $file->lock_new_file (signal => $lock->signal)->then (sub {
