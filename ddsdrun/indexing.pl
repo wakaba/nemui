@@ -69,6 +69,14 @@ sub pull_remote_index ($$;%) {
       '--name', $esite_name,
       ($args{single} ? '--single-file' : ()),
     )->catch (sub { })->then (sub {
+      return unless $args{single};
+      return ddsd (
+        {wd => $base_path},
+        'use',
+        'file',
+        '--name', 'package_list.json',
+      );
+    })->then (sub {
       return ddsd (
         {wd => $base_path},
         'pull',
@@ -417,6 +425,8 @@ sub process_remote_index ($$$$$$$) {
         } @$json];
       }
     } elsif ($site_type eq 'dcatus') {
+      warn "XXX dcatus";
+      warn ref $json;
       if (defined $json and ref $json eq 'HASH' and
           defined $json->{dataset} and ref $json->{dataset} eq 'ARRAY') {
         my $base_url = Web::URL->parse_string ($opts->{base_url} // $root_url);
