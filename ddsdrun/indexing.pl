@@ -73,7 +73,7 @@ sub pull_remote_index ($$;%) {
       return ddsd (
         {wd => $base_path},
         'use',
-        'file',
+        $esite_name, 'file',
         '--name', 'package_list.json',
       );
     })->then (sub {
