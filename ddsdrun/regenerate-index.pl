@@ -23,8 +23,8 @@ sub escape ($) {
 
 sub open_tag_index ($$$) {
   my ($states, $base_path, $tag) = @_;
+  $tag = substr $tag, 0, 100 if 100 < length $tag;
   return $states->{tag_files}->{$tag} ||= do {
-    $tag = substr $tag, 0, 100 if 100 < length $tag;
     my $etag = escape $tag;
     my $path = $base_path->child ("indexes/tags/$etag.jsonl");
     $path->openw;
@@ -221,6 +221,10 @@ sub regenerate_computed_index ($$$$$$) {
       });
     } $names;
   })->then (sub {
+    close $index_all_file;
+    for (values %$mirrorzip_files) {
+      close $_;
+    }
     return promised_for {
       my $mirror_set = $_[0];
       my $mirror_index_path = $base_path->child
@@ -252,12 +256,18 @@ sub regenerate_computed () {
     return promised_for {
       return promised_for {
         my $data = shift;
+        warn sprintf "regenerate_computed_index: %s/%s\n",
+            $data->{site_type}, $data->{site_name};
         return regenerate_computed_index
             ($states, $base_path, $data->{site_type}, $data->{site_name},
              $data->{site_opts}, $touched_mirror_sets);
       } [values %{$_[0]}];
     } [values %$json];
   })->then (sub {
+    for my $tag (keys %{$states->{tag_files} or {}}) {
+      close $states->{tag_files}->{$tag};
+    }
+    delete $states->{tag_files};
     my $states_sets_path = $base_path->child ("states/mirrorsets.json");
     return Promised::File->new_from_path ($states_sets_path)->read_byte_string;
   })->then (sub {

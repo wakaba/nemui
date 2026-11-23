@@ -168,3 +168,7 @@ test: test-deps
 test-deps: deps
 
 test-main:
+
+downstream:
+	cp ../ddsd-indexer/indexing.pl ddsdrun/
+	cp ../ddsd-indexer/regenerate-index.pl ddsdrun/
