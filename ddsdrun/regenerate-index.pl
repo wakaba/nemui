@@ -248,6 +248,7 @@ sub regenerate_computed_index ($$$$$$) {
         warn "XXXX write ";
         return $file->write_byte_string (perl2json_bytes_for_record $json);
       })->finally (sub {
+                     $lock->abort;
         undef $lock;
                    });
     } [keys %$mirrorzip_files];
