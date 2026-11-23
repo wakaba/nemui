@@ -30,7 +30,7 @@ sub open_tag_index ($$$) {
     $path->openw;
   };
 } # open_tag_index
-
+h
 sub regenerate_computed_index ($$$$$$) {
   my ($states, $base_path, $site_type, $site_name, $site_opts,
       $touched_mirror_sets) = @_;
@@ -246,7 +246,12 @@ sub regenerate_computed_index ($$$$$$) {
         return $file->write_byte_string (perl2json_bytes_for_record $json);
       });
     } [keys %$mirrorzip_files];
-  });
+  })->catch (sub {
+               warn "XXX $@";
+               die $@;
+             })->finally (sub {
+warn "XX re4 ";
+               });
 } # regenerate_computed_index
 
 sub regenerate_computed () {
