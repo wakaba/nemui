@@ -494,13 +494,13 @@ sub process_remote_index ($$$$$$$) {
         
         return ddsd (
           {wd => $base_path},
-          'add',
+          'add', "--skip-if-new",
           $pack_url,
           "--name", $key,
         )->catch (sub { })->then (sub {
           return ddsd (
             {wd => $base_path},
-            'use',
+            'use', "--skip-if-new",
             $key,
             '--all',
           );
