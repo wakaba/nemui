@@ -563,8 +563,10 @@ sub process_remote_index ($$$$$$$) {
                                        "local/tmp/$key.mirrorzip.zip",
                                        $states_sets);
           });
+        })->then (sub {
+          return not 'done';
         });
-      };
+      } interval => 5;
     })->then (sub {
       return $states_sitepacks_file->write_byte_string (perl2json_bytes $states_sitepacks);
     })->then (sub { 1 });
