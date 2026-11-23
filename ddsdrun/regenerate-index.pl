@@ -254,7 +254,7 @@ sub regenerate_computed_index ($$$$$$) {
   })->catch (sub {
                warn "XXX $_[0]";
 my $e = $_[0];
-        warn "mirror packref update failed: $mirror_index_path: $e\n";
+        warn "mirror packref update failed: mirror_index_path: $e\n";
         system "lslocks -p $$ 2>&1 | tail -40";
         system "grep packref /proc/locks 2>&1 | tail -20";
                die $_[0];
