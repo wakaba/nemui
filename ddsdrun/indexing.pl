@@ -436,7 +436,7 @@ sub process_remote_index ($$$$$$$) {
             die "Bad item in <$root_url>";
           }
           [$_->{landingPage}, (Web::URL->parse_string ($_->{landingPage}, $base_url) // die "Bad URL |$_| in <$root_url>")->stringify];
-        } @$json];
+        } @{$json->{dataset}}];
       }
     }
     die "Bad JSON file |$path| (site_type |$site_type|)" unless defined $results;
